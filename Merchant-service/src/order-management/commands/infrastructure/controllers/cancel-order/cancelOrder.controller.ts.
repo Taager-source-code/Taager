@@ -1,0 +1,71 @@
+import { OK } from 'http-status';
+import { findOrdersAndUpdate } from '../../../../queries/application/usecases/order.service';
+import { createMultipleOrderActivities } from '../../../application/usecases/orderActivity.service';
+import Logger from '../../../../../shared-kernel/infrastructure/logging/general.log';
+
+/**
+ * Cancel created order by taager
+ * @param {http request} req
+ * @param {http response} res
+ * @returns {Promise<http response>}
+ */
+export const cancelOrder = async (req, res) => {
+  // Todo: delegate the below logic in service layer
+  if (req.body.orders) {
+    const orderIdsArray: any[] = [];
+    req.body.orders.forEach(item => {
+      orderIdsArray.push(item._id);
+    });
+    Logger.info('Cancelling order', { orders: orderIdsArray });
+    const QueryUpdateOrder = {
+      _id: {
+        $in: orderIdsArray,
+      },
+      TagerID: req.decodedToken.user.TagerID,
+    };
+    const UpdateObj: any = {
+      status: 'taager_cancelled',
+    };
+    if (req.body.notes) {
+      UpdateObj.notes = req.body.notes;
+    }
+
+    await findOrdersAndUpdate({
+      query: QueryUpdateOrder,
+      update: {
+        $set: UpdateObj,
+      },
+      options: {},
+      lean: true,
+    });
+
+    const ActivityArray: any[] = [];
+    req.body.orders.forEach(order => {
+      const orderActivity: any = {
+        orderStatus: 'taager_cancelled',
+        notes: req.body.notes ? req.body.notes : '',
+        streetName: order.streetName ? order.streetName : '',
+        deliveryDate: order.deliveryDate ? order.deliveryDate : null,
+
+        receiverName: order.receiverName ? order.receiverName : null,
+        phoneNumber: order.phoneNumber ? order.phoneNumber : null,
+        cashOnDelivery: order.cashOnDelivery ? order.cashOnDelivery : null,
+        province: order.province ? order.province : null,
+        productQuantities: order.productQuantities ? order.productQuantities : null,
+        productPrices: order.productPrices ? order.productPrices : null,
+        orderProfit: order.profit ? order.profit : null,
+      };
+      orderActivity.orderObjectId = order._id;
+      orderActivity.orderID = order.orderID;
+      ActivityArray.push(orderActivity);
+    });
+
+    await createMultipleOrderActivities(ActivityArray);
+  }
+  return res.status(OK).json({
+    msg: 'Order cancelled successfully',
+    data: {},
+  });
+};
+
+

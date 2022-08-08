@@ -1,0 +1,19 @@
+<div class="questionnaire-banner">
+
+    <div class="banner-section d-flex align-items-center">
+
+        <img class="flag-img" src="assets/img/ksaFlyingFlag.svg"/>
+
+        <p class="banner-text">حابب تبدأ تبيع في <span>السعودية</span>  مع تاجر؟ أجب على هذه الأسئلة</p>
+
+        <div class="buttons-container">
+
+            <button class="start-survey" routerLink="/questionnaire" (click)="trackQuestionnaire()">أجب على الأسئلة</button>
+
+            <button class="decline-survey" (click)="declineSurvey()">لا ارغب</button>
+
+        </div>
+
+    </div>
+
+</div>

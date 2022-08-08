@@ -1,0 +1,99 @@
+@import "common.scss";
+
+::ng-deep .toast-container .ngx-toastr {
+
+  display: block;
+
+  background-color: $white;
+
+  border-radius: 1.6rem;
+
+  padding: 1rem;
+
+  pointer-events: all;
+
+  cursor: pointer;
+
+  direction: rtl;
+
+  text-align: right;
+
+  width: 40rem;
+
+  margin: 5rem 1rem;
+
+}
+
+.close-btn-div {
+
+  font-size: 2.5rem;
+
+  color: $red;
+
+  padding-left: 1rem;
+
+  margin-bottom: -2.4rem;
+
+}
+
+.toaster-icon {
+
+  padding: 1.5rem;
+
+  margin-right: 1rem;
+
+  width: 8.3rem;
+
+  height: 6rem;
+
+  border-radius: 1rem;
+
+  margin-bottom: 1rem;
+
+  background-color: rgba($primary-color, 0.14);
+
+}
+
+.toaster-message {
+
+  font-weight: bold;
+
+  margin: 0rem 2rem 0rem 2.6rem;
+
+  padding-top: 0.3rem;
+
+  font-size: 1.7rem;
+
+}
+
+.btn {
+
+  margin: 0.4rem;
+
+  border-radius: 1rem;
+
+  width: 8rem;
+
+  font-size: 1.3rem;
+
+}
+
+.btn-update {
+
+  background-color: $primary-color;
+
+  color: $white;
+
+  margin-right: -2.2rem;
+
+}
+
+.btn-cancel {
+
+  border-color: $primary-color;
+
+  background: none;
+
+  color: $primary-color;
+
+}

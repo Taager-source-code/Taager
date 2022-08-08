@@ -1,0 +1,49 @@
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import * as childOrdersCtrl from '../controllers/childOrder/childOrders.controller';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+import UserCountriesAccessQueryParamMiddleware from '../middlewares/UserCountriesAccessQueryParamMiddleware';
+import UserCountriesAccessBodyMiddleware from '../middlewares/UserCountriesAccessBodyMiddleware';
+
+const router = express.Router();
+
+router.post('/viewOrdersWithIDs', isAuthenticated, errorHandler(childOrdersCtrl.viewChildOrdersWithIDs));
+
+router.post('/direct', isAuthenticated, CountryMiddleware, errorHandler(childOrdersCtrl.createChildOrderDirect));
+
+router.get(
+  '/',
+  isAuthenticated,
+  UserCountriesAccessQueryParamMiddleware,
+  errorHandler(childOrdersCtrl.viewChildOrders),
+);
+
+router.post('/', isAuthenticated, errorHandler(childOrdersCtrl.createChildOrder));
+
+router.patch('/', isAuthenticated, errorHandler(childOrdersCtrl.updateChildOrder));
+
+router.get(
+  '/shipping-statuses',
+  isAuthenticated,
+  UserCountriesAccessQueryParamMiddleware,
+  errorHandler(childOrdersCtrl.getShippingCompanyStatuses),
+);
+
+router.post(
+  '/getAllChildOrdersWithStatus',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(childOrdersCtrl.getAllChildOrdersWithStatus),
+);
+
+router.get('/active-bosta', isAuthenticated, errorHandler(childOrdersCtrl.getActiveBostaChildOrders));
+
+router.patch('/completeTransfer', isAuthenticated, errorHandler(childOrdersCtrl.verifyChildOrder));
+
+router.patch('/inventoryReceivedItem', isAuthenticated, errorHandler(childOrdersCtrl.markItemAsReceivedInChildOrder));
+
+router.get('/viewChildOrder/:id', isAuthenticated, errorHandler(childOrdersCtrl.getChildOrderById));
+
+export = router;

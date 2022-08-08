@@ -1,0 +1,16 @@
+<div>
+  <label for="exampleFormControlTextarea1">Reason for Rejection</label>
+  <textarea
+    class="form-control"
+    id="exampleFormControlTextarea1"
+    [(ngModel)]="reason"
+    rows="3"
+  ></textarea>
+  <button
+    type="button"
+    class="btn btn-success send-button"
+    (click)="onReject()"
+  >
+    Send
+  </button>
+</div>

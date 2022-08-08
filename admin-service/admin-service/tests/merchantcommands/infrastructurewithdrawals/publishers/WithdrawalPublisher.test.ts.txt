@@ -1,0 +1,43 @@
+import { deepEqual, instance, mock, verify } from 'ts-mockito';
+import CreditEligibleAmountProducer, {
+  CreditEligibleAmountDTO,
+} from '../../../../../../src/merchant/commands/infrastructure/withdrawals/producers/CreditEligibleAmountProducer';
+import WithdrawalPublisher from '../../../../../../src/merchant/commands/infrastructure/withdrawals/publishers/WithdrawalPublisher';
+import { WithdrawalRejected } from '../../../../../../src/merchant/commands/domain/withdrawals/events/WithdrawalEvents';
+import Withdrawal from '../../../../../../src/merchant/commands/domain/withdrawals/Withdrawal';
+import { WITHDRAWAL_REQUEST_PARAM_1 } from '../../../../../fixtures/WithdrawalRequestFixtures';
+
+function initializeWithdrawalPublisher() {
+  const mockedCreditEligibleAmountProducer = mock(CreditEligibleAmountProducer);
+  const withdrawalPublisher = new WithdrawalPublisher(instance(mockedCreditEligibleAmountProducer));
+  return { withdrawalPublisher, mockedCreditEligibleAmountProducer };
+}
+
+describe('WithdrawalPublisher', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('WithdrawalPublisher.publish', () => {
+    test('Check all producers are called with correct events, publish withdrawal rejected', async () => {
+      //Arrange
+      const creditEligibleAmountDTO: CreditEligibleAmountDTO = {
+        taagerId: 123,
+        currency: 'EGP',
+        serviceTransactionId: 'a46f1680-0fec-4a84-86d0-c394204a5111',
+        serviceType: 'WithdrawalRequest',
+        serviceSubType: 'WithdrawalRequestRejected',
+        amount: 40,
+      };
+      const withdrawal = new Withdrawal(WITHDRAWAL_REQUEST_PARAM_1);
+      const withdrawalRejected: WithdrawalRejected = new WithdrawalRejected(withdrawal);
+
+      const { withdrawalPublisher, mockedCreditEligibleAmountProducer } = initializeWithdrawalPublisher();
+      //Act
+      await withdrawalPublisher.publish(withdrawalRejected);
+
+      //Assert
+      verify(mockedCreditEligibleAmountProducer.send(deepEqual(creditEligibleAmountDTO))).called();
+    });
+  });
+});

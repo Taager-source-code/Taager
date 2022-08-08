@@ -1,0 +1,41 @@
+<a
+
+  class="category-list-item"
+
+  [ngClass]="{
+
+    'category-list-item--hovered': categoryNode.key === hoveredCategoryId
+
+  }"
+
+  [routerLink]="['/', 'products', 'category', categoryNode.key]"
+
+>
+
+  <div class="category-list-item__category">
+
+    <img
+
+      class="category-list-item__category-icon"
+
+      src="{{ iconsBaseUrl }}commercial-categories/icons/{{
+
+        categoryNode.value.icon
+
+      }}"
+
+      alt=""
+
+    />
+
+    <p class="category-list-item__category-name">
+
+      {{ categoryNode.value.name.arabicName }}
+
+    </p>
+
+  </div>
+
+  <img *ngIf="categoryNode.hasChildren" class="category-list-item__left-chevron" src="assets/img/left-chevron.svg">
+
+</a>

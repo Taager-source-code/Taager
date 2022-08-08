@@ -1,0 +1,21 @@
+import admin from 'firebase-admin';
+import Env from '../Env';
+
+let app: any = null;
+const initialize = () => {
+  app = admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: Env.FIREBASE_PROJECT_ID,
+      privateKey: Env.FIREBASE_PRIVATE_KEY,
+      clientEmail: Env.FIREBASE_CLIENT_EMAIL,
+    }),
+    databaseURL: Env.FIREBASE_DATABASE_URL,
+  });
+};
+
+export const messaging = () => {
+  if (app === null) {
+    initialize();
+  }
+  return admin.messaging();
+};

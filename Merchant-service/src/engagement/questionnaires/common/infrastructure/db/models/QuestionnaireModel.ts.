@@ -1,0 +1,29 @@
+export type QuestionnaireModel = {
+  _id?: string;
+  name: string;
+  passingScore: number;
+  questions: QuestionModel[];
+};
+
+export type QuestionModel = {
+  id: string;
+  text: MultilingualTextModel;
+  iconUrl?: string;
+  maxAllowedAnswers?: number;
+  scoreCap: number;
+  answers: AnswerModel[];
+};
+
+export type AnswerModel = {
+  id: string;
+  iconUrl?: string;
+  text: MultilingualTextModel;
+  score: number;
+};
+
+export type MultilingualTextModel = {
+  en: string;
+  ar: string;
+};
+
+

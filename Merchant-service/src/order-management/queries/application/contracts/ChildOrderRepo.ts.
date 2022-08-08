@@ -1,0 +1,10 @@
+import { GetChildOrdersRequest } from '../models/child-orders/GetChildOrdersRequest';
+import { ChildOrdersResponse } from '../models/child-orders/ChildOrdersResponse';
+import { SearchChildOrdersRequest } from '../models/child-orders/SearchChildOrdersRequest';
+
+export interface ChildOrderRepo {
+  getChildOrders(getChildOrders: GetChildOrdersRequest): Promise<ChildOrdersResponse>;
+  searchInChildOrders(searchInChildOrders: SearchChildOrdersRequest): Promise<ChildOrdersResponse>;
+}
+
+

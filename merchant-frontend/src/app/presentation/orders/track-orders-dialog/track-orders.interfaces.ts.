@@ -1,0 +1,20 @@
+export interface orderInfo{
+    id: string;
+    createdAt: string;
+    confirmationDate: string;
+    deliveryDate: string;
+  }
+
+export interface orderStatus{
+    icon: string;
+    statusInEnglish: string;
+    statusInArabic: string;
+    canceledOrSuspended: boolean;
+    updatedAt: string;
+    suspentionReason: string;
+    rejectionReason: string;
+    notes: string;
+    failedAttemptNote: string;
+  }
+
+

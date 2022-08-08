@@ -1,0 +1,36 @@
+export const AramexOrderStatus = {
+  ORDER_CREATED: 'aramex_order_created',
+  ORDER_FAILED: 'aramex_order_failed',
+  ORDER_TRACKING_RESULTS_SUCCESS: 'aramex_order_tracking_results_success',
+  ORDER_TRACKING_RESULTS_FAIL: 'aramex_order_tracking_results_fail',
+};
+
+export const VHubsShipmentStatus = {
+  INVALID_SHIPMENT_STATUS: 'invalid_shipment_status',
+  SHIPMENT_CREATED: 'vhubs_shipment_created',
+  SHIPMENT_FAILED: 'vhubs_shipment_failed',
+  SHIPMENT_TRACKING_RESULTS_SUCCESS: 'vhubs_shipment_tracking_results_success',
+  SHIPMENT_TRACKING_RESULTS_FAIL: 'vhubs_shipment_tracking_results_fail',
+  NO_ORDER_FOUND: 'no_order_found',
+  ORDER_UPDATED_SUCCESSFULLY: 'order_updated_successfully',
+};
+
+export const DreevoOrderStatus = {
+  ORDER_PACKAGE_CREATED_SUCCESSFULLY: 'Order_package_created_success',
+  ORDER_PACKAGE_CREATION_FAILED: 'Order_package_creation_failed',
+  ORDER_TRACKING_RESULTS_SUCCESS: 'Order_tracking_record_retreived_success',
+  ORDER_TRACKING_RESULTS_FAIL: 'Order_tracking_record_retreiving_failed',
+};
+
+export const BostaOrderStatus = {
+  ORDER_PACKAGE_CREATED_SUCCESSFULLY: 'Order_package_created_success',
+  ORDER_PACKAGE_CREATION_FAILED: 'Order_package_creation_failed',
+  ORDER_TRACKING_RESULTS_SUCCESS: 'Order_tracking_record_retreived_success',
+  ORDER_TRACKING_RESULTS_FAIL: 'Order_tracking_record_retreiving_failed',
+  PACKAGE_AWB_RETRIEVED_SUCCESS: 'package_AWB_retreived_success',
+  PACKAGE_AWB_RETRIEVED_FAILED: 'package_AWB_retreived_failed',
+};
+
+export const knownShippingCompanies = ['aramex', 'bosta', 'vhubs'];
+
+export const otherShippingCompanies = 'other';

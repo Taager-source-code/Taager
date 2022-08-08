@@ -1,0 +1,27 @@
+<nb-accordion>
+  <nb-accordion-item expanded [nbSpinner]="loadingCategoriesList || loadingPreSelectedCategories" nbSpinnerSize="giant" nbSpinnerStatus="primary">
+    <nb-accordion-item-header class="accordion-header">
+      Commercial Category {{ cardIndex }}
+    </nb-accordion-item-header>
+    <nb-accordion-item-body>
+      <div class="card-top-section">
+        <p class="card-top-section__warning-text">Choose at least 1 level</p>
+        <button *ngIf="shouldShowDeleteButton" nbButton ghost class="card-top-section__delete-button" (click)="onDeleteButtonClicked()">
+          <nb-icon class="card-top-section__delete-button-icon" icon="red-trash-icon" pack="taager-icons"></nb-icon>
+          <p class="card-top-section__delete-button-text">Delete category {{ cardIndex }}</p>
+        </button>
+      </div>
+      <form [formGroup]="commercialCategoryFormGroup" *ngIf="!loadingPreSelectedCategories">
+        <ng-container *ngFor="let categoryDropdown of categoryDropdowns let idx = index">
+          <label class="dropdown-label">{{ idx + 1 | i18nPlural: mapping}}</label>
+          <nb-select class="dropdown-input" fullWidth [formControlName]="categoryDropdown.formControlName" (selectedChange)="onCategorySelected($event, idx)">
+            <nb-option [value]="null">All</nb-option>
+            <nb-option *ngFor="let category of categoryDropdown.categoryList" [value]="category.id" >
+              {{ category.name.arabicName }}
+            </nb-option>
+          </nb-select>
+        </ng-container>
+      </form>
+    </nb-accordion-item-body>
+  </nb-accordion-item>
+</nb-accordion>

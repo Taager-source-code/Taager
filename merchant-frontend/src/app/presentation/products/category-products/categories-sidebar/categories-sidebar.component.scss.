@@ -1,0 +1,62 @@
+@import "common.scss";
+
+:host {
+  a:hover {
+    opacity: 0.7;
+    text-decoration: none;
+  }
+  .categories-sidebar-container {
+    .categories-sidebar {
+      padding: 20px 0 20px 0;
+      border-radius: 10px;
+      border: solid 1px $border-color-medium-gray;
+      .sidebar-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: $secondary-color;
+        padding-right: 20px;
+        margin-bottom: 20px;
+      }
+      .level-container {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px 10px 0;
+        &--selected {
+          background-color: $fill-selected-category-side-bar;
+          .custom-chevron {
+            color: $primary-color;
+          }
+          .level-button {
+            color: $primary-color;
+          }
+        }
+      }
+      .level-button {
+        border: none;
+        background: transparent;
+        font-size: 18px;
+        cursor: pointer;
+        color: $secondary-color;
+        &:focus {
+          outline: none;
+        }
+      }
+      .level-three-text {
+        color: $dark-gray;
+        margin: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        &--selected {
+          color: $primary-color;
+        }
+      }
+      .custom-chevron {
+        font-size: 14px;
+        margin-left: 7px;
+        color: #000000;
+      }
+    }
+  }
+}
+
+

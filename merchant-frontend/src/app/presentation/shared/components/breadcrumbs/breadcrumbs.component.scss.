@@ -1,0 +1,29 @@
+@import "common.scss";
+
+.breadcrumbs-container {
+  font-size: 16px;
+  font-weight: 500;
+  color: $secondary-color;
+
+  i {
+    font-size: 14px;
+    padding-bottom: 4px;
+  }
+
+  .breadcrumb-category {
+    cursor: pointer;
+    color: $secondary-color;
+    padding: em-calc(4px 8px);
+  }
+
+  .last-category {
+    color: $dark-gray;
+    pointer-events: none;
+  }
+
+  .breadcrumb-category:hover {
+    opacity: 0.7;
+  }
+}
+
+

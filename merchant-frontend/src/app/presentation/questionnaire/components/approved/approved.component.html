@@ -1,0 +1,47 @@
+<div class="approved-screen">
+
+  <section class="congrats">
+
+    <img
+
+      class="congrats-img"
+
+      src="assets/img/questionnaire/confetti.jpeg"
+
+      alt="confetti"
+
+    />
+
+    <p class="congrats-text">تهانينا، الآن تقدر تبيع في السعودية!</p>
+
+  </section>
+
+  <section class="website-changes">
+
+    <p class="website-changes-title">ما تغيّر في الموقع؟</p>
+
+    <div class="website-changes-content">
+
+      <div *ngFor="let section of changesSection" class="website-changes-content-item">
+
+        <img
+
+          class="website-changes-content-item-img"
+
+          src="assets/img/questionnaire/{{ section.img }}"
+
+          alt="section.img"
+
+        />
+
+        <p class="website-changes-content-item-text">{{ section.text }}</p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <button (click)="onBackToTaagerClick()">العودة الى موقع تاجر</button>
+
+</div>

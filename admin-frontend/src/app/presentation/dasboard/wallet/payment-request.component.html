@@ -1,0 +1,92 @@
+<h4 class="text-center">طلب صرف</h4>
+<div mat-dialog-content>
+  <mat-form-field *ngIf="newRequest">
+    <input
+      matInput
+      type="text"
+      (focusout)="onTaagerIdChange()"
+      placeholder="Tager ID"
+      [(ngModel)]="TagerID"
+      required
+    />
+  </mat-form-field>
+  <mat-form-field *ngIf="newRequest">
+    <input
+      disabled="true"
+      matInput
+      type="text"
+      placeholder="Username"
+      [(ngModel)]="Username"
+      required
+    />
+  </mat-form-field>
+  <mat-form-field>
+    <input
+      matInput
+      [disabled]="changeStatus"
+      type="number"
+      placeholder="المبلغ"
+      [(ngModel)]="amount"
+      required
+    />
+  </mat-form-field>
+  <mat-form-field *ngIf="currencyFilterFeatureEnabled">
+    <mat-label>Select Currency</mat-label>
+    <mat-select [(ngModel)]="selectedCurrency">
+      <mat-option *ngFor="let item of currencyList" [value]="item">{{
+        item
+      }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select
+      [disabled]="changeStatus"
+      [(ngModel)]="paymentWay"
+      placeholder="طريقه الدفع"
+    >
+      <mat-option value="vodafone_cash">فودافون كاش</mat-option>
+      <mat-option *ngIf="maxAmount > 3000" value="bank_transfer"
+        >تحويل بنكي</mat-option
+      >
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <input
+      matInput
+      [disabled]="changeStatus"
+      type="text"
+      placeholder="رقم الموبايل"
+      [(ngModel)]="phoneNum"
+      required
+      text
+    />
+  </mat-form-field>
+  <mat-form-field *ngIf="changeStatus || newRequest">
+    <mat-select [(ngModel)]="status" placeholder="status">
+      <mat-option value="received">received</mat-option>
+      <mat-option value="inprogress">inprogress</mat-option>
+      <mat-option value="successful">successful</mat-option>
+      <mat-option value="rejected">rejected</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="status == 'rejected'">
+    <textarea
+      matInput
+      type="text"
+      placeholder="سبب الرفض"
+      [(ngModel)]="rejectReason"
+      required
+      text
+    ></textarea>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button
+    type="button"
+    class="btn btn-success"
+    [disabled]="clicked"
+    (click)="onSubmit()"
+  >
+    إرسال
+  </button>
+</div>

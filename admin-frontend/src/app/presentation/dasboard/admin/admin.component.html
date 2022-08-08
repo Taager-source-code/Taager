@@ -1,0 +1,2988 @@
+<div class="profile-section">
+  <div class="container">
+    <div>
+      <ngx-spinner
+        bdColor="rgba(0, 0, 0, 0.8)"
+        size="large"
+        color="#fff"
+        type="timer"
+        [fullScreen]="true"
+        ><p style="color: white">Loading...</p></ngx-spinner
+      >
+      <div class="row">
+        <div class="left col-lg-3">
+          <!-- <div class="photo-left">
+            <img [src]='profilePicture' class="photo" />
+          </div> -->
+          <h4 class="name text-center">{{ firstName }} {{ lastName }}</h4>
+          <div class="email-and-phonenumber" *ngIf="!isLoading">
+            <span
+              class="email-and-phonenumber__email"
+              [ngClass]="{ error: !email }"
+            >
+              {{ email }}
+            </span>
+            <span class="email-and-phonenumber__phone-number text-center">{{
+              phoneNumber
+            }}</span>
+          </div>
+          <div class="username text-center">{{ userLevel }}</div>
+          <div *ngIf="isDevEnv" class="dev-banner text-center">
+            This is Development Environment
+          </div>
+          <div class="buttons-wrapper">
+            <button
+              *ngIf="userPrivileges.admin || userPrivileges.viewAndEditCategory"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="openFeaturedDialog()"
+            >
+              Edit Taager Recommendations
+            </button>
+            <button
+              *ngIf="userPrivileges.admin"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="openAnnounceDialog()"
+            >
+              Add Announcement
+            </button>
+            <button
+              *ngIf="
+                userPrivileges.admin &&
+                userRole === 'superAdmin' &&
+                isUserFeatureButtonVisible
+              "
+              type="button"
+              class="btn btn-outline-info"
+              (click)="openUserFeatureDialog()"
+            >
+              Add user Feature
+            </button>
+            <button
+              *ngIf="userPrivileges.admin"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="openNotificationDialog()"
+            >
+              Add Notification
+            </button>
+            <button
+              *ngIf="userPrivileges.admin || userPrivileges.editOrders"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="openExportOrderDialog()"
+            >
+              Extract Orders by Status
+            </button>
+            <button
+              *ngIf="
+                userPrivileges.admin ||
+                userPrivileges.editOrders ||
+                userPrivileges.viewUsers
+              "
+              type="button"
+              class="btn btn-outline-info"
+              (click)="onExtractUsers()"
+            >
+              Extract Users
+            </button>
+            <!--  <button *ngIf="userPrivileges.admin" type="button" class="btn btn-outline-info" (click)="onRecalculateProfit()">Recalculate Profit</button> -->
+            <button
+              *ngIf="userPrivileges.admin || userPrivileges.editOrders"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="onBulkUpload()"
+            >
+              Shipping Bulk Upload
+            </button>
+            <button
+              *ngIf="userPrivileges.admin || userPrivileges.editOrders"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="onBulkUploadTracking()"
+            >
+              Bulk Upload Tracking IDs
+            </button>
+            <button
+              *ngIf="userPrivileges.admin || userPrivileges.editOrders"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="onChildBulkUpload()"
+            >
+              Child Shipping Bulk Upload
+            </button>
+            <button
+              *ngIf="userPrivileges.admin"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="migrateUserRolesAndPrivileges()"
+            >
+              Migrate user roles and privileges
+            </button>
+            <button
+              *ngIf="userPrivileges.admin"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="openCreateSurveyDialog()"
+            >
+              Create new survey
+            </button>
+            <button
+              *ngIf="userRole === 'operations' || userRole === 'superAdmin'"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="openGeneratePickListDialog()"
+            >
+              Generate pick list
+            </button>
+            <button
+              *ngIf="isOmPortalButtonVisible"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="goToOrderAutomation()"
+            >
+              Order Automation
+            </button>
+            <a
+              *ngIf="isCmsPortalButtonVisible"
+              type="button"
+              class="btn btn-outline-info"
+              (click)="goToCMS()"
+            >
+              CMS portal
+            </a>
+
+            <!-- <button type="button" class="btn btn-outline-info" (click)="onMigrateLoyaltyPrograms()">Migrate Loyalty Programs</button> -->
+            <!--            <button type="button" class="btn btn-outline-info" (click)="calculateProductsOrderCounts()">Generate porducts order counts</button>-->
+            <!--            <button type="button" class="btn btn-outline-info" (click)="onExtractOrders()">Extract Orders</button>-->
+            <!--            <button type="button" class="btn btn-outline-info" (click)="onExtractPendingOrders()">Extract Pending-->
+            <!--              Orders</button>-->
+          </div>
+        </div>
+        <div class="right col-lg-9">
+          <div class="row">
+            <div class="col-lg-4">
+              <div class="title-wrap">
+                <div class="items-on-page admin-filter d-flex">
+                  <div class="btn-group" dropdown>
+                    <button
+                      id="button-animated"
+                      dropdownToggle
+                      type="button"
+                      class="btn btn-primary dropdown-toggle"
+                      aria-controls="dropdown-animated"
+                    >
+                      <span class="items-number">{{ maxItemPerPage }}</span>
+                      <span class="caret"></span>
+                    </button>
+                    <ul
+                      id="dropdown-animated"
+                      *dropdownMenu
+                      class="dropdown-menu"
+                      role="menu"
+                      aria-labelledby="button-animated"
+                    >
+                      <li
+                        role="menuitem"
+                        class="dropdown-item"
+                        (click)="changeItemsOnPage(5)"
+                      >
+                        5
+                      </li>
+                      <li
+                        role="menuitem"
+                        class="dropdown-item"
+                        (click)="changeItemsOnPage(10)"
+                      >
+                        10
+                      </li>
+                      <li
+                        role="menuitem"
+                        class="dropdown-item"
+                        (click)="changeItemsOnPage(15)"
+                      >
+                        15
+                      </li>
+                      <li
+                        role="menuitem"
+                        class="dropdown-item"
+                        (click)="changeItemsOnPage(25)"
+                      >
+                        25
+                      </li>
+                      <li
+                        role="menuitem"
+                        class="dropdown-item"
+                        (click)="changeItemsOnPage(50)"
+                      >
+                        50
+                      </li>
+                      <li
+                        role="menuitem"
+                        class="dropdown-item"
+                        (click)="changeItemsOnPage(100)"
+                      >
+                        100
+                      </li>
+                      <li
+                        role="menuitem"
+                        class="dropdown-item"
+                        (click)="changeItemsOnPage(200)"
+                      >
+                        200
+                      </li>
+                    </ul>
+                    <span class="items-text">Ø§Ø®ØªØ± Ø§Ù„Ø¹Ø¯Ø¯ ÙÙŠ ÙƒÙ„ ØµÙØ­Ø©</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-8">
+              <div
+                class="orter-status-search"
+                *ngIf="
+                  selectedIndex === 0 ||
+                  selectedIndex === 1 ||
+                  selectedIndex === 2 ||
+                  selectedIndex === 3 ||
+                  selectedIndex === 4 ||
+                  selectedIndex === 5 ||
+                  selectedIndex === 6 ||
+                  selectedIndex === 7 ||
+                  selectedIndex === 8 ||
+                  selectedIndex === 9 ||
+                  selectedIndex === 10 ||
+                  selectedIndex === 11 ||
+                  selectedIndex === 12 ||
+                  selectedIndex === 13
+                "
+              >
+                <div class="row row-inner">
+                  <div class="col-lg-12" *ngIf="selectedIndex === 10">
+                    <form [formGroup]="orderIssuesFilter">
+                      <div class="filter-field col-lg-4">
+                        <app-country-dropdown
+                          (selectedCountry)="
+                            getSelectedCountry($event, orderIssuesFilter);
+                            searchOrderIssues(orderIssuesFilter)
+                          "
+                          [filterUse]="'true'"
+                        >
+                        </app-country-dropdown>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="taggerId"
+                            placeholder="Enter Tager Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="orderId"
+                            placeholder="Order Id"
+                          />
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-5">
+                        <mat-form-field>
+                          <mat-label>Issue Status</mat-label>
+                          <mat-select formControlName="issueStatus">
+                            <mat-option>Select Issue Status</mat-option>
+                            <mat-option [value]="'received'"
+                              >Received</mat-option
+                            >
+                            <mat-option [value]="'accepted'"
+                              >Accepted</mat-option
+                            >
+                            <mat-option [value]="'rejected'"
+                              >Rejected</mat-option
+                            >
+                            <mat-option [value]="'merchant_cancelled'"
+                              >Merchant cancelled</mat-option
+                            >
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-5">
+                        <mat-form-field>
+                          <mat-label>Issue Type</mat-label>
+                          <mat-select formControlName="issueType">
+                            <mat-option>Select Issue Type</mat-option>
+                            <mat-option [value]="1">Refund</mat-option>
+                            <mat-option [value]="2">Repalcement</mat-option>
+                            <mat-option [value]="3">Addition</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-3">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchOrderIssues(orderIssuesFilter)"
+                        >
+                          Search
+                        </button>
+                        <button
+                          mat-raised-button
+                          (click)="clearIssuesFilterButton()"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="col-lg-12" *ngIf="selectedIndex === 4">
+                    <form [formGroup]="userSearchFilter">
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="phoneNum"
+                            placeholder="Enter Phone No"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="email"
+                            placeholder="Enter Email"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="taggerId"
+                            placeholder="Enter tagger Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchUser(userSearchFilter)"
+                        >
+                          Search
+                        </button>
+                        <button mat-raised-button (click)="clearUserFilter()">
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="col-lg-12" *ngIf="selectedIndex === 11">
+                    <form [formGroup]="adminUserSearchFilter">
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <mat-label>Role</mat-label>
+                          <mat-select formControlName="role">
+                            <mat-option>---Select a Role---</mat-option>
+                            <mat-option value="unAssignedRole"
+                              >unAssigned Role</mat-option
+                            >
+                            <mat-option
+                              *ngFor="let role of roles"
+                              [value]="role._id"
+                            >
+                              {{ role.role }}
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="phoneNum"
+                            placeholder="Enter Phone No"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="email"
+                            placeholder="Enter Email"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="taggerId"
+                            placeholder="Enter tagger Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchAdminUser(adminUserSearchFilter)"
+                        >
+                          Search
+                        </button>
+                        <button
+                          mat-raised-button
+                          (click)="clearAdminUserFilter()"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="col-lg-12" *ngIf="selectedIndex === 12">
+                    <form [formGroup]="childOrderFilter">
+                      <div class="filter-field col-lg-4">
+                        <app-country-dropdown
+                          (selectedCountry)="
+                            getSelectedCountry($event, childOrderFilter);
+                            searchChildOrder(childOrderFilter)
+                          "
+                          [filterUse]="'true'"
+                        >
+                        </app-country-dropdown>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="orderID"
+                            placeholder="Order Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-5">
+                        <mat-form-field>
+                          <mat-label>Status</mat-label>
+                          <mat-select formControlName="status">
+                            <mat-option>Select Status</mat-option>
+                            <mat-option [value]="'refund_request_accepted'"
+                              >Refund Request Accepted</mat-option
+                            >
+                            <mat-option [value]="'replacement_request_accepted'"
+                              >Replacement Request Accepted</mat-option
+                            >
+                            <mat-option
+                              [value]="'order_addition_request_approved'"
+                              >Addition Request Approved</mat-option
+                            >
+                            <mat-option [value]="'pending_shipping_company'"
+                              >Pending Shipping Company</mat-option
+                            >
+                            <mat-option [value]="'delivery_in_progress'"
+                              >Delivery In Progress</mat-option
+                            >
+                            <mat-option [value]="'delivered'"
+                              >Delivered</mat-option
+                            >
+                            <mat-option [value]="'item_received_in_inventory'"
+                              >Item Received In Inventory</mat-option
+                            >
+                            <mat-option [value]="'r'">All Refund's</mat-option>
+                            <mat-option [value]="'m'"
+                              >All Replacement's</mat-option
+                            >
+                            <mat-option [value]="'s'"
+                              >All Addition's</mat-option
+                            >
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <mat-label>Zone</mat-label>
+                          <mat-select formControlName="zone">
+                            <mat-option>Select Zone</mat-option>
+                            <mat-option [value]="'red'">Red</mat-option>
+                            <mat-option [value]="'green'">Green</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-5">
+                        <mat-form-field>
+                          <mat-label>Shipping Status</mat-label>
+                          <mat-select formControlName="shippingCompanyStatus">
+                            <mat-option
+                              >Select Shipping Company Status</mat-option
+                            >
+                            <mat-option
+                              *ngFor="let status of shippingCompanyStatuses"
+                              [value]="status"
+                              >{{ status }}
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field class="input">
+                          <input
+                            matInput
+                            formControlName="fromDate"
+                            (dateInput)="OnChildOrdersFromDateChange($event)"
+                            (dateChange)="
+                              OnChildOrdersFromDateChange($event.value)
+                            "
+                            [matDatepicker]="fromPicker"
+                            placeholder="From"
+                          />
+                          <mat-datepicker-toggle
+                            matSuffix
+                            [for]="fromPicker"
+                          ></mat-datepicker-toggle>
+                          <mat-datepicker
+                            #fromPicker
+                            (dateInput)="OnChildOrdersFromDateChange($event)"
+                          ></mat-datepicker>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field class="input">
+                          <input
+                            matInput
+                            formControlName="toDate"
+                            (dateInput)="OnChildOrdersToDateChange($event)"
+                            (dateChange)="
+                              OnChildOrdersToDateChange($event.value)
+                            "
+                            [matDatepicker]="toPicker"
+                            placeholder="To"
+                          />
+                          <mat-datepicker-toggle
+                            matSuffix
+                            [for]="toPicker"
+                          ></mat-datepicker-toggle>
+                          <mat-datepicker
+                            #toPicker
+                            (dateInput)="OnChildOrdersToDateChange($event)"
+                          ></mat-datepicker>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-3">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchChildOrder(childOrderFilter)"
+                        >
+                          Search
+                        </button>
+                        <button
+                          mat-raised-button
+                          (click)="clearChildOrderFilter()"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="col-lg-12" *ngIf="selectedIndex === 9">
+                    <form [formGroup]="provinceSearchFilter">
+                      <div class="filter-field col-lg-4">
+                        <app-country-dropdown
+                          (selectedCountry)="
+                            getSelectedCountry($event, provinceSearchFilter);
+                            viewProvinces($event)
+                          "
+                          [filterUse]="'true'"
+                        >
+                        </app-country-dropdown>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <button mat-raised-button color="primary">
+                          Search
+                        </button>
+                        <button
+                          mat-raised-button
+                          (click)="clearProvinceFilter()"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="col-lg-12" *ngIf="selectedIndex === 3">
+                    <form [formGroup]="deliveredOrderFilter">
+                      <div class="filter-field col-lg-4">
+                        <app-country-dropdown
+                          (selectedCountry)="
+                            getSelectedCountry($event, deliveredOrderFilter);
+                            searchDeliveredOrder(deliveredOrderFilter)
+                          "
+                          [filterUse]="'true'"
+                        >
+                        </app-country-dropdown>
+                      </div>
+                      <div class="filter-field col-lg-4">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchDeliveredOrder(deliveredOrderFilter)"
+                        >
+                          Search
+                        </button>
+                        <button
+                          mat-raised-button
+                          (click)="clearDeliveredOrders()"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <mat-accordion
+                    class="mat-accordion"
+                    *ngIf="selectedIndex === 1"
+                  >
+                    <mat-expansion-panel
+                      class="mat-expansion-panel"
+                      (opened)="panelOpenState = true"
+                      (closed)="panelOpenState = false"
+                    >
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          Filter by using advanced criteria
+                        </mat-panel-title>
+                      </mat-expansion-panel-header>
+
+                      <div class="col-lg-16">
+                        <form [formGroup]="orderSearchFilter">
+                          <div class="filter-field col-lg-4">
+                            <app-country-dropdown
+                              (selectedCountry)="
+                                getSelectedCountry($event, orderSearchFilter);
+                                searchOrder(orderSearchFilter)
+                              "
+                              [filterUse]="'true'"
+                            >
+                            </app-country-dropdown>
+                          </div>
+                          <div
+                            class="filter-field"
+                            [ngClass]="{
+                              'col-lg-3':
+                                userRole === 'orderConfirmationsTeamLeader' ||
+                                userRole === 'ksaConfirmationsMember' ||
+                                userRole === 'superAdmin',
+                              'col-lg-5': !(
+                                userRole === 'orderConfirmationsTeamLeader' ||
+                                userRole === 'ksaConfirmationsMember' ||
+                                userRole === 'superAdmin'
+                              )
+                            }"
+                          >
+                            <mat-form-field>
+                              <mat-label>Order Status</mat-label>
+                              <mat-select formControlName="status">
+                                <mat-option>Select Order Status</mat-option>
+                                <mat-option
+                                  [value]="'confirmed'"
+                                  *ngIf="!(userRole === 'returnAndRefunds')"
+                                  >Confirmed</mat-option
+                                >
+                                <mat-option
+                                  [value]="'pending_shipping_company'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Pending Shipping Company</mat-option
+                                >
+                                <mat-option
+                                  [value]="'delayed'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Delayed</mat-option
+                                >
+                                <mat-option
+                                  [value]="'delivery_in_progress'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Delivery In Progress</mat-option
+                                >
+                                <mat-option
+                                  [value]="'customer_refused'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Customer Refused</mat-option
+                                >
+                                <mat-option
+                                  [value]="'delivered'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Delivered</mat-option
+                                >
+                                <mat-option
+                                  [value]="'delivery_suspended'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Delivery Suspended</mat-option
+                                >
+                                <mat-option
+                                  [value]="'return_in_progress'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Return In Progress</mat-option
+                                >
+                                <mat-option
+                                  [value]="'return_verified'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Return Verified</mat-option
+                                >
+                                <mat-option
+                                  [value]="'order_verified'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Order Verified</mat-option
+                                >
+                                <mat-option
+                                  [value]="'suspended'"
+                                  *ngIf="!(userRole === 'returnAndRefunds')"
+                                  >Suspended</mat-option
+                                >
+                                <mat-option
+                                  [value]="'taager_cancelled'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Taager Cancelled</mat-option
+                                >
+                                <mat-option
+                                  [value]="'customer_rejected'"
+                                  *ngIf="!(userRole === 'returnAndRefunds')"
+                                  >Rejected</mat-option
+                                >
+                                <mat-option
+                                  [value]="'order_received'"
+                                  *ngIf="!(userRole === 'returnAndRefunds')"
+                                  >Order Received</mat-option
+                                >
+                                <mat-option
+                                  [value]="'cancel'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember' ||
+                                      userRole === 'returnAndRefunds'
+                                    )
+                                  "
+                                  >Cancel</mat-option
+                                >
+                                <mat-option
+                                  [value]="'refund_in_progress'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember'
+                                    )
+                                  "
+                                  >Refund In Progress</mat-option
+                                >
+                                <mat-option
+                                  [value]="'refund_verified'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember'
+                                    )
+                                  "
+                                  >Refund Verified</mat-option
+                                >
+                                <mat-option
+                                  [value]="'replacement_in_progress'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember'
+                                    )
+                                  "
+                                  >Replacement In Progress</mat-option
+                                >
+                                <mat-option
+                                  [value]="'replacement_verified'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember'
+                                    )
+                                  "
+                                  >Replacement Verified</mat-option
+                                >
+                                <mat-option
+                                  [value]="'order_addition_inprogress'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember'
+                                    )
+                                  "
+                                  >Order Addition In Progress</mat-option
+                                >
+                                <mat-option
+                                  [value]="'order_addition'"
+                                  *ngIf="
+                                    !(
+                                      userRole ===
+                                        'orderConfirmationsTeamMember' ||
+                                      userRole ===
+                                        'orderConfirmationsTeamLeader' ||
+                                      userRole === 'ksaConfirmationsMember'
+                                    )
+                                  "
+                                  >Order Addition Verified</mat-option
+                                >
+                              </mat-select>
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field col-lg-3"
+                            *ngIf="
+                              userRole === 'orderConfirmationsTeamLeader' ||
+                              userRole === 'ksaConfirmationsMember' ||
+                              userRole === 'superAdmin'
+                            "
+                          >
+                            <mat-form-field>
+                              <mat-label>Order Source</mat-label>
+                              <mat-select formControlName="orderSource">
+                                <mat-option>Select Order Source</mat-option>
+                                <mat-option
+                                  *ngFor="let option of orderSourceOptions"
+                                  [value]="option.value"
+                                >
+                                  {{ option.label }}
+                                </mat-option>
+                              </mat-select>
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field"
+                            [ngClass]="{
+                              'col-lg-3':
+                                userRole === 'orderConfirmationsTeamLeader' ||
+                                userRole === 'ksaConfirmationsMember' ||
+                                userRole === 'superAdmin',
+                              'col-lg-5': !(
+                                userRole === 'orderConfirmationsTeamLeader' ||
+                                userRole === 'ksaConfirmationsMember' ||
+                                userRole === 'superAdmin'
+                              )
+                            }"
+                            *ngIf="!(userRole === 'returnAndRefunds')"
+                          >
+                            <mat-form-field>
+                              <input
+                                matInput
+                                formControlName="phoneNum"
+                                placeholder="Phone No"
+                              />
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field col-lg-5"
+                            *ngIf="!(userRole === 'returnAndRefunds')"
+                          >
+                            <mat-form-field>
+                              <mat-label>Failed Attempts</mat-label>
+                              <mat-select formControlName="failedAttemptsCount">
+                                <mat-option>Select Failed Attempts</mat-option>
+                                <mat-option [value]="'0'">0</mat-option>
+                                <mat-option [value]="'1'">1</mat-option>
+                                <mat-option [value]="'2'">2</mat-option>
+                                <mat-option [value]="'3'">3</mat-option>
+                                <mat-option [value]="'4'">4</mat-option>
+                                <mat-option [value]="'5'">5</mat-option>
+                              </mat-select>
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field col-lg-5"
+                            *ngIf="!(userRole === 'returnAndRefunds')"
+                          >
+                            <mat-form-field>
+                              <mat-label>Duplicate/Mergeable Orders</mat-label>
+                              <mat-select
+                                formControlName="duplicateOrMergeable"
+                              >
+                                <mat-option
+                                  >Select Duplicate/Mergeable Orders</mat-option
+                                >
+                                <mat-option [value]="'duplicateOrders'"
+                                  >Duplicate</mat-option
+                                >
+                                <mat-option [value]="'mergeableOrders'"
+                                  >Mergeable</mat-option
+                                >
+                              </mat-select>
+                            </mat-form-field>
+                          </div>
+
+                          <div class="filter-field col-lg-3">
+                            <mat-form-field>
+                              <input
+                                matInput
+                                formControlName="orderId"
+                                placeholder="Order Id"
+                              />
+                            </mat-form-field>
+                          </div>
+
+                          <div class="filter-field col-lg-3">
+                            <mat-form-field>
+                              <input
+                                matInput
+                                formControlName="taggerId"
+                                placeholder="Tagger Id"
+                              />
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field col-lg-3"
+                            *ngIf="!(userRole === 'returnAndRefunds')"
+                          >
+                            <mat-form-field>
+                              <mat-label>Province</mat-label>
+                              <mat-select formControlName="province">
+                                <mat-option>---Select a Province---</mat-option>
+                                <ng-container
+                                  *ngIf="
+                                    userCountry === 'EGY';
+                                    else otherProvinces
+                                  "
+                                >
+                                  <mat-optgroup
+                                    *ngFor="let province of provinceGroups"
+                                    [label]="province.name"
+                                    [disabled]="province.disabled"
+                                  >
+                                    <mat-option
+                                      *ngFor="let province of province.province"
+                                      [value]="province.value"
+                                    >
+                                      {{ province.viewValue }}
+                                    </mat-option>
+                                  </mat-optgroup>
+                                </ng-container>
+                                <ng-template #otherProvinces>
+                                  <mat-option
+                                    *ngFor="let province of provinceGroups"
+                                    [value]="province.location"
+                                  >
+                                    {{ province.location }}
+                                  </mat-option>
+                                </ng-template>
+                              </mat-select>
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field col-lg-3"
+                            *ngIf="!(userRole === 'returnAndRefunds')"
+                          >
+                            <mat-form-field>
+                              <mat-label>Assigned to</mat-label>
+                              <mat-select formControlName="assignedAdmin">
+                                <mat-option
+                                  >---Select an assignedAdmin---</mat-option
+                                >
+                                <mat-option [value]="'unAssignedToOrders'"
+                                  >Un-Assigned Orders</mat-option
+                                >
+                                <mat-option
+                                  *ngFor="let admin of confirmationAdmins"
+                                  [value]="admin"
+                                >
+                                  {{ admin.name }}
+                                </mat-option>
+                              </mat-select>
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field col-lg-3"
+                            *ngIf="!(userRole === 'returnAndRefunds')"
+                          >
+                            <mat-form-field class="input">
+                              <input
+                                matInput
+                                formControlName="fromDate"
+                                (dateInput)="OnFromDateChange($event)"
+                                (dateChange)="OnFromDateChange($event.value)"
+                                [matDatepicker]="fromPicker"
+                                placeholder="Assigned date From"
+                              />
+                              <mat-datepicker-toggle
+                                matSuffix
+                                [for]="fromPicker"
+                              ></mat-datepicker-toggle>
+                              <mat-datepicker
+                                #fromPicker
+                                (dateInput)="OnFromDateChange($event)"
+                              ></mat-datepicker>
+                            </mat-form-field>
+                          </div>
+
+                          <div
+                            class="filter-field col-lg-3"
+                            *ngIf="!(userRole === 'returnAndRefunds')"
+                          >
+                            <mat-form-field class="input">
+                              <input
+                                matInput
+                                formControlName="toDate"
+                                (dateInput)="OnToDateChange($event)"
+                                (dateChange)="OnToDateChange($event.value)"
+                                [matDatepicker]="toPicker"
+                                placeholder="Assigned Date To"
+                              />
+                              <mat-datepicker-toggle
+                                matSuffix
+                                [for]="toPicker"
+                              ></mat-datepicker-toggle>
+                              <mat-datepicker
+                                #toPicker
+                                (dateInput)="OnToDateChange($event)"
+                              ></mat-datepicker>
+                            </mat-form-field>
+                          </div>
+
+                          <div class="filter-field col-lg-12">
+                            <button
+                              mat-raised-button
+                              color="primary"
+                              (click)="searchOrder(orderSearchFilter)"
+                            >
+                              Search
+                            </button>
+                            <button mat-raised-button (click)="clearFilter()">
+                              Clear
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </mat-expansion-panel>
+                  </mat-accordion>
+
+                  <div class="col-lg-16" *ngIf="selectedIndex === 0">
+                    <form [formGroup]="orderSearchFilter">
+                      <div class="filter-field col-lg-4">
+                        <app-country-dropdown
+                          (selectedCountry)="
+                            getSelectedCountry($event, orderSearchFilter);
+                            searchOrder(orderSearchFilter)
+                          "
+                          [filterUse]="'true'"
+                        >
+                        </app-country-dropdown>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <mat-label>Failed Attempts</mat-label>
+                          <mat-select formControlName="failedAttemptsCount">
+                            <mat-option>Select Failed Attempts</mat-option>
+                            <mat-option [value]="'0'">0</mat-option>
+                            <mat-option [value]="'1'">1</mat-option>
+                            <mat-option [value]="'2'">2</mat-option>
+                            <mat-option [value]="'3'">3</mat-option>
+                            <mat-option [value]="'4'">4</mat-option>
+                            <mat-option [value]="'5'">5</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <mat-label>Duplicate/Mergeable Orders</mat-label>
+                          <mat-select formControlName="duplicateOrMergeable">
+                            <mat-option
+                              >Select Duplicate/Mergeable Orders</mat-option
+                            >
+                            <mat-option [value]="'duplicateOrders'"
+                              >Duplicate</mat-option
+                            >
+                            <mat-option [value]="'mergeableOrders'"
+                              >Mergeable</mat-option
+                            >
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <mat-label>Province</mat-label>
+                          <mat-select formControlName="province">
+                            <mat-option>---Select a Province---</mat-option>
+                            <ng-container
+                              *ngIf="userCountry === 'EGY'; else otherProvinces"
+                            >
+                              <mat-optgroup
+                                *ngFor="let province of provinceGroups"
+                                [label]="province.name"
+                                [disabled]="province.disabled"
+                              >
+                                <mat-option
+                                  *ngFor="let province of province.province"
+                                  [value]="province.value"
+                                >
+                                  {{ province.viewValue }}
+                                </mat-option>
+                              </mat-optgroup>
+                            </ng-container>
+                            <ng-template #otherProvinces>
+                              <mat-option
+                                *ngFor="let province of provinceGroups"
+                                [value]="province.location"
+                              >
+                                {{ province.location }}
+                              </mat-option>
+                            </ng-template>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <mat-label>Order Status</mat-label>
+                          <mat-select formControlName="status">
+                            <mat-option>Select Order Status</mat-option>
+                            <mat-option [value]="'confirmed'"
+                              >Confirmed</mat-option
+                            >
+                            <mat-option
+                              [value]="'pending_shipping_company'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Pending Shipping Company</mat-option
+                            >
+                            <mat-option
+                              [value]="'delivery_in_progress'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Delivery In Progress</mat-option
+                            >
+                            <mat-option
+                              [value]="'customer_refused'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Customer Refused</mat-option
+                            >
+                            <mat-option
+                              [value]="'delivered'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Delivered</mat-option
+                            >
+                            <mat-option
+                              [value]="'delivery_suspended'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Delivery Suspended</mat-option
+                            >
+                            <mat-option
+                              [value]="'return_in_progress'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Return In Progress</mat-option
+                            >
+                            <mat-option
+                              [value]="'return_verified'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Return Verified</mat-option
+                            >
+                            <mat-option
+                              [value]="'order_verified'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Order Verified</mat-option
+                            >
+                            <mat-option [value]="'suspended'"
+                              >Suspended</mat-option
+                            >
+                            <mat-option
+                              [value]="'taager_cancelled'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Taager Cancelled</mat-option
+                            >
+                            <mat-option [value]="'customer_rejected'"
+                              >Rejected</mat-option
+                            >
+                            <mat-option [value]="'order_received'"
+                              >Order Received</mat-option
+                            >
+                            <mat-option
+                              [value]="'cancel'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Cancel</mat-option
+                            >
+                            <mat-option
+                              [value]="'refund_in_progress'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Refund In Progress</mat-option
+                            >
+                            <mat-option
+                              [value]="'refund_verified'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Refund Verified</mat-option
+                            >
+                            <mat-option
+                              [value]="'replacement_in_progress'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Replacement In Progress</mat-option
+                            >
+                            <mat-option
+                              [value]="'replacement_verified'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Replacement Verified</mat-option
+                            >
+                            <mat-option
+                              [value]="'order_addition_inprogress'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Order Addition In Progress</mat-option
+                            >
+                            <mat-option
+                              [value]="'order_addition'"
+                              *ngIf="
+                                !(
+                                  userRole === 'orderConfirmationsTeamMember' ||
+                                  userRole === 'orderConfirmationsTeamLeader' ||
+                                  userRole === 'ksaConfirmationsMember'
+                                )
+                              "
+                              >Order Addition Verified</mat-option
+                            >
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="phoneNum"
+                            placeholder="Phone No"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-2">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="orderId"
+                            placeholder="Order Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div
+                        class="filter-field col-lg-3"
+                        *ngIf="
+                          userRole === 'orderConfirmationsTeamMember' ||
+                          userRole === 'superAdmin'
+                        "
+                      >
+                        <mat-form-field>
+                          <mat-label>Order Source</mat-label>
+                          <mat-select formControlName="orderSource">
+                            <mat-option>Select Order Source</mat-option>
+                            <mat-option
+                              *ngFor="let option of orderSourceOptions"
+                              [value]="option.value"
+                            >
+                              {{ option.label }}
+                            </mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-2">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="taggerId"
+                            placeholder="Tagger Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-1">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchOrder(orderSearchFilter)"
+                        >
+                          Search
+                        </button>
+                        <button mat-raised-button (click)="clearFilter()">
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div
+                    class="col-lg-12"
+                    *ngIf="
+                      selectedIndex === 2 ||
+                      selectedIndex === 5 ||
+                      selectedIndex === 6 ||
+                      selectedIndex === 7
+                    "
+                  >
+                    <form [formGroup]="orderMessageSearchFilter">
+                      <div class="filter-field col-lg-4">
+                        <app-country-dropdown
+                          (selectedCountry)="
+                            getSelectedCountry(
+                              $event,
+                              orderMessageSearchFilter
+                            );
+                            searchOrderMessage(orderMessageSearchFilter)
+                          "
+                          [filterUse]="'true'"
+                        >
+                        </app-country-dropdown>
+                      </div>
+                      <div class="filter-field col-lg-4">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="orderId"
+                            placeholder="Enter order Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-4">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="taggerId"
+                            placeholder="Enter tagger Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-4">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchOrderMessage(orderMessageSearchFilter)"
+                        >
+                          Search
+                        </button>
+                        <button mat-raised-button (click)="clearFilterMsg()">
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div class="col-lg-12" *ngIf="selectedIndex === 8">
+                    <form [formGroup]="requestedPaymentsSearchFilter">
+                      <div
+                        *ngIf="currencyFilterFeatureEnabled"
+                        class="filter-field col-lg-3"
+                      >
+                        <mat-form-field class="full-width">
+                          <mat-label>Select Currency</mat-label>
+                          <mat-select formControlName="currency">
+                            <mat-option value="">All Currencies</mat-option>
+                            <mat-option
+                              *ngFor="let item of currencyList"
+                              [value]="item"
+                              >{{ item }}</mat-option
+                            >
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+
+                      <div
+                        *ngIf="currencyFilterFeatureEnabled"
+                        class="filter-field col-lg-3"
+                      >
+                        <mat-form-field>
+                          <mat-label>Status</mat-label>
+                          <mat-select multiple formControlName="status">
+                            <mat-option [value]="'pending'">Pending</mat-option>
+                            <mat-option [value]="'accepted'"
+                              >Accepted</mat-option
+                            >
+                            <mat-option [value]="'in-progress'"
+                              >In Progress</mat-option
+                            >
+                            <mat-option [value]="'rejected'"
+                              >Rejected</mat-option
+                            >
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div
+                        *ngIf="!currencyFilterFeatureEnabled"
+                        class="filter-field col-lg-3"
+                      >
+                        <mat-form-field>
+                          <mat-label>Status</mat-label>
+                          <mat-select formControlName="status">
+                            <mat-option>Select Status</mat-option>
+                            <mat-option [value]="'received'"
+                              >received</mat-option
+                            >
+                            <mat-option [value]="'successful'"
+                              >successful</mat-option
+                            >
+                            <mat-option [value]="'rejected'"
+                              >rejected</mat-option
+                            >
+                            <mat-option [value]="'inprogress'"
+                              >inprogress</mat-option
+                            >
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field class="input">
+                          <input
+                            matInput
+                            formControlName="fromDate"
+                            (dateInput)="
+                              OnRequestedPaymentsFromDateChange($event)
+                            "
+                            (dateChange)="
+                              OnRequestedPaymentsFromDateChange($event.value)
+                            "
+                            [matDatepicker]="fromPicker"
+                            placeholder="From"
+                          />
+                          <mat-datepicker-toggle
+                            matSuffix
+                            [for]="fromPicker"
+                          ></mat-datepicker-toggle>
+                          <mat-datepicker
+                            #fromPicker
+                            (dateInput)="
+                              OnRequestedPaymentsFromDateChange($event)
+                            "
+                          ></mat-datepicker>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field class="input">
+                          <input
+                            matInput
+                            formControlName="toDate"
+                            (dateInput)="
+                              OnRequestedPaymentsToDateChange($event)
+                            "
+                            (dateChange)="
+                              OnRequestedPaymentsToDateChange($event.value)
+                            "
+                            [matDatepicker]="toPicker"
+                            placeholder="To"
+                          />
+                          <mat-datepicker-toggle
+                            matSuffix
+                            [for]="toPicker"
+                          ></mat-datepicker-toggle>
+                          <mat-datepicker
+                            #toPicker
+                            (dateInput)="
+                              OnRequestedPaymentsToDateChange($event)
+                            "
+                          ></mat-datepicker>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="taagerId"
+                            placeholder="Enter taager Id"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-12">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="
+                            searchRequestedPayments(
+                              requestedPaymentsSearchFilter
+                            )
+                          "
+                        >
+                          Search
+                        </button>
+                        <button
+                          mat-raised-button
+                          (click)="clearRequestedPaymentsFilter()"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div class="col-lg-12" *ngIf="selectedIndex === 13">
+                    <form [formGroup]="SurveysSearchFilter">
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="surveyId"
+                            placeholder="Survey ID"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <input
+                            matInput
+                            formControlName="name"
+                            placeholder="Survey Name"
+                          />
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <mat-form-field>
+                          <mat-label>Status</mat-label>
+                          <mat-select formControlName="isEnabled">
+                            <mat-option>Select Survey Status</mat-option>
+                            <mat-option [value]="true">Enabled</mat-option>
+                            <mat-option [value]="false">Disabled</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      </div>
+                      <div class="filter-field col-lg-3">
+                        <button
+                          mat-raised-button
+                          color="primary"
+                          (click)="searchSurveys(SurveysSearchFilter)"
+                        >
+                          Search
+                        </button>
+                        <button
+                          mat-raised-button
+                          class="mt-1"
+                          (click)="clearSurveyFilter()"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="parent-table">
+            <mat-tab-group
+              (selectedTabChange)="onTabChanged($event)"
+              [selectedIndex]="selectedIndex"
+            >
+              <mat-tab
+                label="Assigned Orders"
+                [disabled]="
+                  !(userPrivileges.admin || userPrivileges.confirmOrders)
+                "
+              >
+                <ng-template mat-tab-label *ngIf="assignedOrdersCount"
+                  >(<span class="assignedOrdersCount">{{
+                    assignedOrdersCount
+                  }}</span
+                  >)Assigned Orders</ng-template
+                >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Order Status</th>
+                      <th scope="col">Order Created Date</th>
+                      <th scope="col">Preferred Delivery Date</th>
+                      <th scope="col">Order Notes</th>
+                      <th scope="col">Tagger Status</th>
+                      <th scope="col">Failed Counter</th>
+                      <th scope="col">Failed Notes</th>
+                      <th scope="col">Client Name</th>
+                      <th scope="col">Action</th>
+                      <th scope="col">Potential Duplicate Orders</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let order of assignedOrdersList; let i = index">
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.status }}</td>
+                      <th scope="row">{{ order.createdAt }}</th>
+                      <td>
+                        {{
+                          order.preferredDeliveryDate
+                            ? momentObj(order.preferredDeliveryDate).format(
+                                "dddd, MMMM Do YYYY"
+                              )
+                            : "--"
+                        }}
+                      </td>
+                      <th scope="row">{{ order.notes }}</th>
+                      <th scope="row">
+                        {{
+                          order.TagerID && taggerCounts[order.TagerID] >= 5
+                            ? "Not Important"
+                            : "Important"
+                        }}
+                      </th>
+                      <th scope="row">
+                        {{
+                          order.failedAttemptsCount >= 0
+                            ? order.failedAttemptsCount
+                            : " "
+                        }}
+                      </th>
+                      <th scope="row">
+                        {{
+                          order.failedAttemptNote
+                            ? order.failedAttemptNote
+                            : " "
+                        }}
+                      </th>
+                      <th>
+                        {{ order.receiverName ? order.receiverName : " " }}
+                      </th>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="
+                            verifyOrder || (changeStatus && !order.selected)
+                          "
+                          (click)="changeOrderStatus(order)"
+                        >
+                          Change Status
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="
+                            (changeStatus && !order.selected) || clicked
+                          "
+                          (click)="verifiedOrder(order)"
+                          *ngIf="
+                            (userPrivileges.admin ||
+                              userPrivileges.verifyOrder) &&
+                            (order.status == 'cancel' ||
+                              order.status == 'customer_refused' ||
+                              order.status == 'taager_cancelled' ||
+                              order.status == 'delivered' ||
+                              order.status == 'return_verified' ||
+                              order.status == 'replacement_verified' ||
+                              order.status == 'refund_verified')
+                          "
+                        >
+                          Verified Order
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="changeOrderProductPrice(order)"
+                          *ngIf="
+                            order.status == 'order_received' ||
+                            order.status == 'confirmed' ||
+                            order.status == 'pending_shipping_company' ||
+                            order.status == 'delivery_in_progress' ||
+                            order.status == 'delivery_suspended' ||
+                            order.status == 'suspended'
+                          "
+                        >
+                          Edit prices
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="revertOrderStatus(order)"
+                          *ngIf="
+                            userPrivileges.admin &&
+                            userRole !== 'ksaConfirmationsMember' &&
+                            order.status != 'order_received'
+                          "
+                        >
+                          Revert status
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [ngClass]="{
+                            danger: order.hasAdminNote
+                          }"
+                          (click)="openAdminChatModel(order)"
+                        >
+                          Notes
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          *ngIf="
+                            (userPrivileges.admin ||
+                              userPrivileges.assignOrders ||
+                              userPrivileges.confirmOrders) &&
+                            order.duplicateOrders?.length > 0
+                          "
+                          class="btn btn-outline-info danger"
+                          (click)="duplicateOrderDialog(order)"
+                        >
+                          View client history
+                        </button>
+
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onTrackOrder(order)"
+                        >
+                          Track Order Activity
+                        </button>
+
+                        <button
+                          type="button"
+                          *ngIf="
+                            (userPrivileges.admin ||
+                              userPrivileges.assignOrders ||
+                              userPrivileges.confirmOrders) &&
+                            order.mergeableOrders?.length > 1
+                          "
+                          class="btn btn-outline-info danger"
+                          (click)="mergeableOrderDialog(order)"
+                        >
+                          View mergeable orders
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="viewOrderIssue(order)"
+                          *ngIf="order.hasIssue !== undefined"
+                        >
+                          View Order Issue
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab
+                [disabled]="
+                  !(
+                    userPrivileges.admin ||
+                    userPrivileges.editOrders ||
+                    userPrivileges.assignOrders
+                  )
+                "
+                label="Change Orders Status"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">
+                        <mat-checkbox
+                          (click)="selectAllOrders()"
+                          [(ngModel)]="isChecked"
+                        ></mat-checkbox>
+                      </th>
+                      <th scope="col">ID</th>
+                      <th scope="col">Order Status</th>
+                      <th scope="col">Order Created Date</th>
+                      <th scope="col">Preferred Delivery Date</th>
+                      <th scope="col">Order Notes</th>
+                      <th scope="col">Failed Counter</th>
+                      <th scope="col">Failed Notes</th>
+                      <th scope="col">Assigned to</th>
+                      <th scope="col">Action</th>
+                      <th scope="col">Potential Duplicate Orders</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let order of orderStatusList; let i = index">
+                      <td>
+                        <mat-checkbox
+                          [(ngModel)]="order.checked"
+                          (change)="selectedOrdersValue($event, order)"
+                          [value]="order._id"
+                        ></mat-checkbox>
+                      </td>
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.status }}</td>
+                      <th scope="row">{{ order.createdAt }}</th>
+                      <td>
+                        {{
+                          order.preferredDeliveryDate
+                            ? momentObj(order.preferredDeliveryDate).format(
+                                "dddd, MMMM Do YYYY"
+                              )
+                            : "--"
+                        }}
+                      </td>
+                      <th scope="row">{{ order.notes ? order.notes : " " }}</th>
+                      <th scope="row">
+                        {{
+                          order.failedAttemptsCount >= 0
+                            ? order.failedAttemptsCount
+                            : " "
+                        }}
+                      </th>
+                      <th scope="row">
+                        {{
+                          order.failedAttemptNote
+                            ? order.failedAttemptNote
+                            : " "
+                        }}
+                      </th>
+                      <th scope="row">
+                        {{
+                          order.assignedAdmin ? order.assignedAdmin.name : " "
+                        }}
+                      </th>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="
+                            verifyOrder || (changeStatus && !order.selected)
+                          "
+                          (click)="changeOrderStatus(order)"
+                        >
+                          Change Status
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="
+                            (changeStatus && !order.selected) || clicked
+                          "
+                          (click)="verifiedOrder(order)"
+                          *ngIf="
+                            (userPrivileges.admin ||
+                              userPrivileges.verifyOrder) &&
+                            (order.status == 'cancel' ||
+                              order.status == 'customer_refused' ||
+                              order.status == 'taager_cancelled' ||
+                              order.status == 'delivered' ||
+                              order.status == 'return_verified' ||
+                              order.status == 'replacement_verified' ||
+                              order.status == 'refund_verified')
+                          "
+                        >
+                          Verified Order
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="changeOrderProductPrice(order)"
+                          *ngIf="
+                            order.status == 'order_received' ||
+                            order.status == 'confirmed' ||
+                            order.status == 'pending_shipping_company' ||
+                            order.status == 'delivery_in_progress' ||
+                            order.status == 'delivery_suspended' ||
+                            order.status == 'suspended'
+                          "
+                        >
+                          Edit prices
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="revertOrderStatus(order)"
+                          *ngIf="
+                            userPrivileges.admin &&
+                            userRole !== 'ksaConfirmationsMember' &&
+                            order.status != 'order_received'
+                          "
+                        >
+                          Revert status
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [ngClass]="{
+                            danger: order.hasAdminNote
+                          }"
+                          (click)="openAdminChatModel(order)"
+                        >
+                          Notes
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          *ngIf="
+                            (userPrivileges.admin ||
+                              userPrivileges.assignOrders ||
+                              userPrivileges.confirmOrders) &&
+                            order.duplicateOrders?.length > 0
+                          "
+                          class="btn btn-outline-info danger"
+                          (click)="duplicateOrderDialog(order)"
+                        >
+                          View client history
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onTrackOrder(order)"
+                        >
+                          Track Order Activity
+                        </button>
+                        <button
+                          *ngIf="
+                            (userPrivileges.admin ||
+                              userPrivileges.assignOrders) &&
+                            userRole !== 'ksaConfirmationsMember'
+                          "
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="openAssignOrdersDialog(order)"
+                        >
+                          Assign Orders
+                        </button>
+                        <button
+                          type="button"
+                          *ngIf="
+                            (userPrivileges.admin ||
+                              userPrivileges.assignOrders ||
+                              userPrivileges.confirmOrders) &&
+                            order.mergeableOrders?.length > 1
+                          "
+                          class="btn btn-outline-info danger"
+                          (click)="mergeableOrderDialog(order)"
+                        >
+                          View mergeable orders
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="viewOrderIssue(order)"
+                          *ngIf="order.hasIssue !== undefined"
+                        >
+                          View Order Issue
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab
+                [disabled]="
+                  !(userPrivileges.admin || userPrivileges.verifyOrder)
+                "
+                label="Verified Orders"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Taager ID</th>
+                      <th scope="col">Order Status</th>
+                      <th scope="col">Verified</th>
+                      <!-- <th scope="col">Action</th> -->
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let order of orderStatusList; let i = index">
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.TagerID }}</td>
+                      <td>{{ order.status }}</td>
+                      <td>{{ order.isOrderVerified }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          *ngIf="userPrivileges.admin || order.isOrderVerified"
+                          class="btn btn-outline-info"
+                          [disabled]="clicked"
+                          (click)="unVerifyOrder(order)"
+                        >
+                          Unverify Order
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab label="Bosta Delivered Orders">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Order Status</th>
+                      <th scope="col">Shipment Status</th>
+                      <th scope="col">Tracking Id</th>
+                      <th scope="col">Order Created Date</th>
+                      <th scope="col">Preferred Delivery Date</th>
+                      <th scope="col">Taager ID</th>
+                      <th scope="col">Client Name</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      *ngFor="let order of deliveredOrdersList; let i = index"
+                    >
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.status }}</td>
+                      <td>{{ order.shipmentStatus }}</td>
+                      <td>{{ order.shippingInfo.trackingNumber }}</td>
+                      <td>{{ order.createdAt }}</td>
+                      <td>
+                        {{
+                          order.preferredDeliveryDate
+                            ? momentObj(order.preferredDeliveryDate).format(
+                                "dddd, MMMM Do YYYY"
+                              )
+                            : "--"
+                        }}
+                      </td>
+                      <td>{{ order.TagerID }}</td>
+                      <td>{{ order.receiverName }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="clicked"
+                          (click)="changeBostaOrderStatus(order, 'delivered')"
+                        >
+                          Delivered
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="clicked"
+                          (click)="
+                            changeBostaOrderStatus(order, 'return_in_progress')
+                          "
+                        >
+                          Returned
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab
+                [disabled]="!(userPrivileges.admin || userPrivileges.viewUsers)"
+                label="Users"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">First Name</th>
+                      <th scope="col">Last Name</th>
+                      <th scope="col">Username</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Phone Number</th>
+                      <!-- <th scope="col">Redeemable Profit</th>
+                      <th scope="col">Total Profit</th>
+                      <th scope="col">Collected Profit</th> -->
+                      <th scope="col"></th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let user of users">
+                      <th scope="row">{{ user.TagerID }}</th>
+                      <td>{{ user.firstName }}</td>
+                      <td>{{ user.lastName }}</td>
+                      <td>{{ user.username }}</td>
+                      <td>{{ user.email }}</td>
+                      <td>{{ user.phoneNum }}</td>
+                      <!-- <td>{{user.eligibleProfit}}</td>
+                      <td>{{user.totalProfit}}</td>
+                      <td>{{user.collectedProfit}}</td> -->
+                      <!--  <td>
+                        <button type="button" class="btn btn-outline-info" (click)="onDeleteUser(user.username)"> Delete
+                          User </button>
+                      </td> -->
+                      <td>
+                        <button
+                          *ngIf="userRole === 'superAdmin'"
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onEditUserRole(user)"
+                        >
+                          Edit User Role
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onViewProfile(user._id)"
+                        >
+                          View Profile
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab
+                [disabled]="
+                  !(userPrivileges.admin || userPrivileges.viewOrders)
+                "
+                label="All Orders"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Taager ID</th>
+                      <th scope="col">Seller Name</th>
+                      <th scope="col">Receiver Name</th>
+                      <th scope="col">Phone Number</th>
+                      <th scope="col">Product Code</th>
+                      <th scope="col">Order Time</th>
+                      <th scope="col">Preferred Delivery Date</th>
+                      <th scope="col">Province</th>
+                      <th scope="col">Street</th>
+                      <th scope="col">Notes</th>
+                      <th scope="col">Order Price</th>
+                      <th scope="col">Product Quantity</th>
+                      <th scope="col">Order Profit</th>
+                      <th scope="col">Cash on Delivery</th>
+                      <th scope="col">Courrier</th>
+                      <th scope="col">Tracking Id</th>
+                      <th scope="col">Order Message</th>
+                      <th scope="col">Potential Duplicate Orders</th>
+                      <th scope="col">Create Order Issue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let order of allOrders">
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.status }}</td>
+                      <td>{{ order.TagerID }}</td>
+                      <td>{{ order.orderedByName }}</td>
+                      <td>{{ order.receiverName }}</td>
+                      <td>{{ order.phoneNumber }}</td>
+                      <td>{{ order.pid }}</td>
+                      <td>{{ order.createdAt }}</td>
+                      <td>
+                        {{
+                          order.preferredDeliveryDate
+                            ? momentObj(order.preferredDeliveryDate).format(
+                                "dddd, MMMM Do YYYY"
+                              )
+                            : "--"
+                        }}
+                      </td>
+                      <td>{{ order.province }}</td>
+                      <td>{{ order.streetName }}</td>
+                      <td>{{ order.notes }}</td>
+                      <td>{{ order.productPrices }}</td>
+                      <td>{{ order.productQuantities }}</td>
+                      <td>{{ order.orderProfit }}</td>
+                      <td>{{ order.cashOnDelivery }}</td>
+                      <td scope="row">
+                        {{
+                          order.shippingInfo ? order.shippingInfo.company : ""
+                        }}
+                      </td>
+                      <td scope="row">
+                        {{
+                          order.shippingInfo
+                            ? order.shippingInfo.trackingNumber
+                            : ""
+                        }}
+                      </td>
+                      <td class="action-btn">
+                        <span
+                          *ngIf="
+                            userPrivileges.admin ||
+                            userPrivileges.viewAndEditMessages
+                          "
+                          [ngClass]="{
+                            'active-msg':
+                              order.isAdminRead === false ? true : false
+                          }"
+                          class="material-icons"
+                          (click)="openChatModel(order)"
+                        >
+                          chat_bubble_outline
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onTrackOrder(order)"
+                        >
+                          Track Order Activity
+                        </button>
+                      </td>
+                      <td>
+                        <app-create-order-issues
+                          *ngIf="
+                            !order.hasIssue &&
+                            (order.status === 'delivered' ||
+                              order.status === 'replacement_verified' ||
+                              order.status === 'order_addition')
+                          "
+                          [order]="order"
+                          (orderIssueCreated)="onOrderIssueCreated(order)"
+                        >
+                        </app-create-order-issues>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <!-- <mat-tab label="Pending Requests">
+                <table class="table table-striped">
+                  <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Rejection Reason</th>
+                    <th scope="col">Requester Name</th>
+                    <th scope="col">Request Amount</th>
+                    <th scope="col">Request Time</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let request of pendingRequests">
+                    <th scope="row" >{{request._id}}</th>
+                    <td>{{request.status}}</td>
+                    <td>{{request.message}}</td>
+                    <td>{{request.requesterName}}</td>
+                    <td>{{request.requestedAmount}}</td>
+                    <td>{{request.createdAt}}</td>
+                    <td>
+                      <button type="button" class="btn btn-outline-info" (click)="onAcceptRequest(request._id,'inProgress')" >Process Request</button>
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-outline-info" (click)="onRejectRequest(request._id)">Reject</button>
+                    </td>
+
+                  </tr>
+
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab label="In-Progress Requests">
+                <table class="table table-striped">
+                  <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Rejection Reason</th>
+                    <th scope="col">Requester Name</th>
+                    <th scope="col">Request Amount</th>
+                    <th scope="col">Request Time</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let request of inProgRequests">
+                    <th scope="row">{{request._id}}</th>
+                    <td>{{request.status}}</td>
+                    <td>{{request.message}}</td>
+                    <td>{{request.requesterName}}</td>
+                    <td>{{request.requestedAmount}}</td>
+                    <td>{{request.createdAt}}</td>
+                    <td>
+                      <button type="button" class="btn btn-outline-info"
+                              (click)="onAcceptRequest(request._id,'inProgress')">Process Request
+                      </button>
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-outline-info" (click)="onRejectRequest(request._id)">Reject
+                      </button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </mat-tab> -->
+              <mat-tab
+                [disabled]="
+                  !(userPrivileges.admin || userPrivileges.viewAndEditMessages)
+                "
+                label="Order Messages"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Tager ID</th>
+                      <th scope="col">Receiver Name</th>
+                      <th scope="col">Phone Number</th>
+                      <th scope="col">Product Code</th>
+                      <th scope="col">Message Time</th>
+                      <th scope="col">Order Profit</th>
+                      <th scope="col">Order Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let order of allOrdersWithMessages">
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.orderStatus }}</td>
+                      <td>{{ order.TagerID }}</td>
+                      <td>{{ order.receiverName }}</td>
+                      <td>{{ order.phoneNumber }}</td>
+                      <td>{{ order.pid }}</td>
+                      <td>{{ order.createdAt }}</td>
+                      <td>{{ order.orderProfit }}</td>
+                      <td class="action-btn">
+                        <span
+                          *ngIf="
+                            userPrivileges.admin ||
+                            userPrivileges.viewAndEditMessages
+                          "
+                          [ngClass]="{
+                            'active-msg':
+                              order.isAdminRead === false ? true : false
+                          }"
+                          class="material-icons"
+                          (click)="openChatModel(order)"
+                        >
+                          chat_bubble_outline
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <app-no-record-found
+                  *ngIf="
+                    !allOrdersWithMessages && !loading && selectedIndex === 9
+                  "
+                >
+                </app-no-record-found>
+              </mat-tab>
+              <mat-tab
+                [disabled]="
+                  !(userPrivileges.admin || userPrivileges.viewAndEditMessages)
+                "
+                label="Order Unread Messages"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Tager ID</th>
+                      <th scope="col">Receiver Name</th>
+                      <th scope="col">Phone Number</th>
+                      <th scope="col">Product Code</th>
+                      <th scope="col">Order Time</th>
+                      <th scope="col">Order Profit</th>
+                      <th scope="col">Order Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let order of allOrdersWithUnreadMessages">
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.status }}</td>
+                      <td>{{ order.TagerID }}</td>
+                      <td>{{ order.receiverName }}</td>
+                      <td>{{ order.phoneNumber }}</td>
+                      <td>{{ order.pid }}</td>
+                      <td>{{ order.createdAt }}</td>
+                      <td>{{ order.orderProfit }}</td>
+                      <td class="action-btn">
+                        <span
+                          *ngIf="
+                            userPrivileges.admin ||
+                            userPrivileges.viewAndEditMessages
+                          "
+                          [ngClass]="{
+                            'active-msg':
+                              order.isAdminRead === false ? true : false
+                          }"
+                          class="material-icons"
+                          (click)="openChatModel(order)"
+                        >
+                          chat_bubble_outline
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab
+                [disabled]="
+                  !(userRole === 'superAdmin' || userRole === 'wallet')
+                "
+                label="Requested Payments"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">Tager Id</th>
+                      <th scope="col">User Name</th>
+                      <th scope="col">Amount</th>
+                      <th scope="col">Currency</th>
+                      <th scope="col">Payment Way</th>
+                      <th scope="col">Phone Number</th>
+                      <th scope="col">Date</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="openAddPaymentDialog()"
+                          [disabled]="userRole !== 'wallet'"
+                        >
+                          Add Payment Request
+                        </button>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let payRequest of paymentRequests">
+                      <td>{{ payRequest.userId.TagerID }}</td>
+                      <td>{{ payRequest.userId.firstName }}</td>
+                      <td>{{ payRequest.amount }}</td>
+                      <td>{{ payRequest.currency }}</td>
+                      <td>{{ payRequest.paymentWay }}</td>
+                      <td>{{ payRequest.phoneNum }}</td>
+                      <td>{{ payRequest.createdAt }}</td>
+                      <td>{{ payRequest.status }}</td>
+                      <td>
+                        <button
+                          *ngIf="payRequest.status != 'rejected'"
+                          type="button"
+                          (click)="openPaymentDialog(payRequest._id)"
+                          class="btn btn-outline-info"
+                          [disabled]="userRole !== 'wallet'"
+                        >
+                          Change Request Status
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab
+                [disabled]="
+                  !(userPrivileges.admin || userPrivileges.viewAndEditProvinces)
+                "
+                label="Provinces"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">Location</th>
+                      <th scope="col">Branch</th>
+                      <th scope="col">Shipping Revenue</th>
+                      <th scope="col">Shipping Cost</th>
+                      <th scope="col">Minimum ETA</th>
+                      <th scope="col">Maximum ETA</th>
+                      <th scope="col">isActive</th>
+                      <th scope="col">
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="openAddProvinceDialog()"
+                        >
+                          Add Province
+                        </button>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let province of provinces">
+                      <td>{{ province.location }}</td>
+                      <td>{{ province.branch }}</td>
+                      <td>{{ province.shippingRevenue }}</td>
+                      <td>{{ province.shippingCost }}</td>
+                      <td>{{ province.minETA }}</td>
+                      <td>{{ province.maxETA }}</td>
+                      <td>{{ province.isActive }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="openProvinceDialog(province._id)"
+                        >
+                          Edit Province
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab label="Order Issues">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">Tager Id</th>
+                      <th scope="col">Order Id</th>
+                      <th scope="col">Issue Type</th>
+                      <th scope="col">Product Id</th>
+                      <th scope="col">Quantity</th>
+                      <th scope="col">Date</th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let issue of orderIssues">
+                      <td>{{ issue.user.TagerId }}</td>
+                      <td>{{ issue.order.OrderId }}</td>
+                      <td>{{ getIssueType(issue.issueType) }}</td>
+                      <td>{{ issue.product.productId }}</td>
+                      <td>{{ issue.product.productQty }}</td>
+                      <td>{{ issue.createdAt }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="openOrderIssueDialog(issue)"
+                        >
+                          View Order
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onTrackOrder(issue.order)"
+                        >
+                          Track Order Activity
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab
+                [disabled]="userRole !== 'superAdmin'"
+                label="Admin Users"
+              >
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">First Name</th>
+                      <th scope="col">Last Name</th>
+                      <th scope="col">Username</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Phone Number</th>
+                      <th scope="col">Join Date</th>
+                      <th scope="col">Role</th>
+                      <th scope="col">Privileges</th>
+                      <th scope="col"></th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let user of adminUsers">
+                      <th scope="row">{{ user.TagerID }}</th>
+                      <td>{{ user.firstName }}</td>
+                      <td>{{ user.lastName }}</td>
+                      <td>{{ user.username }}</td>
+                      <td>{{ user.email }}</td>
+                      <td>{{ user.phoneNum }}</td>
+                      <td>{{ user.createdAt }}</td>
+                      <td>
+                        {{
+                          user.userRole?.role ? user.userRole.role : "No role"
+                        }}
+                      </td>
+                      <td>
+                        {{
+                          user.userRole?.privileges
+                            ? user.userRole.privileges.join(", ")
+                            : "No privileges"
+                        }}
+                      </td>
+                      <td>
+                        <button
+                          *ngIf="userRole === 'superAdmin'"
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onEditUserRole(user)"
+                        >
+                          Edit User Role
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-danger"
+                          (click)="onDeactivateUser(user._id)"
+                        >
+                          Deactivate
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab [disabled]="!userPrivileges.admin" label="Child Orders">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">
+                        <mat-checkbox
+                          (click)="selectAllChildOrders()"
+                          [(ngModel)]="isChildOrderChecked"
+                          *ngIf="
+                            showSelectButtonsOnStatus(
+                              filterChildOrderObj.status
+                            )
+                          "
+                        ></mat-checkbox>
+                      </th>
+                      <th scope="col">ID</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Created Date</th>
+                      <th scope="col">Action</th>
+                      <th scope="col">
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onSendOrdersToBosta()"
+                          *ngIf="
+                            showSelectButtonsOnStatus(
+                              filterChildOrderObj.status
+                            ) && selectedChildOrders.length
+                          "
+                        >
+                          Send To Bosta
+                        </button>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let order of allChildOrders; let i = index">
+                      <td>
+                        <mat-checkbox
+                          [(ngModel)]="order.checked"
+                          (change)="selectedChildOrdersValue($event, order)"
+                          [value]="order._id"
+                          *ngIf="
+                            showSelectButtonsOnStatus(
+                              filterChildOrderObj.status
+                            )
+                          "
+                        ></mat-checkbox>
+                      </td>
+                      <th scope="row">{{ order.orderID }}</th>
+                      <td>{{ order.status }}</td>
+                      <th scope="row">{{ order.createdAt }}</th>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="changeChildOrderStatus(order)"
+                          [disabled]="
+                            isVerifyChildOrder ||
+                            (changeStatus && !order.selected)
+                          "
+                        >
+                          Change Status
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="
+                            (isChangeChildOrderStatus && !order.selected) ||
+                            clicked
+                          "
+                          (click)="verifyChildOrder(order)"
+                          *ngIf="
+                            order.orderID.startsWith('R') &&
+                            !order.isOrderVerified &&
+                            order.status === 'item_received_in_inventory' &&
+                            order.itemReceivedDate
+                          "
+                        >
+                          Transfer Compelete
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          [disabled]="
+                            (isChangeChildOrderStatus && !order.selected) ||
+                            clicked
+                          "
+                          (click)="receiveItemChildOrder(order)"
+                          *ngIf="
+                            (order.orderID.startsWith('R') ||
+                              order.orderID.startsWith('M')) &&
+                            !(
+                              order.orderID.startsWith('R') &&
+                              order.isOrderVerified
+                            ) &&
+                            order.status === 'item_received_in_inventory' &&
+                            !order.itemReceivedDate
+                          "
+                        >
+                          Item Received
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+              <mat-tab [disabled]="!userPrivileges.admin" label="Surveys">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Survey Question</th>
+                      <th scope="col">Survey Name</th>
+                      <th scope="col">Survey Status</th>
+                      <th scope="col">Creation Date</th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let survey of surveys">
+                      <th scope="row" style="text-align: center">
+                        {{ survey.surveyId }}
+                      </th>
+                      <td>{{ survey.question }}</td>
+                      <td>{{ survey.name }}</td>
+                      <td>{{ survey.isEnabled ? "Enabled" : "Disabled" }}</td>
+                      <td>{{ survey.createdAt }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-outline-info"
+                          (click)="onEditSurvey(survey)"
+                        >
+                          Edit survey
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </mat-tab>
+            </mat-tab-group>
+          </div>
+
+          <div class="row justify-content-center paginate">
+            <div *ngIf="showPagination" class="col-xs-6">
+              <div class="pagination-wrapper">
+                <pagination
+                  [boundaryLinks]="showBoundaryLinks"
+                  [totalItems]="noOfItems"
+                  [(ngModel)]="currentPage"
+                  [itemsPerPage]="maxItemPerPage"
+                  [maxSize]="maxPageSize"
+                  (pageChanged)="pageChanged($event)"
+                  previousText=" "
+                  nextText=" "
+                >
+                </pagination>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="loading" class="row mt-5 loader-holder">
+          <loader
+            [loading]="loading"
+            size="md"
+            alt="loading"
+            id="loading"
+          ></loader>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

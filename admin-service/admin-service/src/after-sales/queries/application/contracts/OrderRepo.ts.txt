@@ -1,0 +1,9 @@
+import Order from '../models/Order';
+import { OrdersQuery } from '../../OrdersQuery';
+import GetOrdersQueryResult from '../models/GetOrdersQueryResult';
+
+export default interface OrderRepo {
+  getById(orderId: string): Promise<Order | null>;
+
+  getOrders(orderQuery: OrdersQuery): Promise<GetOrdersQueryResult>;
+}

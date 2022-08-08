@@ -1,0 +1,25 @@
+import { Schema } from 'joi';
+import { Request } from 'express';
+
+export abstract class HttpProcessor {
+  public abstract schema: Schema;
+
+  getValueToValidate(req: Request): any {
+    return req.body;
+  }
+
+  abstract execute(req: any, joiValue: any): Promise<HttpSuccess | HttpError>;
+}
+export interface HttpSuccess {
+  status: any;
+  data?: any;
+}
+
+export interface HttpError {
+  status: any;
+  errorCode: string;
+  description: string;
+  message?: string;
+}
+
+

@@ -1,0 +1,5 @@
+export const designatedUserLevel = Object.freeze({
+  MERCHANT_USER: 1,
+  SUPER_USER: 2,
+  ADMIN_USER: 3,
+});

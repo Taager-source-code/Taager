@@ -1,0 +1,77 @@
+import _ from 'lodash';
+import { isObject, isArray } from '../../../../authentication/commands/infrastructure/utils/validations';
+
+/**
+ * Abstract class cacher
+ *
+ * @class Cacher
+ */
+
+abstract class Cacher {
+  protected opts: any;
+  /**
+   * Creates an instance of Cacher.
+   * @param {object} opts
+   */
+  protected constructor(opts) {
+    this.opts = _.defaultsDeep(opts, {
+      ttl: null, // time to live
+    });
+  }
+
+  /**
+   * Get a cached content by key
+   */
+  abstract get(key);
+
+  /**
+   * Set a content by key to cache
+   */
+  abstract set(key, data, ttl);
+
+  /**
+   * Delete a content by key from cache
+   */
+  abstract del(Keys: any);
+
+  /**
+   * Clears complete cache
+   */
+  abstract clear();
+
+  /**
+   * Close cacher
+   */
+  abstract close();
+
+  /**
+   * return items in cache
+   */
+  abstract itemCount();
+
+  /**
+   * Cache Key generator
+   * @param {Object} obj
+   */
+  KeyGenerator(obj) {
+    if (isArray(obj)) {
+      return `[${obj.map(obj => this.KeyGenerator(obj)).join('|')}]`;
+    }
+    if (obj instanceof Date && !Number.isNaN(obj.getTime())) {
+      return obj.valueOf();
+    }
+    if (isObject(obj)) {
+      return Object.keys(obj)
+        .map(key => [key, this.KeyGenerator(obj[key])].join('|'))
+        .join('|');
+    }
+    if (obj != null) {
+      return obj.toString();
+    }
+    return 'null';
+  }
+}
+
+export = Cacher;
+
+

@@ -1,0 +1,13 @@
+import express from 'express';
+import isAuthenticated from '../middlewares/auth';
+import { registerGet } from '../common/http/HttpHandler';
+
+import { GetOrderController } from '../after-sales/queries/infrastructure/controllers/GetOrderController';
+import { GetOrdersController } from '../after-sales/queries/infrastructure/controllers/GetOrdersController';
+
+const router = express.Router();
+
+registerGet('/orders/:id', GetOrderController, router, isAuthenticated);
+registerGet('/orders', GetOrdersController, router, isAuthenticated);
+
+export = router;

@@ -1,0 +1,217 @@
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import User from '../../src/models/user.model';
+import Notification from '../../src/models/notification.model';
+import request from 'supertest';
+
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+import * as expressServer from '../expressServer/expressServer';
+import MigrationExecutor from '../../src/migrations/migrationExecutor';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import { MERCHANT_1 } from '../fixtures/users/merchantFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import { FORBIDDEN } from 'http-status';
+
+async function assertNotificationDatabaseState(expectedNotifications: Array<any>) {
+  const notifications = await Notification.find({}).lean();
+  expect(notifications).toMatchObject(expectedNotifications);
+  expect(notifications).toHaveLength(expectedNotifications.length);
+}
+
+describe('/api/notifications', () => {
+  let app: any = null;
+  let accessToken: string;
+  let adminUserId: string;
+
+  async function createUsers() {
+    const user = await User.create(ADMIN_1);
+    await User.create(MERCHANT_1);
+    adminUserId = user._id;
+    await UserRoles.create({ role: 'admin' });
+  }
+
+  async function login(app: any) {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  }
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    const mongoUrl = `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`;
+    await mongooseConnector.connectToMongoDB(mongoUrl);
+
+    await new MigrationExecutor().migrateAll();
+
+    app = expressServer.setupServer();
+  });
+
+  beforeEach(async () => {
+    await createUsers();
+  });
+
+  afterEach(async () => {
+    await User.remove({});
+    await Notification.remove({});
+  });
+
+  describe('POST /notification', () => {
+    test('all mandatory fields of private notification sent should return 200', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      const createNotificationResponse = await request(app)
+        .post('/api/notifications')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          message: 'Message for you',
+          taagerId: MERCHANT_1.TagerID,
+          link: 'www.taager.com/message',
+        });
+
+      //Assert
+      expect(createNotificationResponse.statusCode).toEqual(200);
+      expect(createNotificationResponse.body.msg).toEqual('Notification created!');
+
+      await assertNotificationDatabaseState([
+        {
+          message: 'Message for you',
+          taagerId: MERCHANT_1.TagerID,
+          type: 'personal',
+          link: 'www.taager.com/message',
+          country: 'EGY',
+        },
+      ]);
+    });
+
+    test('all mandatory fields of bulk notification sent should return 200', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      const createNotificationResponse = await request(app)
+        .post('/api/notifications')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          message: 'Message for you',
+          link: 'www.taager.com/message',
+        });
+
+      //Assert
+      expect(createNotificationResponse.statusCode).toEqual(200);
+      expect(createNotificationResponse.body.msg).toEqual('Notification created!');
+
+      await assertNotificationDatabaseState([
+        {
+          message: 'Message for you',
+          type: 'bulk',
+          link: 'www.taager.com/message',
+          country: 'EGY',
+        },
+      ]);
+    });
+
+    test('sending notification for country you dont have access to should be forbidden', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      const createNotificationResponse = await request(app)
+        .post('/api/notifications')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          message: 'Message for you',
+          link: 'www.taager.com/message',
+          country: 'ARE',
+        });
+
+      //Assert
+      expect(createNotificationResponse.statusCode).toEqual(FORBIDDEN);
+    });
+
+    test('all mandatory fields of bulk notification for UAE sent should return 200', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserAreRole(app, accessToken, adminUserId);
+
+      // Act
+      const createNotificationResponse = await request(app)
+        .post('/api/notifications')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          message: 'Message for you',
+          link: 'www.taager.com/message',
+          country: 'ARE',
+        });
+
+      //Assert
+      expect(createNotificationResponse.statusCode).toEqual(200);
+      expect(createNotificationResponse.body.msg).toEqual('Notification created!');
+
+      await assertNotificationDatabaseState([
+        {
+          message: 'Message for you',
+          type: 'bulk',
+          link: 'www.taager.com/message',
+          country: 'ARE',
+        },
+      ]);
+    });
+
+    test('no fields sent should return 422', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      const createNotificationResponse = await request(app)
+        .post('/api/notifications')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(createNotificationResponse.statusCode).toEqual(422);
+    });
+  });
+
+  describe('POST /sendPush', () => {
+    test.skip('all mandatory fields sent should return 200', async () => {
+      // Arrange
+      await login(app);
+
+      // Act
+      const sendPushResponse = await request(app)
+        .post('/api/notifications/sendPush')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          message: 'Message for you',
+          title: "It's a title!",
+          taagerId: MERCHANT_1.TagerID,
+        });
+
+      expect(sendPushResponse.statusCode).toEqual(200);
+      expect(sendPushResponse.body.msg).toEqual('Push Notification sent!');
+    });
+
+    test('no fields sent should return 422', async () => {
+      // Arrange
+      await login(app);
+
+      // Act
+      const sendPushResponse = await request(app)
+        .post('/api/notifications/sendPush')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({});
+
+      expect(sendPushResponse.statusCode).toEqual(422);
+    });
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+  });
+});

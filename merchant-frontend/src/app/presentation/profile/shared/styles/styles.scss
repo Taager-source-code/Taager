@@ -1,0 +1,141 @@
+@import "common.scss";
+
+.form-group__default-label {
+
+    opacity: 0.7;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    text-align: center;
+
+    color: $text-primary;
+
+    direction: rtl;
+
+    text-align: right;
+
+    width: 100%;
+
+    margin-right: 20px;
+
+    margin-top: 20px;
+
+    margin-bottom: 5px;
+
+}
+
+.btn-submit {
+
+    width: 179px;
+
+    height: 38px;
+
+    border-radius: 4px;
+
+    border: solid 1.2px #29b6ab;
+
+    background-color: #29b6ab;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    color: #fff;
+
+    margin: 20px auto;
+
+}
+
+.btn-submit--enabled {
+
+    &:hover {
+
+        cursor: pointer;
+
+        opacity: 0.7;
+
+    }
+
+}
+
+.btn-submit--disabled {
+
+    cursor: not-allowed;
+
+    opacity: 0.7;
+
+}
+
+.horizontal-form-group {
+
+    display: flex;
+
+    @media (max-width: 767px) {
+
+        display: block;
+
+    }
+
+}
+
+.form-group {
+
+    margin-right: 10px;
+
+    width: 45%;
+
+    @media (max-width: 767px) {
+
+        margin-right: 10px;
+
+        width: 90%;
+
+    }
+
+}
+
+.form-control--default-input {
+
+    border-radius: 3px;
+
+    border: solid 1px $border-color-dark-gray;
+
+    width: 100%;
+
+    margin-right: 10px;
+
+    height: 35px;
+
+}
+
+.confirm-input {
+
+    border-radius: 3px;
+
+    border: solid 1px $border-color-dark-gray;
+
+    width: 100%;
+
+    margin-right: 10px;
+
+    padding: 0 5px;
+
+    height: 35px;
+
+    &:focus {
+
+        border-color: $border-color-primary;
+
+        outline: none;
+
+    }
+
+}
+
+.block-element {
+
+    display: block !important;
+
+}

@@ -1,0 +1,50 @@
+.questionnaire {
+    height: calc(100% - 68px);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // overflow-y: hidden;
+
+    $font-family: 'Taager-Regular';
+
+    &__show-prompt {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 39px;
+        flex-direction: column;
+
+        &__prompt {
+            &__text {
+                font-family: $font-family;
+                font-style: normal;
+                font-weight: 500;
+                font-size: 23px;
+                line-height: 26px;
+                text-align: center;
+                color: #0F1933;
+            }
+        }
+
+        &__action-button {
+            button {
+                background: #46B8B0;
+                border-radius: 12px;
+                padding: 20px 40px;
+                border: none;
+                cursor: pointer;
+
+                font-family: $font-family;
+                font-style: normal;
+                font-weight: 500;
+                font-size: 18px;
+                line-height: 20px;
+                text-align: center;
+                color: #FFFFFF;
+            }
+        }
+    } 
+}
+
+

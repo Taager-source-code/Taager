@@ -1,0 +1,81 @@
+<h4 mat-dialog-title>Duplicate Orders</h4>
+<mat-tab-group class="order-status-form">
+  <mat-tab [label]="order.orderID" *ngFor="let order of orders">
+    <div mat-dialog-content>
+      <mat-form-field>
+        <mat-label>Order Id</mat-label>
+        <input matInput [(ngModel)]="order.orderID" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Status</mat-label>
+        <input matInput [(ngModel)]="order.status" disabled />
+      </mat-form-field>
+      <mat-form-field *ngIf="order.trackingId !== ''">
+        <mat-label>Tracking Id</mat-label>
+        <input matInput [(ngModel)]="order.trackingId" disabled />
+      </mat-form-field>
+      <mat-form-field *ngIf="order.suspendedReason">
+        <mat-label>Suspended Reasons</mat-label>
+        <input
+          matInput
+          [ngModel]="mapNumbersToSuspendedReasons(order.suspendedReason)"
+          disabled
+        />
+      </mat-form-field>
+      <mat-form-field *ngIf="order.customerRejectedReason">
+        <mat-label>Rejected Reasons</mat-label>
+        <input
+          matInput
+          [ngModel]="
+            mapNumbersToCustomerRejectedReasons(order.customerRejectedReason)
+          "
+          disabled
+        />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Created At</mat-label>
+        <input matInput [(ngModel)]="order.createdAt" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Receiver Name</mat-label>
+        <input matInput [(ngModel)]="order.receiverName" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Phone Number</mat-label>
+        <input matInput [(ngModel)]="order.phoneNumber" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Phone Number 2</mat-label>
+        <input matInput [(ngModel)]="order.phoneNumber2" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Street Name</mat-label>
+        <input matInput [(ngModel)]="order.streetName" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>المحافظة</mat-label>
+        <input matInput [(ngModel)]="order.province" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Cash On Delivery</mat-label>
+        <input matInput [(ngModel)]="order.cashOnDelivery" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Profit</mat-label>
+        <input matInput [(ngModel)]="order.profit" disabled />
+      </mat-form-field>
+      <div>
+        <label>Products</label>
+        <div
+          *ngFor="let product of order.productsList"
+          class="table-element row no-gutters"
+        >
+          <div>
+            <input [(ngModel)]="product.name" style="width: 350px" disabled />
+            <input [(ngModel)]="product.qty" style="width: 100px" disabled />
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-tab>
+</mat-tab-group>

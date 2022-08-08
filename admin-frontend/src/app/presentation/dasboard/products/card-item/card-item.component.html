@@ -1,0 +1,42 @@
+<div *ngIf="!product.isExpired" class="grid-item card txt-center">
+  <img
+    class="card-img-top"
+    [src]="product.productPicture"
+    (click)="navigateToProductDetails()"
+  />
+  <div class="card-body">
+    <div class="item-stock" [ngStyle]="{ 'background-color': getColor() }">
+      <label>
+        {{ mapProductAvailiblity() }}
+      </label>
+    </div>
+    <h5
+      [title]="product.productName"
+      class="card-title"
+      (click)="navigateToProductDetails()"
+    >
+      {{ product.productName }}
+    </h5>
+    <h6 class="card-text" id="price">
+      <span>{{ product.productPrice }}</span>
+    </h6>
+    <p class="card-text" id="profit">
+      <span>الربح : </span> <span>{{ product.productProfit }}</span>
+    </p>
+  </div>
+  <div class="card-actions flex-md-row-reverse">
+    <button
+      *ngIf="!loading"
+      [disabled]="!inStock"
+      (click)="addToCart()"
+      class="btn add_to_cart"
+      type="button"
+    >
+      <span class="d-none d-sm-inline">اضافة الى العربة</span>
+      <span class="d-sm-none"><i class="fa fa-shopping-cart"></i></span>
+    </button>
+    <!--    <button class="btn favorite-btn">-->
+    <!--      <div></div>-->
+    <!--    </button>-->
+  </div>
+</div>

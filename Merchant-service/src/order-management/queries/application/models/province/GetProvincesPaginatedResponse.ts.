@@ -1,0 +1,15 @@
+import { ProvinceModel } from '../../../../common/infrastructure/db/models/ProvinceModel';
+
+export default class GetProvincesPaginatedResponse {
+  public data: ProvinceModel[];
+  public count: number;
+  public endPages: boolean;
+
+  constructor(data: ProvinceModel[], count: number, endPages: boolean) {
+    this.data = data;
+    this.count = count;
+    this.endPages = endPages;
+  }
+}
+
+

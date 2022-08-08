@@ -1,0 +1,15 @@
+export const ProductAvailabilityStatus = {
+  AVAILABLE: 'available',
+  NOT_AVAILABLE: 'not_available',
+  AVAILABLE_WITH_HIGH_QTY: 'available_with_high_qty',
+  AVAILABLE_WITH_LOW_QTY: 'available_with_low_qty',
+  DRAFT: 'draft',
+};
+
+export const possibleProductAvailabilities = [
+  ProductAvailabilityStatus.AVAILABLE,
+  ProductAvailabilityStatus.NOT_AVAILABLE,
+  ProductAvailabilityStatus.AVAILABLE_WITH_HIGH_QTY,
+  ProductAvailabilityStatus.AVAILABLE_WITH_LOW_QTY,
+  ProductAvailabilityStatus.DRAFT,
+];

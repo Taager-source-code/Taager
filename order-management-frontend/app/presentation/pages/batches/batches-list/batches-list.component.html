@@ -1,0 +1,136 @@
+<ngx-spinner type="ball-scale-multiple"><p class="loading">Loading</p></ngx-spinner>
+<div class="filter-container">
+    <p>Search Orders by</p>
+    <form [formGroup]="batchForm.searchFormGroup">
+        <div class="row">
+            <div class="col-md-4">
+                <nb-form-field>
+                    <nb-icon nbPrefix icon="search-outline" pack="eva"></nb-icon>
+                    <input class="width-80" formControlName="batchId" type="text" placeholder="Batch ID" nbInput>
+                    <button nbSuffix nbButton ghost type="button" *ngIf="batchForm.searchFormGroup.controls.batchId.value !== null" (click)="clearSearch('batchId')">
+                        <nb-icon icon='close-outline' pack="eva"></nb-icon>
+                      </button>
+                </nb-form-field>
+            </div>
+            <div class="col-md-4">
+                <nb-form-field>
+                    <nb-icon nbPrefix icon="search-outline" pack="eva"></nb-icon>
+                    <input class="width-80" formControlName="orderId" type="text" placeholder="Order ID" nbInput>
+                    <button nbSuffix nbButton ghost type="button" *ngIf="batchForm.searchFormGroup.controls.orderId.value !== null" (click)="clearSearch('orderId')">
+                        <nb-icon icon='close-outline' pack="eva"></nb-icon>
+                      </button>
+                </nb-form-field>
+            </div>
+            <div class="col-md-4 filter-search-btn-container">
+                <button class="filter-search" nbButton status="primary" type="submit"
+                    (click)="batchForm.fetchBatch()">Search</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="dropdown-filters">
+    <div class="row">
+        <div class="col-md-2">
+            <ejs-dropdownlist cssClass="e-custom" id='shippingCompanyObj' #shippingCompanyObj [showClearButton]="true"
+                (change)="filterSearch($event, 'company')"
+                placeholder="Shipping Company" [dataSource]='batchForm.shippingCompanyList'></ejs-dropdownlist>
+        </div>
+        <div class="col-md-2">
+            <ejs-dropdownlist (beforeOpen)="sharedData.fetchProvinces();" (change)="filterSearch($event,'province')"
+                cssClass="e-custom" placeholder="Provinces" [dataSource]='sharedData.provinceList'
+                [allowFiltering]='true' [showClearButton]="true" #provinceDropDown [fields]='{ text: "location", value: "location" }'>
+            </ejs-dropdownlist>
+        </div>
+        <div class="col-md-2">
+            <ejs-dropdownlist  (change)="filterSearch($event,'downloadStatus')" cssClass="e-custom" placeholder="Download Status" [dataSource]='sharedData.downloadStatus'
+               [showClearButton]="true" #downloadDropDown [fields]='{ text: "name", value: "value" }'>
+            </ejs-dropdownlist>
+        </div>
+    </div>
+</div>
+<div class="data-table">
+    <div class="row">
+        <ejs-grid #ejsGrid (actionBegin)="pageChange($event)" [dataSource]='tableData'
+            class="default-table-style" [allowPaging]='true' [pageSettings]='tableSettings'>
+            <e-columns>
+                <e-column field='batchId' headerText='ID' width=120></e-column>
+                <e-column field='country' headerText='Country' width=80></e-column>
+                <e-column field='shipping.company' headerText='Shipping Company' width=120></e-column>
+                <e-column field='shipping.province' headerText='Province' width=120></e-column>
+                <e-column field='shipping.zone' headerText='Zone' width=120></e-column>
+                <e-column field='orderCount' headerText='Orders Count' width=70></e-column>
+                <e-column field='downloaded' headerText='Downloaded' width=70></e-column>
+                <e-column [allowSorting]="false" textAlign="left" width=80>
+                    <ng-template #template let-data>
+                    </ng-template>
+                </e-column>
+            </e-columns>
+            <ng-template #rowTemplate let-data>
+                <tr class="data-row">
+                    <td (click)="showOrderSidebar(data)">
+                        {{data.batchId}}
+                    </td>
+                    <td (click)="showOrderSidebar(data)">
+                        {{data.country}}
+                    </td>
+                    <td (click)="showOrderSidebar(data)">
+                        {{data.shipping.company}}
+                    </td>
+                    <td (click)="showOrderSidebar(data)">
+                        {{data.shipping.province}}
+                    </td>
+                    <td (click)="showOrderSidebar(data)">
+                        {{data.shipping.zone}}
+                    </td>
+                    <td (click)="showOrderSidebar(data)">
+                        {{data.orderCount}}
+                    </td>
+                    <td (click)="showOrderSidebar(data)">
+                        <nb-alert class="order-status-badge" 
+                                [status]="
+                                    data.downloaded === true? 'success' :
+                                    'warning'">
+                                {{data.downloaded}}
+                            </nb-alert>
+                    </td>
+                    <td>
+                        <button nbButton ghost [nbPopover]="actions" nbPopoverPlacement="bottom">
+                            <nb-icon icon="more-horizontal-outline"></nb-icon>
+                        </button>
+                        <ng-template #actions>
+                            <button class="actions-btn" nbButton ghost (click)="showOrderSidebar(data)">
+                                <nb-icon icon="edit-outline"></nb-icon>Edit
+                            </button>
+                            <button class="actions-btn" nbButton ghost (click)="deleteBatch(data.batchId)">
+                                <nb-icon icon="trash-2-outline"></nb-icon>Delete
+                            </button>
+                        </ng-template>
+                    </td>
+                </tr>
+            </ng-template>
+        </ejs-grid>
+    </div>
+</div>
+<ejs-sidebar id="default-sidebar" #sidebar position="Right" type="Over" style="visibility: hidden" width="450px"
+    zIndex="1004" showBackdrop="true">
+    <create-batch-form></create-batch-form>
+    <div class="confirm-buttons">
+        <div class="row">
+            <button class="cancel-btn" nbButton ghost (click)="closeSideBar()">Cancel</button>
+            <button class="filter-search" nbButton status="primary" [disabled]="!form.valid"
+                (click)="onSubmit()">Create</button>
+        </div>
+    </div>
+</ejs-sidebar>
+<ejs-sidebar id="edit-sidebar" class="edit-sidebar" #orderSidebar position="Right" type="Over" style="visibility: hidden" width="75vw"
+    zIndex="1004" showBackdrop="true">
+    <div class="edit-sidebar__header">
+        <button class="edit-sidebar__back-button" nbButton ghost (click)="closeOrderSideBar()">
+            <nb-icon icon="arrow-ios-back-outline" pack="eva"></nb-icon>
+        </button>
+        <p class="edit-sidebar__title">Batch details</p>
+    </div>
+    <ng-container *ngIf="selectedOrder">
+        <batch-order-add [data]="selectedOrder" [pageSettings]="tableSettings"></batch-order-add>
+    </ng-container>
+</ejs-sidebar>

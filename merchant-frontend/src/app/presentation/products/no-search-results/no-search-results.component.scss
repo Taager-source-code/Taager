@@ -1,0 +1,72 @@
+@import 'common.scss';
+
+:host {
+  @include fluid-type(991px, 1920px, 12px, 16px);
+  .no-search-results-container {
+    padding-top: em-calc(20px);
+    hr {
+      opacity: 1;
+      padding: 0;
+    }
+    .additional-search-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: em-calc(20px 0);
+      .no-results-found-image {
+        width: em-calc(260px);
+        margin-bottom: em-calc(15px);
+      }
+      .no-results-found-text {
+        font-size: em-calc(24px);
+        font-weight: bold;
+        text-align: center;
+      }
+      .no-results-found-help-text {
+        font-size: em-calc(18px);
+        text-align: center;
+      }
+    }
+    .category-list-section {
+      .category-list-title-overlay {
+        width: fit-content;
+        margin: 0 auto;
+        margin-top: em-calc(-20px);
+        background-color: $fill-white;
+        padding: em-calc(0 10px);
+        .category-list-title {
+          font-weight: bold;
+        }
+      }
+      app-category-card{
+        flex-basis: 16.66666%;
+
+        @media (max-width: 1199px) {
+          flex-basis: 20%;
+        }
+
+        @media (max-width: 991px) {
+          flex-basis: 14.2857%
+        }
+
+        @media (max-width: 767px) {
+          flex-basis: 20%
+        }
+
+        @media (max-width: 521px) {
+          flex-basis: 25%
+        }
+
+        @media (max-width: 426px) {
+          flex-basis: 33.33333%
+        }
+
+        @media (max-width: 331px) {
+          flex-basis: 50%
+        }
+      }
+    }
+  }
+}
+
+

@@ -1,0 +1,7 @@
+import mongoose from 'mongoose';
+
+export type UserCountriesAccess = {
+  _id?: mongoose.Types.ObjectId | null;
+  userId: mongoose.Types.ObjectId;
+  countries: Array<string>;
+};

@@ -1,0 +1,67 @@
+.custom-file {
+  font-size: 1.3rem;
+}
+
+.numbertext {
+  font-size: 16px;
+  padding: 0px 8px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+#announce {
+  width: 450;
+  height: 250px;
+  direction: ltr;
+  background-color: transparent;
+}
+
+gallery::ng-deep {
+  gallery-item iframe {
+    position: relative;
+  }
+
+  .g-nav-prev,
+  .g-nav-next {
+    opacity: 1;
+    color: midnightblue;
+    border-radius: 6px;
+    padding: 5px;
+    height: 25px;
+    width: 25px;
+  }
+
+  .g-dot-inner {
+    background-color: #ccc;
+    box-shadow: none;
+  }
+
+  .g-dot-active .g-dot-inner {
+    background-color: var(--light-green-color);
+  }
+
+  .g-image-item {
+    background-size: contain;
+  }
+}
+
+/* Add a hover effect (blue shadow) */
+img:hover {
+  box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.announcement-form-entry {
+  padding: 5px;
+  border: 1px solid #c9c9c9;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+
+  label {
+    margin: 0;
+  }
+}

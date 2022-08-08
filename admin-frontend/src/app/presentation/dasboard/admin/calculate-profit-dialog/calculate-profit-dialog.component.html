@@ -1,0 +1,42 @@
+<h1 mat-dialog-title></h1>
+<div mat-dialog-content>
+  <mat-form-field class="example-full-width">
+    <input
+      matInput
+      (dateInput)="OnFromDateChange($event)"
+      (dateChange)="OnFromDateChange($event.value)"
+      [matDatepicker]="fromPicker"
+      placeholder="Choose from date"
+    />
+    <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+    <mat-datepicker
+      #fromPicker
+      (dateInput)="OnFromDateChange($event)"
+    ></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field class="example-full-width">
+    <input
+      matInput
+      (dateInput)="OnToDateChange($event)"
+      (dateChange)="OnToDateChange($event.value)"
+      [matDatepicker]="toPicker"
+      placeholder="Choose To date"
+    />
+    <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+    <mat-datepicker
+      #toPicker
+      (dateInput)="OnToDateChange($event)"
+    ></mat-datepicker>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button
+    type="button"
+    class="btn btn-success"
+    [disabled]="clicked"
+    (click)="onExtractOrders()"
+  >
+    Calculate Profit
+  </button>
+</div>

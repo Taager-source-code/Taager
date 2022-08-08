@@ -1,0 +1,20 @@
+<div class="zones-search-field" *ngIf="zoneList?.length > 0">
+  <ejs-combobox id='comboelement'
+      [dataSource]='zoneList' (beforeOpen)="fetchZoneList()" (change)="showSearchResult($event)" placeholder="Search Zone" [fields]="{text: 'name', value: 'name'}">
+  </ejs-combobox>
+</div>
+<nb-accordion>
+<nb-accordion-item *ngFor="let zone of searchResults; let i = index" class="zone-accordion">
+  <nb-accordion-item-header class="zone-accordion-header" (click)="setExpandZone(i)">
+    <div class="col-9">
+      {{zone.name}}  
+    </div>
+    <div class="col-3 text-right small-text" *ngIf="zone.manuallyModified">
+      <span class="modified-label">Zone Manually Modified</span>
+    </div>
+  </nb-accordion-item-header>
+  <nb-accordion-item-body>
+    <ngx-shipping-capacity-table [capacityType]="capacityType" [zoneData]="zone" [provinceId]="provinceId" *ngIf="expandedIndex === i"></ngx-shipping-capacity-table>
+  </nb-accordion-item-body>
+</nb-accordion-item>
+</nb-accordion>

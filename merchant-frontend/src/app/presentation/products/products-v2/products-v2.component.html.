@@ -1,0 +1,57 @@
+<div class="container">
+
+  <section class="d-flex flex-column">
+
+    <app-questionnaire-banner *ngIf="ksaOnboardingFlag && isUserEligibleForQuestionnaire"></app-questionnaire-banner>
+
+    <app-top-banner></app-top-banner>
+
+  </section>
+
+  <section class="d-flex flex-column mt-5">
+
+    
+
+    <div class="d-md-none d-flex flex-wrap justify-content-between category-header-container mb-1">
+
+      <div class="category-section-header">
+
+        الاقسام
+
+      </div>
+
+      <div class="view-all" (click)="goToCategories()">
+
+          عرض الكل
+
+      </div>
+
+    </div>
+
+    <div class="d-flex flex-row flex-wrap justify-content-flex-start" *ngIf="!commercialCategoriesFlag">
+
+      <app-category-card *ngFor="let category of categories;let index=index;" [areIconsLoaded]="areIconsLoaded" [category]="category"></app-category-card>
+
+    </div>
+
+  </section>
+
+  <section class="d-flex flex-column" *ngFor="let carouselData of carouselsData.topGroup">
+
+    <app-products-carousel [carouselData]="carouselData" [isCatalogDataLoaded]="isCatalogDataLoaded"></app-products-carousel>
+
+  </section>
+
+  <section class="d-flex flex-row justify-content-between" *ngIf="shouldShowSubBanners">
+
+    <app-sub-banner *ngFor="let bannerData of subBannersData" [bannerData]="bannerData"></app-sub-banner>
+
+  </section>
+
+  <section class="d-flex flex-column" *ngFor="let carouselData of carouselsData.bottomGroup">
+
+    <app-products-carousel [carouselData]="carouselData" [isCatalogDataLoaded]="isCatalogDataLoaded"></app-products-carousel>
+
+  </section>
+
+</div>

@@ -1,0 +1,39 @@
+import CountryRepo from '../../infrastructure/repositories/CountryRepo';
+import { Country } from '../../infrastructure/db/models/Country';
+import { Service } from 'typedi';
+import IsMultiTenancyUAEEnabled from './IsMultiTenancyUAEEnabled';
+import IsMultiTenancyEnabled from './IsMultiTenancyEnabled';
+
+@Service({ global: true })
+export default class GetSupportedCountries {
+  private countryRepo: CountryRepo;
+  private isMultiTenancyEnabled: IsMultiTenancyEnabled;
+  private isMultiTenancyUAEEnabled: IsMultiTenancyUAEEnabled;
+
+  constructor(
+    countryRepo: CountryRepo,
+    isMultiTenancyEnabled: IsMultiTenancyEnabled,
+    isMultiTenancyUAEEnabled: IsMultiTenancyUAEEnabled,
+  ) {
+    this.countryRepo = countryRepo;
+    this.isMultiTenancyEnabled = isMultiTenancyEnabled;
+    this.isMultiTenancyUAEEnabled = isMultiTenancyUAEEnabled;
+  }
+  async execute(tagerId): Promise<Country[]> {
+    const isMultiTenancyEnabled = await this.isMultiTenancyEnabled.execute(String(tagerId));
+    const isMultiTenancyUAEEnabled = await this.isMultiTenancyUAEEnabled.execute(String(tagerId));
+    const isoCodes = ['EGY'];
+    if (isMultiTenancyEnabled) {
+      isoCodes.push('SAU');
+    }
+    if (isMultiTenancyUAEEnabled) {
+      isoCodes.push('ARE');
+    }
+
+    const countries = await this.countryRepo.getCountries();
+
+    return countries.filter(country => isoCodes.includes(country.countryIsoCode3));
+  }
+}
+
+

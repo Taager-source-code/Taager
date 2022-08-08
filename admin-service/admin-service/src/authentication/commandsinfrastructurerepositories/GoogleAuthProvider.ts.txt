@@ -1,0 +1,26 @@
+import { OAuth2Client } from 'google-auth-library';
+import Env from '../../../../Env';
+import { Service } from 'typedi';
+
+@Service({ global: true })
+export default class GoogleAuthProvider {
+  private client: OAuth2Client;
+
+  constructor() {
+    this.client = new OAuth2Client();
+  }
+
+  async validateAndExtractEmail(token): Promise<string> {
+    const ticket = await this.client.verifyIdToken({
+      idToken: token,
+      audience: Env.GOOGLE_AUDIENCES,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (payload == null || payload.email == null) {
+      throw new Error('Unauthorized');
+    }
+    return payload.email;
+  }
+}

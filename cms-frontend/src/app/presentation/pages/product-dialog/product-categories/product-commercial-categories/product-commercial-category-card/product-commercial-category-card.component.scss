@@ -1,0 +1,28 @@
+.card-top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  &__warning-text {
+    margin-bottom: 0;
+    color: #e17605;
+  }
+  &__delete-button {
+    padding: 5px !important;
+    &-text {
+      margin-bottom: 0;
+      color: #ce0021;
+      text-transform: none;
+    }
+    &-icon {
+      width: 24px !important;
+      height: 24px !important;
+    }
+  }
+}
+.dropdown-label {
+  margin-bottom: 16px;
+}
+.dropdown-input {
+  margin-bottom: 20px;
+}

@@ -1,0 +1,17 @@
+.internal-categories-accordion::ng-deep {
+  nb-accordion-item-body .item-body {
+    padding: 0.5rem;
+  }
+}
+.accordion-header {
+  height: 50px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.accordion-body {
+  min-height: 100px;
+}
+.warning-paragraph {
+  color: #e17605;
+}

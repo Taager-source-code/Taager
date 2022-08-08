@@ -1,0 +1,388 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import User from '../../src/models/user.model';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import { mock, instance } from 'ts-mockito';
+import { Container } from 'typedi';
+
+import OrderConfirmedProducer from '../../src/order-management/commands/infrastructure/producers/orders/OrderConfirmedProducer';
+import { OrderBuilder } from '../fixtures/orderFixture';
+import Order from '../../src/models/order.model';
+import OrderApp from '../../src/after-sales/queries/application/models/Order';
+import GetOrdersQueryResult from '../../src/after-sales/queries/application/models/GetOrdersQueryResult';
+import { ProductBuilder } from '../fixtures/product.fixture';
+import Product from '../../src/models/product.model';
+
+describe('/api/after-sales', () => {
+  let app: any = null;
+  let accessToken: string;
+  let orderProducerMock: OrderConfirmedProducer;
+  const prod1 = new ProductBuilder().setName('testProduct1').build();
+  const prod2 = new ProductBuilder().setName('testProduct2').build();
+  const order1 = new OrderBuilder()
+    .setOrderId('orderID_1')
+    .setOrderNum(1)
+    .setStatus('delivered')
+    .setCreatedAt('2022-05-06')
+    .setProducts([prod1, prod2])
+    .build();
+  const order2 = new OrderBuilder()
+    .setOrderId('orderID_2')
+    .setOrderNum(2)
+    .setStatus('delivered')
+    .setOrderLineItems([])
+    .setCreatedAt('2022-05-07')
+    .build();
+  const order3 = new OrderBuilder()
+    .setOrderId('orderID_3')
+    .setOrderNum(3)
+    .setStatus('delivery_in_progress')
+    .setCreatedAt('2022-05-08')
+    .build();
+  const order4 = new OrderBuilder()
+    .setOrderId('orderID_4')
+    .setOrderNum(4)
+    .setStatus('delivered')
+    .setPhoneNumber1('9999999')
+    .setCreatedAt('2022-05-09')
+    .setDeliveryDate('2022-05-20')
+    .build();
+
+  const order5 = new OrderBuilder()
+    .setOrderId('orderID_5')
+    .setOrderNum(5)
+    .setStatus('suspended')
+    .setPhoneNumber1('9999999')
+    .setCreatedAt('2022-05-11')
+    .setDeliveryDate('2022-05-23')
+    .build();
+
+  const createUser = async () => {
+    await User.create(ADMIN_1);
+    await UserRoles.create({ role: 'admin' });
+  };
+
+  const login = async (app: any) => {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+    await createUser();
+    await createProducts();
+    await createOrders();
+
+    orderProducerMock = mock(OrderConfirmedProducer);
+    const orderConfirmedProducerInstance = instance(orderProducerMock);
+    Container.set(OrderConfirmedProducer, orderConfirmedProducerInstance);
+  });
+
+  async function createOrders() {
+    await Order.insertMany([order1, order2, order3, order4, order5]);
+  }
+  async function createProducts() {
+    await Product.insertMany([prod1, prod2]);
+  }
+
+  const order_1_Response = {
+    orderId: 'orderID_1',
+    status: 'delivered',
+    placedAt: '2022-05-06T00:00:00.000Z',
+    deliveredAt: '2022-06-07T00:00:00.000Z',
+    cashOnDelivery: 725,
+    customerDetails: {
+      customerName: 'testReceiver',
+      customerPhoneNum1: '01000000000',
+      customerPhoneNum2: '02000000000',
+    },
+    shippingInfo: {
+      province: 'province',
+      zone: { name: 'test_zone_1', status: '' },
+    },
+    orderLines: [
+      {
+        orderLineId: 1,
+        productId: order1.productIds?.[0] || 0,
+        productName: 'testProduct1',
+        quantity: 1,
+        totalPrice: 200,
+        totalMerchantProfit: 400,
+        type: 'initial',
+        direction: 'forward',
+        status: 'created',
+        trackingNumber: '123456',
+        shippingCompanyId: 'testCompany1',
+        originalOrderLineId: 1,
+      },
+      {
+        orderLineId: 2,
+        productId: order1.productIds?.[1] || 0,
+        productName: 'testProduct2',
+        quantity: 1,
+        totalPrice: 500,
+        totalMerchantProfit: 900,
+        type: 'initial',
+        direction: 'forward',
+        status: 'created',
+        trackingNumber: '123457',
+        shippingCompanyId: 'testCompany2',
+        originalOrderLineId: 2,
+      },
+    ],
+  };
+  const order_2_Response = {
+    orderId: 'orderID_2',
+    status: 'delivered',
+    placedAt: '2022-05-06T00:00:00.000Z',
+    deliveredAt: '2022-06-07T00:00:00.000Z',
+    cashOnDelivery: 725,
+    customerDetails: {
+      customerName: 'testReceiver',
+      customerPhoneNum1: '01000000000',
+      customerPhoneNum2: '02000000000',
+    },
+    shippingInfo: {
+      province: 'province',
+      zone: { name: 'test_zone_1', status: '' },
+    },
+    orderLines: [
+      {
+        orderLineId: 1,
+        productId: order2.productIds?.[0] || 0,
+        quantity: 1,
+        totalPrice: 200,
+        type: 'initial',
+        direction: 'forward',
+        status: 'delivered',
+        trackingNumber: '123456',
+        shippingCompanyId: 'testCompany',
+      },
+      {
+        orderLineId: 2,
+        productId: order2.productIds?.[1] || 0,
+        quantity: 2,
+        totalPrice: 500,
+        type: 'initial',
+        direction: 'forward',
+        status: 'delivered',
+        trackingNumber: '123456',
+        shippingCompanyId: 'testCompany',
+      },
+    ],
+  };
+
+  const order_3_Response = {
+    orderId: 'orderID_3',
+    status: 'delivery_in_progress',
+    placedAt: '2022-05-08T00:00:00.000Z',
+    deliveredAt: '2022-06-07T00:00:00.000Z',
+    customerDetails: {
+      customerName: 'testReceiver',
+      customerPhoneNum1: '01000000000',
+      customerPhoneNum2: '02000000000',
+    },
+  };
+
+  const order_4_Response = {
+    orderId: 'orderID_4',
+    status: 'delivered',
+    placedAt: '2022-05-09T00:00:00.000Z',
+    deliveredAt: '2022-05-20T00:00:00.000Z',
+    customerDetails: {
+      customerName: 'testReceiver',
+      customerPhoneNum1: '9999999',
+      customerPhoneNum2: '02000000000',
+    },
+  };
+
+  const order_2_status_response = {
+    orderId: 'orderID_2',
+    status: 'delivered',
+  };
+  const order_1_status_response = {
+    orderId: 'orderID_1',
+    status: 'delivered',
+  };
+
+  describe('GET /after-sales/orders/:id', () => {
+    test('Get order should succeed and return expected order', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders/${order1.orderID}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      expect(response.statusCode).toEqual(200);
+      const responseBody: OrderApp = response.body.data;
+      expect(responseBody).toMatchObject(order_1_Response);
+    });
+    test('Get order with orderLines empty should recreate them from old data', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders/${order2.orderID}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      expect(response.statusCode).toEqual(200);
+      const responseBody: OrderApp = response.body.data;
+      expect(responseBody).toMatchObject(order_2_Response);
+    });
+    test('Get non-existing order should return 404', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders/123456`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      expect(response.statusCode).toEqual(404);
+    });
+  });
+
+  describe('GET /after-sales/orders', () => {
+    test('Get orders should succeed and return expected orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders[0]).toMatchObject(order_4_Response);
+      expect(responseBody.orders[1]).toMatchObject(order_3_Response);
+      expect(responseBody.orders.map((ord) => ord.orderId).filter((ord) => ord === order5.orderID)).toHaveLength(0);
+      expect(responseBody.count).toEqual(4);
+    });
+  });
+
+  describe('GET /after-sales/orders?status=delivered', () => {
+    test('Get orders with status should succeed and return expected orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY&status=delivered`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders[0]).toMatchObject(order_4_Response);
+      expect(responseBody.count).toEqual(3);
+    });
+  });
+
+  describe('GET /after-sales/orders?pageSize=1', () => {
+    test('Get orders with page size and page should succeed and return expected orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY&pageSize=1&page=1`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders[0]).toMatchObject(order_4_Response);
+      expect(responseBody.orders).toHaveLength(1);
+      expect(responseBody.count).toEqual(4);
+    });
+  });
+
+  describe('GET /after-sales/orders?page=4', () => {
+    test('Get orders with page should succeed and return not return any orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY&pageSize=2&page=4`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders).toHaveLength(0);
+      expect(responseBody.count).toEqual(4);
+    });
+  });
+
+  describe('GET /after-sales/orders?customerPhoneNum', () => {
+    test('Get orders with customerPhoneNum should succeed and return matching orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY&customerPhoneNum=01000000000`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders).toHaveLength(3);
+      expect(responseBody.orders[0]).toMatchObject(order_3_Response);
+      expect(responseBody.count).toEqual(3);
+    });
+  });
+
+  describe('GET /after-sales/orders?deliveryDate', () => {
+    test('Get orders with deliveryDate should succeed and return matching orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY&deliveryDate=2022-06-07`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders).toHaveLength(3);
+      expect(responseBody.orders[0]).toMatchObject(order_3_Response);
+      expect(responseBody.orders[0].deliveredAt).toEqual(new Date('2022-06-07').toISOString());
+      expect(responseBody.count).toEqual(3);
+    });
+  });
+
+  describe('GET /after-sales/orders?status', () => {
+    test('Get orders with status should succeed and return matching orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY&status=delivery_in_progress`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders).toHaveLength(1);
+      expect(responseBody.orders[0]).toMatchObject(order_3_Response);
+      expect(responseBody.count).toEqual(1);
+    });
+  });
+
+  describe('GET /after-sales/orders without status', () => {
+    test('Get orders without status should succeed and return all after sales status orders', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=EGY`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(200);
+      const responseBody: GetOrdersQueryResult = response.body.data;
+      expect(responseBody.orders).toHaveLength(4);
+      expect(responseBody.count).toEqual(4);
+      expect(responseBody.orders).toMatchObject([
+        order_4_Response,
+        order_3_Response,
+        order_2_status_response,
+        order_1_status_response,
+      ]);
+    });
+  });
+
+  describe('GET /after-sales/orders?countryIsWrong', () => {
+    test('Get orders with wrong country should fail and return bad request with error msg', async () => {
+      await login(app);
+      const response = await request(app)
+        .get(`/api/after-sales/orders?country=IND`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.body.description).toEqual('"country" must be one of [EGY, SAU, ARE]');
+    });
+  });
+
+  afterAll(async () => {
+    await Order.deleteMany({});
+    await mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

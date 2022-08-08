@@ -1,0 +1,30 @@
+import { Service } from 'typedi';
+import CacheManager from '../../../../cache';
+import { CacheType } from '../../../../domain/cacheModel';
+import { UserCountriesAccess } from '../db/models/UserCountriesAccess';
+
+@Service({ global: true })
+export class UserCountriesAccessCache {
+  private cache;
+
+  constructor() {
+    const memoryCacheConfigs = {
+      ttl: 60 * 30,
+      max: 100,
+      stale: false,
+      updateAgeOnGet: false,
+    };
+
+    this.cache = CacheManager.resolve({
+      options: memoryCacheConfigs,
+      type: CacheType.Memory,
+    });
+  }
+
+  getByUserId(userId: string): UserCountriesAccess | null {
+    return this.cache.get(userId);
+  }
+  set(userCountriesAccess: UserCountriesAccess): void {
+    this.cache.set(String(userCountriesAccess.userId), userCountriesAccess);
+  }
+}

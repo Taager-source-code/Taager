@@ -1,0 +1,40 @@
+@import './colors';
+.activated-selection {
+  border: 2px solid $primary-light !important;
+  img.cat-icon {
+    filter: invert(45%) sepia(94%) saturate(664%) hue-rotate(134deg) brightness(96%) contrast(85%) !important;
+  }
+  .box-title {
+    color: $primary !important;
+  }
+}
+.selection-box {
+  border: 2px solid $grey-medium;
+  border-radius: 8px;
+  padding: 10px 5px;
+  display: flex;
+  align-items: center;
+  .text {
+    width: 60%;
+  }
+  .selected-icon {
+    width: 20%;
+    img {
+      width: 65%;
+    }
+  }
+  .icon-container {
+    width: 20%;
+    img {
+      width: 25px;
+      height: 25px;
+    }
+  }
+  .box-title {
+    font-size: 16px;
+    color: $grey-medium;
+  }
+}
+.selection-box:hover {
+  cursor: pointer;
+}

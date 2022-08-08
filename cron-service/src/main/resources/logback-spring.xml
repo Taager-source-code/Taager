@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- HTTP Requests and Responses -->
+    <logger name="org.zalando.logbook" level="trace"/>
+    <!--    Json logging appender   -->
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+    <!-- Default logging format in dev for console  -->
+    <springProfile name="default">
+        <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    </springProfile>
+    <!--  Json logging for production environment   -->
+    <springProfile name="prod">
+        <root level="${logging.level.com.taager.cronservice}">
+            <appender-ref ref="jsonConsoleAppender"/>
+        </root>
+    </springProfile>
+</configuration>

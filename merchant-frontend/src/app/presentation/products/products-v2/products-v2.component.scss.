@@ -1,0 +1,101 @@
+@import 'common.scss';
+
+:host {
+  .container {
+    margin-bottom: 50px;
+  }
+
+  .revert-link{
+    font-weight: 500;
+    padding: 10px 0;
+
+    @media (max-width: 768px){
+      font-size: 14px;
+    }
+  }
+
+  .revert-link:hover{
+    color: $text-light-green;
+    opacity: 0.7;
+  }
+
+  .category-section {
+    margin-top: 90px;
+  }
+
+  .sub-banner {
+    margin-top: 65px;
+    
+    @media (max-width: 768px) {
+      margin-top: 20px;
+    }
+  }
+
+  .category-section-header {
+    color: $text-primary;
+    font-size: 21px;
+    font-weight: 800;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.48;
+    letter-spacing: normal;
+    text-align: right;
+  
+    @media (max-width: 767px) {
+      font-size: 16px;
+      padding-right: 15px;
+    }
+  }
+
+  .view-all {
+    color: $text-light-green;
+    font-size: 18px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.44;
+    letter-spacing: normal;
+    margin-top: 3px;
+    text-align: left;
+    cursor: pointer;
+    
+    @media (max-width: 767px) {
+      font-size: 12px;
+      padding-left: 15px;
+    }
+  }
+
+  app-category-card{
+    flex-basis: 16.66666%;
+
+    @media (max-width: 1199px) {
+      flex-basis: 20%;
+    }
+
+    @media (max-width: 991px) {
+      flex-basis: 14.2857%
+    }
+
+    @media (max-width: 767px) {
+      flex-basis: 20%
+    }
+
+    @media (max-width: 521px) {
+      flex-basis: 25%
+    }
+
+    @media (max-width: 426px) {
+      flex-basis: 33.33333%
+    }
+
+    @media (max-width: 331px) {
+      flex-basis: 50%
+    }
+  }
+}
+
+.view-all:hover {
+    text-decoration: underline; 
+  }
+
+

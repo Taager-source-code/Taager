@@ -1,0 +1,193 @@
+import mongoose from 'mongoose';
+import * as mongooseConnector from '../../mongo/mongoose.connector';
+import { disconnectFromMongoDB } from '../../mongo/mongoose.connector';
+import * as dockerMongo from '../../mongo/docker.mongo';
+import VariantGroup from '../../../src/models/variantGroup.model';
+import MigrationExecutor from '../../../src/migrations/migrationExecutor';
+
+process.env.ROLLBAR_ACCESS_TOKEN = 'yallahabibi2';
+
+const aVariant = (variants: any[] = [], attributeSets: any[] = []) => ({
+  variants,
+  embeddedVariants: variants.map((_id) => {
+    return {
+      _id,
+      prodID: Date.now().toString(),
+      productName: 'Name',
+      productPrice: 20,
+      prodPurchasePrice: 20,
+      productAvailability: 'available',
+      productProfit: 300,
+      productQuantity: 1,
+      productDescription: 'some description',
+      sellerName: 'seller',
+      Category: 'some category',
+      productPicture: 'http://some-product-image.com',
+      orderCount: 0,
+    };
+  }),
+  primaryVariant: mongoose.Types.ObjectId(),
+  name: 'Shirt 1',
+  categoryId: mongoose.Types.ObjectId(),
+  attributeSets,
+});
+
+export const internalCategoryId = 'fba19dad-3bea-4f3d-b636-6266365f5d48';
+
+describe('Variant group model operations', () => {
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+  });
+
+  test('single variant group should get inserted', async () => {
+    // Arrange
+    const initialVariantGroups = await VariantGroup.find({});
+
+    // Act
+    await VariantGroup.create(aVariant());
+
+    // Assert
+    const variantGroupsAfterInsert = await VariantGroup.find({}).lean();
+    expect(initialVariantGroups).toHaveLength(0);
+    expect(variantGroupsAfterInsert).toHaveLength(1);
+    expect(variantGroupsAfterInsert[0].variants).toEqual([]);
+    expect(variantGroupsAfterInsert[0]._id).not.toBeFalsy();
+  });
+
+  test('single variant group with an internalCategoryId attached should get inserted', async () => {
+    // Arrange
+    const initialVariantGroups = await VariantGroup.find({});
+
+    // Act
+    await VariantGroup.create({
+      ...aVariant(),
+      internalCategoryId,
+    });
+
+    // Assert
+    const variantGroupsAfterInsert = await VariantGroup.find({}).lean();
+    expect(initialVariantGroups).toHaveLength(0);
+    expect(variantGroupsAfterInsert).toHaveLength(1);
+    expect(variantGroupsAfterInsert[0].variants).toEqual([]);
+    expect(variantGroupsAfterInsert[0]._id).not.toBeFalsy();
+    expect(variantGroupsAfterInsert[0].internalCategoryId).not.toBeFalsy();
+  });
+
+  test('multiple variant groups with variable variant size should get inserted', async () => {
+    // Arrange & Act
+    await VariantGroup.create(aVariant());
+    await VariantGroup.create(aVariant([mongoose.Types.ObjectId()]));
+    await VariantGroup.create(
+      aVariant([
+        mongoose.Types.ObjectId(),
+        mongoose.Types.ObjectId(),
+        mongoose.Types.ObjectId(),
+        mongoose.Types.ObjectId(),
+      ]),
+    );
+    await VariantGroup.create(aVariant([mongoose.Types.ObjectId(), mongoose.Types.ObjectId()]));
+
+    // Assert
+    const variantGroupsAfterInsert: any = await VariantGroup.find({}).lean();
+    expect(variantGroupsAfterInsert).toHaveLength(4);
+    expect(variantGroupsAfterInsert.map((vg) => vg.variants.length)).toEqual(expect.arrayContaining([0, 1, 4, 2]));
+  });
+
+  test('variant group with attribute sets should be created', async () => {
+    // Arrange
+    const attributeSets = [
+      {
+        type: 'color',
+        attributes: [{ name: 'blue' }, { name: 'red' }],
+      },
+      {
+        type: 'size',
+        attributes: [{ name: 'XL' }, { name: 'L' }],
+      },
+    ];
+
+    // Act
+    await VariantGroup.create(
+      aVariant(
+        [mongoose.Types.ObjectId(), mongoose.Types.ObjectId(), mongoose.Types.ObjectId(), mongoose.Types.ObjectId()],
+        attributeSets,
+      ),
+    );
+
+    // Assert
+    const variantGroupsAfterInsert = await VariantGroup.find({}).lean();
+    expect(variantGroupsAfterInsert).toHaveLength(1);
+    expect(variantGroupsAfterInsert[0].attributeSets).toEqual(attributeSets);
+  });
+
+  test('variant group should be updated', async () => {
+    // Arrange
+    const variantGroup = await VariantGroup.create(aVariant());
+
+    // Act
+    await VariantGroup.updateOne(
+      { _id: variantGroup._id },
+      {
+        $set: {
+          variants: [mongoose.Types.ObjectId(), mongoose.Types.ObjectId(), mongoose.Types.ObjectId()],
+        },
+      },
+    );
+
+    // Assert
+    const variantGroupsAfterInsert = await VariantGroup.find({}).lean();
+    expect(variantGroupsAfterInsert).toHaveLength(1);
+    expect(variantGroupsAfterInsert[0].variants).toHaveLength(3);
+    expect(variantGroupsAfterInsert[0]._id).not.toBeFalsy();
+  });
+
+  test('variant group should be updated with a new internalCategoryId', async () => {
+    // Arrange
+    const variantGroup = await VariantGroup.create(aVariant());
+
+    // Act
+    await VariantGroup.updateOne(
+      { _id: variantGroup._id },
+      {
+        $set: {
+          internalCategoryId,
+          variants: [mongoose.Types.ObjectId(), mongoose.Types.ObjectId(), mongoose.Types.ObjectId()],
+        },
+      },
+    );
+
+    // Assert
+    const variantGroupsAfterInsert = await VariantGroup.find({}).lean();
+    expect(variantGroupsAfterInsert).toHaveLength(1);
+    expect(variantGroupsAfterInsert[0].variants).toHaveLength(3);
+    expect(variantGroupsAfterInsert[0]._id).not.toBeFalsy();
+    expect(variantGroupsAfterInsert[0].internalCategoryId).not.toBeFalsy();
+  });
+
+  test('migrate old variant group to have country should success', async () => {
+    // Arrange
+    await VariantGroup.create(aVariant());
+
+    // Assert
+    const variantGroupsBeforeMigrations = await VariantGroup.find({}).lean();
+    variantGroupsBeforeMigrations.forEach((variantGroup) => expect(variantGroup.country).toEqual(undefined));
+
+    // migrate products
+    await new MigrationExecutor().migrate('productsCountryUpdate', './scripts/1638694155000-productsCountryUpdate');
+
+    // Assert
+    const variantGroupsAfterMigration = await VariantGroup.find({}).lean();
+    variantGroupsAfterMigration.forEach((variantGroup) => expect(variantGroup.country).toEqual('EGY'));
+  });
+
+  afterEach(async () => {
+    await VariantGroup.deleteMany({});
+  });
+
+  afterAll(() => {
+    disconnectFromMongoDB();
+  });
+});

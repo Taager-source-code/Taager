@@ -1,0 +1,542 @@
+import dotenv from 'dotenv';
+dotenv.config();
+jest.mock('../../src/shared-kernel/infrastructure/toggles/activeFeatureToggles');
+
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import User from '../../src/models/user.model';
+import UserRoles from '../../src/models/userRoles.model';
+import UserPrivileges from '../../src/models/userPrivileges.model';
+import UsersCountriesAccess from '../../src/authentication/common/infrastructure/db/schemas/UsersCountriesAccessSchema';
+import { ADMIN_1, ADMIN_2, CUSTOMER_SERVICE_USER } from '../fixtures/users/adminFixtures';
+import { verifyToken } from '../../src/services/auth.service';
+import jwt from 'jsonwebtoken';
+import { BAD_REQUEST, FORBIDDEN, NOT_FOUND, OK, UNAUTHORIZED } from 'http-status';
+import { instance, mock, when } from 'ts-mockito';
+import { when as whenJest } from 'jest-when';
+import { Container } from 'typedi';
+import GoogleAuthProvider from '../../src/authentication/commands/infrastructure/repositories/GoogleAuthProvider';
+import * as activeFeatureToggle from '../../src/shared-kernel/infrastructure/toggles/activeFeatureToggles';
+
+const adminRole = {
+  __v: 0,
+  _id: '629cd8050eef7eeead77a54b',
+  createdAt: '2022-06-06T08:02:37.687Z',
+  privileges: ['free_ice_cream'],
+  role: 'admin',
+  updatedAt: '2022-06-06T08:02:37.687Z',
+  userCountriesAccess: [],
+};
+
+const customerServiceRole = {
+  __v: 0,
+  _id: '629cd8050eef7eeead77a54c',
+  createdAt: '2022-06-06T10:02:37.687Z',
+  privileges: ['not_free_ice_cream_anymore'],
+  role: 'orderConfirmationsTeamMember',
+  updatedAt: '2022-06-06T10:02:37.687Z',
+  userCountriesAccess: [],
+};
+
+describe('/api/user', () => {
+  let app: any = null;
+  let accessToken: string;
+  let firstUserId: string;
+  let adminRoleId: string;
+
+  const createFirstUser = async () => {
+    const user = await User.create(ADMIN_1);
+    firstUserId = user._id;
+  };
+
+  const createSecondUser = async () => {
+    await User.create(ADMIN_2);
+  };
+
+  const createThirdUser = async () => {
+    await User.create(CUSTOMER_SERVICE_USER);
+  };
+
+  const createRoles = async () => {
+    await UserPrivileges.create({
+      privilege: 'free_ice_cream',
+      description: "It's free!",
+      group: 'dairy',
+    });
+    const userRole = await UserRoles.create(adminRole);
+    await UserRoles.create(customerServiceRole);
+    adminRoleId = userRole._id;
+  };
+
+  const generateAccessToken = async (username = '01234567891', password = '123456789'): Promise<string> => {
+    whenJest(activeFeatureToggle.isLoginWithUsernameAndPasswordEnabled).calledWith().mockReturnValue(true);
+    const response = await request(app).post('/api/auth/login').send({
+      username,
+      password,
+    });
+
+    return response.body.data;
+  };
+
+  const googleAuthProviderMock: GoogleAuthProvider = mock(GoogleAuthProvider);
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+    app = expressServer.setupServer();
+    const googleAuthProviderMockInstance = instance(googleAuthProviderMock);
+    Container.set(GoogleAuthProvider, googleAuthProviderMockInstance);
+  });
+
+  describe('Login flow', () => {
+    beforeEach(async () => {
+      await createFirstUser();
+      await createSecondUser();
+      await createThirdUser();
+      await createRoles();
+      whenJest(activeFeatureToggle.isLoginWithUsernameAndPasswordEnabled).calledWith().mockReturnValue(true);
+    });
+
+    test('Login with correct password, should succeed', async () => {
+      await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        })
+        .expect(OK);
+    });
+
+    test('Login with correct password, normal login with username and password not allowed, but api key is provided', async () => {
+      whenJest(activeFeatureToggle.isLoginWithUsernameAndPasswordEnabled).calledWith().mockReturnValue(false);
+      await request(app)
+        .post('/api/auth/login')
+        .set('Authorization', `someApiToken`)
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        })
+        .expect(OK);
+    });
+
+    test('Login with correct password, normal login with username and password not allowed and api key is not provided, but customer service user is trying to login', async () => {
+      whenJest(activeFeatureToggle.isLoginWithUsernameAndPasswordEnabled).calledWith().mockReturnValue(false);
+      await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567893',
+          password: '123456789',
+        })
+        .expect(OK);
+    });
+
+    test('Login with correct password, but username and password not allowed should fail', async () => {
+      whenJest(activeFeatureToggle.isLoginWithUsernameAndPasswordEnabled).calledWith().mockReturnValue(false);
+      await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        })
+        .expect(FORBIDDEN);
+    });
+
+    test('Login with incorrect password, should fail', async () => {
+      await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: 'wrong_password',
+        })
+        .expect(UNAUTHORIZED);
+    });
+
+    test('Login with nonexistent user, should fail', async () => {
+      await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: 'I_dont_exist',
+          password: 'wrong_password',
+        })
+        .expect(NOT_FOUND);
+    });
+    test('if user doesnt have roles, should fail', async () => {
+      await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567892',
+          password: '123456789',
+        })
+        .expect(FORBIDDEN);
+    });
+  });
+
+  describe('Google Login flow', () => {
+    beforeEach(async () => {
+      await createFirstUser();
+      await createRoles();
+    });
+
+    test('Login with correct idToken, should succeed', async () => {
+      const validIdToken = 'valid-google-token';
+      when(googleAuthProviderMock.validateAndExtractEmail(validIdToken)).thenResolve('test@taager.com');
+      await request(app)
+        .post('/api/auth/google-login')
+        .send({
+          idToken: validIdToken,
+        })
+        .expect(OK);
+    });
+    test('Login with correct idToken,but not taager account should fail', async () => {
+      const validIdToken = 'valid-google-token';
+      when(googleAuthProviderMock.validateAndExtractEmail(validIdToken)).thenResolve('test@gmail.com');
+      await request(app)
+        .post('/api/auth/google-login')
+        .send({
+          idToken: validIdToken,
+        })
+        .expect(UNAUTHORIZED);
+    });
+    test('Login with correct idToken,but user level not 3 should fail', async () => {
+      await User.create({
+        userLevel: 1,
+        username: '01234567892',
+        phoneNum: '01234567892',
+        lastName: 'Yalla',
+        firstName: 'Habibi',
+        fullName: 'Habibi Yalla',
+        email: 'test2@taager.com',
+        password: '$2a$10$8GU7Wnp2t686jyJSuBg3beIWEl5FWtUPtQZt9NqUX7CGGnCUkw30.', // Encoded 123456789
+        referralCode: 'refcode3',
+        TagerID: 3,
+      });
+      const validIdToken = 'valid-google-token';
+      when(googleAuthProviderMock.validateAndExtractEmail(validIdToken)).thenResolve('test2@taager.com');
+      await request(app)
+        .post('/api/auth/google-login')
+        .send({
+          idToken: validIdToken,
+        })
+        .expect(FORBIDDEN);
+    });
+    test('Login with incorrect idToken, should fail', async () => {
+      const invalidIdToken = 'invalid-google-token';
+      when(googleAuthProviderMock.validateAndExtractEmail(invalidIdToken)).thenThrow(new Error('Unauthorized'));
+      await request(app).post('/api/auth/google-login').send({ idToken: invalidIdToken }).expect(UNAUTHORIZED);
+    });
+    test('Login with incorrect parameter, should fail with bad request', async () => {
+      await request(app).post('/api/auth/google-login').send({ invalidParam: 'anything' }).expect(BAD_REQUEST);
+    });
+    test('Login with nonexistent user, should fail', async () => {
+      const validIdToken = 'valid-google-token';
+      when(googleAuthProviderMock.validateAndExtractEmail(validIdToken)).thenResolve('not-found-email@taager.com');
+
+      await request(app)
+        .post('/api/auth/google-login')
+        .send({
+          idToken: validIdToken,
+        })
+        .expect(NOT_FOUND);
+    });
+  });
+
+  describe('user roles', () => {
+    beforeEach(async () => {
+      await createFirstUser();
+      await createSecondUser();
+      await createRoles();
+      accessToken = await generateAccessToken();
+    });
+
+    test('if user has roles, they should be returned in token', async () => {
+      await request(app)
+        .post('/api/user/setUserRole')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ userId: firstUserId, userRole: 'admin', userLevel: 3 })
+        .expect(200);
+
+      const token = await generateAccessToken();
+      const decodedToken = jwt.decode(token, process.env.SECRET);
+
+      expect(decodedToken.user.userRoles).toMatchObject([
+        {
+          role: 'admin',
+          privileges: [
+            {
+              privilege: 'free_ice_cream',
+              description: "It's free!",
+              group: 'dairy',
+            },
+          ],
+        },
+      ]);
+    });
+
+    test('malformed request should return 400', async () => {
+      await request(app)
+        .post('/api/user/setUserRole')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ userCountriesAccess: 'EGY' })
+        .expect(400);
+    });
+
+    test('setting and getting user roles', async () => {
+      // Act
+      const setUserRoleResponse = await request(app)
+        .post('/api/user/setUserRole')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ userId: firstUserId, userRole: 'admin', userLevel: 3 });
+
+      expect(setUserRoleResponse.statusCode).toEqual(200);
+
+      const getUserRolesResponse = await request(app)
+        .get('/api/user/getUserRoles')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(getUserRolesResponse.statusCode).toEqual(200);
+
+      expect(getUserRolesResponse.body.data).toMatchObject({
+        role: 'admin',
+        privileges: ['free_ice_cream'],
+        userCountriesAccess: ['EGY', 'SAU', 'ARE'],
+      });
+    });
+
+    test('setting and getting user roles for countries', async () => {
+      // Set ARE country and assert
+      const setUserRoleResponseSomeCountries = await request(app)
+        .post('/api/user/setUserRole')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          userId: firstUserId,
+          userRole: 'admin',
+          userLevel: 3,
+          userCountriesAccess: ['ARE'],
+        });
+
+      expect(setUserRoleResponseSomeCountries.statusCode).toEqual(200);
+
+      const tokenSomeCountries = await generateAccessToken();
+      const decodedTokenSomeCountries: any = await verifyToken(tokenSomeCountries);
+      expect(decodedTokenSomeCountries.userAccessCountries).toEqual(['ARE']);
+
+      const getUserRolesResponseSomeCountries = await request(app)
+        .get('/api/user/getUserRoles')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(getUserRolesResponseSomeCountries.statusCode).toEqual(200);
+      expect(getUserRolesResponseSomeCountries.body.data).toMatchObject({
+        role: 'admin',
+        privileges: ['free_ice_cream'],
+        userCountriesAccess: ['ARE'],
+      });
+
+      // Set EGY, SAU, ARE country and assert
+      const setUserRoleResponseAllCountries = await request(app)
+        .post('/api/user/setUserRole')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          userId: firstUserId,
+          userRole: 'admin',
+          userLevel: 3,
+          userCountriesAccess: ['EGY', 'SAU', 'ARE'],
+        });
+
+      expect(setUserRoleResponseAllCountries.statusCode).toEqual(200);
+
+      const tokenAllCountries = await generateAccessToken();
+      const decodedTokenAllCountries: any = await verifyToken(tokenAllCountries);
+      expect(decodedTokenAllCountries.userAccessCountries).toEqual(['EGY', 'SAU', 'ARE']);
+
+      const getUserRolesResponseAllCountries = await request(app)
+        .get('/api/user/getUserRoles')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(getUserRolesResponseAllCountries.statusCode).toEqual(200);
+      expect(getUserRolesResponseAllCountries.body.data).toMatchObject({
+        role: 'admin',
+        privileges: ['free_ice_cream'],
+        userCountriesAccess: ['EGY', 'SAU', 'ARE'],
+      });
+    });
+
+    test('getting user roles for user without roles', async () => {
+      // Act
+      const getUserRolesResponse = await request(app)
+        .get('/api/user/getUserRoles')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(getUserRolesResponse.statusCode).toEqual(200);
+      expect(getUserRolesResponse.body.data).toEqual(adminRole);
+    });
+  });
+
+  describe('get all admin users', () => {
+    beforeEach(async () => {
+      await createFirstUser();
+      await createSecondUser();
+      await createRoles();
+      accessToken = await generateAccessToken();
+    });
+
+    test('different search objects for admin users', async () => {
+      const setUserRoleResponse = await request(app)
+        .post('/api/user/setUserRole')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ userId: firstUserId, userRole: 'admin', userLevel: 3 });
+
+      expect(setUserRoleResponse.statusCode).toEqual(200);
+
+      const userRole = adminRole;
+      // @ts-ignore
+      delete userRole.userCountriesAccess;
+      const admin1WithCountriesAccess = {
+        ...ADMIN_1,
+        userRole: adminRole,
+        userCountriesAccess: { countries: ['EGY', 'SAU', 'ARE'] },
+      };
+      const admin2WithoutCountriesAccess = { ...ADMIN_2 };
+
+      // Find all users with malformed query
+      const malformedQuery = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({});
+
+      expect(malformedQuery.statusCode).toEqual(400);
+
+      // Find all users without query
+      const allAdminUsersWithoutQuery = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 25 });
+
+      expect(allAdminUsersWithoutQuery.statusCode).toEqual(200);
+      expect(allAdminUsersWithoutQuery.body).toMatchObject({
+        count: 2,
+        data: [admin1WithCountriesAccess, admin2WithoutCountriesAccess],
+      });
+
+      // Find all users in egypt
+      const allAdminUsersInEgy = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 25, filter: { country: 'EGY' } });
+
+      expect(allAdminUsersInEgy.statusCode).toEqual(200);
+      expect(allAdminUsersInEgy.body).toMatchObject({
+        count: 1,
+        data: [admin1WithCountriesAccess],
+      });
+
+      // Find all users in nonexistent country
+      const allAdminUsersInNonExistentCountry = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 25, filter: { country: 'CRO' } });
+
+      expect(allAdminUsersInNonExistentCountry.statusCode).toEqual(400);
+
+      // Pagination, first page
+      const firstPageSingleElement = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 1 });
+
+      expect(firstPageSingleElement.statusCode).toEqual(200);
+      expect(firstPageSingleElement.body).toMatchObject({
+        count: 2,
+        data: [admin1WithCountriesAccess],
+      });
+
+      // Pagination, second page
+      const secondPageSingleElement = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 2, pageSize: 1 });
+
+      expect(secondPageSingleElement.statusCode).toEqual(200);
+      expect(secondPageSingleElement.body).toMatchObject({
+        count: 2,
+        data: [admin2WithoutCountriesAccess],
+      });
+
+      // Find users without any role assigned
+      const usersWithoutRoles = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 100, filter: { role: 'unAssignedRole' } });
+
+      expect(usersWithoutRoles.statusCode).toEqual(200);
+      expect(usersWithoutRoles.body).toMatchObject({
+        count: 1,
+        data: [admin2WithoutCountriesAccess],
+      });
+
+      // Find users with roles assigned
+      const usersWithRoles = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 100, filter: { role: adminRoleId } });
+
+      expect(usersWithRoles.statusCode).toEqual(200);
+      expect(usersWithRoles.body).toMatchObject({
+        count: 1,
+        data: [admin1WithCountriesAccess],
+      });
+
+      // Find users with email
+      const usersWithEmail = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 100, filter: { email: ADMIN_1.email } });
+
+      expect(usersWithEmail.statusCode).toEqual(200);
+      expect(usersWithEmail.body).toMatchObject({
+        count: 1,
+        data: [admin1WithCountriesAccess],
+      });
+
+      // Finding users with nonsense email
+      const nonsenseEmailUsers = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 100, filter: { email: 'nonsense' } });
+
+      expect(nonsenseEmailUsers.statusCode).toEqual(200);
+      expect(nonsenseEmailUsers.body).toMatchObject({ count: 0, data: [] });
+
+      // Find users with Taager id
+      const usersWithTaagerId = await request(app)
+        .post('/api/user/getAllAdminUsers')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 100, filter: { taggerId: '1' } });
+
+      expect(usersWithTaagerId.statusCode).toEqual(200);
+      expect(usersWithTaagerId.body).toMatchObject({
+        count: 1,
+        data: [{ ...ADMIN_1, userRole }],
+      });
+    });
+  });
+
+  afterEach(async () => {
+    await User.remove({});
+    await UserRoles.remove({});
+    await UserPrivileges.remove({});
+    await UsersCountriesAccess.remove({});
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

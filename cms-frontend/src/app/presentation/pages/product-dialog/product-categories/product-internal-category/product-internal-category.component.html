@@ -1,0 +1,69 @@
+<nb-accordion>
+  <nb-accordion-item expanded>
+    <nb-accordion-item-header class="accordion-header">
+      Internal Categories
+    </nb-accordion-item-header>
+    <nb-accordion-item-body class="accordion-body" [nbSpinner]="isLoading" nbSpinnerStatus="primary">
+      <form *ngIf="!isLoading"
+        [formGroup]="productsService.productForm.get('productCategoryForm').get('internalCategoryForm')">
+        <div>
+          <p class="warning-paragraph">You should fill all levels</p>
+          <p>Category (level 1)</p>
+          <nb-select
+            (selectedChange)="onCategorySelectionChange($event, 1)"
+            fullWidth
+            class="down-spacing"
+            formControlName="levelOneCategoryId"
+          >
+            <nb-option disabled *ngIf="!levelOneCategoriesList.length"
+              >There is no internal categories</nb-option
+            >
+            <nb-option
+              *ngFor="let category of levelOneCategoriesList"
+              [value]="category.id"
+              >{{ category.name.englishName }}</nb-option
+            >
+          </nb-select>
+        </div>
+        <div>
+          <p>Level 2</p>
+          <nb-select
+            (selectedChange)="onCategorySelectionChange($event, 2)"
+            fullWidth
+            class="down-spacing"
+            formControlName="levelTwoCategoryId"
+          >
+            <nb-option value="" disabled *ngIf="!levelTwoCategoriesList.length"
+              >There is no internal sub categories</nb-option
+            >
+            <nb-option
+              *ngFor="let subCategory of levelTwoCategoriesList"
+              [value]="subCategory.id"
+              >{{ subCategory.name.englishName }}</nb-option
+            >
+          </nb-select>
+        </div>
+        <div>
+          <p>Level 3</p>
+          <nb-select
+            fullWidth
+            class="down-spacing"
+            formControlName="levelThreeCategoryId"
+          >
+            <nb-option
+              value=""
+              disabled
+              *ngIf="!levelThreeCategoriesList.length"
+              >There is no internal sub categories</nb-option
+            >
+            <nb-option
+              *ngFor="let subCategory of levelThreeCategoriesList"
+              [value]="subCategory.id"
+              >{{ subCategory.name.englishName }}</nb-option
+            >
+          </nb-select>
+        </div>
+      </form>
+    </nb-accordion-item-body>
+  </nb-accordion-item>
+</nb-accordion>

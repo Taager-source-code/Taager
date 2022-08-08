@@ -1,0 +1,173 @@
+@import 'common.scss';
+
+:host {
+
+  @include fluid-type(991px, 1920px, 12px, 16px);
+
+  .order-filters {
+
+    background-color: $light-gray;
+
+    padding: em-calc(26px 32px 21px);
+
+    margin-bottom: em-calc(40px);
+
+    border-radius: 10px;
+
+    &__row {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      flex-wrap: wrap;
+
+      font-size: em-calc(18px);
+
+      &:not(:last-of-type) {
+
+        margin-bottom: em-calc(24px);
+
+      }
+
+    }
+
+    &__long-input {
+
+      width: 65%;
+
+      border-radius: 5px;
+
+      background-color: white;
+
+      input {
+
+        font-size: em-calc(18px, em-calc(18px));
+
+      }
+
+    }
+
+    &__input, &__select, &__date-picker {
+
+      border-radius: 5px;
+
+      background-color: white;
+
+    }
+
+    &__input {
+
+      width: 33%;
+
+    }
+
+    &__select, &__date-picker {
+
+      width: 18%;
+
+      @media(max-width: 600px) {
+
+        width: 49%;
+
+        margin-bottom: em-calc(24px);
+
+      }
+
+    }
+
+    &__button {
+
+      width: 10%;
+
+      border-radius: 5px;
+
+      min-height: em-calc(45px);
+
+      &:focus {
+
+        outline-color: $primary-color
+
+      }
+
+      &:hover:not(:disabled) {
+
+        cursor: pointer;
+
+        opacity: 0.7;
+
+      }
+
+      @media(max-width: 600px) {
+
+        width: 49%;
+
+      }
+
+      &--solid {
+
+        color: $white; 
+
+        background-color: $primary-color;
+
+        border: 1px solid $primary-color;
+
+      }
+
+      &--stroked {
+
+        color: $primary-color;
+
+        background-color: $white;
+
+        border: 1px solid $primary-color; 
+
+      }
+
+    }
+
+    mat-form-field::ng-deep {
+
+      .mat-form-field-wrapper {
+
+        padding: 0;
+
+        margin: 0;
+
+      }
+
+      .mat-form-field-outline-thick {
+
+        color: $primary-color;
+
+      }
+
+      .mat-form-field-wrapper, .mat-form-field-flex, .mat-form-field-outline {
+
+        height: 100%;
+
+      }
+
+      .mat-icon-button:focus {
+
+        outline: none;
+
+      }
+
+      .mat-datepicker-toggle-default-icon {
+
+        fill: $primary-color;
+
+      }
+
+      .mat-form-field-suffix, .mat-form-field-prefix {
+
+        top: 0.35em;
+
+      }
+
+    }
+
+  }
+
+}

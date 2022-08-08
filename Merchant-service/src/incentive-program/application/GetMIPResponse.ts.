@@ -1,0 +1,16 @@
+export default class GetMIPResponse {
+  public incentiveProgram: any;
+  public orders: any;
+
+  /**
+   *
+   * @param {IncentiveProgram} incentiveProgram
+   * @param {Number} orders
+   */
+  constructor(incentiveProgram, orders) {
+    this.incentiveProgram = incentiveProgram;
+    this.orders = orders;
+  }
+}
+
+

@@ -1,0 +1,7 @@
+export interface GetProvincesPaginatedRequest {
+  pageSize: number;
+  page: number;
+  country: string;
+}
+
+

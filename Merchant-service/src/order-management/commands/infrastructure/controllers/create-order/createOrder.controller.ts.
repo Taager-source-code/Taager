@@ -1,0 +1,128 @@
+import {
+  UNAUTHORIZED,
+  UNPROCESSABLE_ENTITY,
+  INTERNAL_SERVER_ERROR,
+  OK,
+  CREATED,
+  CONFLICT,
+  SERVICE_UNAVAILABLE,
+} from 'http-status';
+import { Container } from 'typedi';
+import { validateOrderByCartRequest } from './createOrder.validator';
+import * as orderDetailsService from '../../../application/usecases/orderDetails.service';
+import { MerchantOrderPlacedEventHandler } from '../../../../../engagement/activity/commands/application/usecases/MerchantOrderCreationEventHandler';
+import { TooLowProductPriceError, InvalidProvinceError } from '../../../domain/order.errors';
+
+import Logger from '../../../../../shared-kernel/infrastructure/logging/general.log';
+
+import ProductNotFoundError from '../../../../../content-management/commands/domain/exceptions/product.errors';
+import {
+  isBlanketRamadanBlockEnabled,
+  isRamadanBlockEnabled,
+} from '../../../../../shared-kernel/infrastructure/toggles/activeFeatureToggles';
+import { OrderPlacedEvent } from '../../../../../engagement/activity/commands/application/models/OrderCreationEvent';
+
+const mapMakeOrderByCartStatus = status => {
+  switch (status) {
+    case orderDetailsService.makeOrderByCartStatuses.UN_AUTHORIZED_ACTION.code:
+      return UNAUTHORIZED;
+    case orderDetailsService.makeOrderByCartStatuses.ONE_OR_MORE_PRODUCT_IS_NOT_AVAILABLE.code:
+    case orderDetailsService.makeOrderByCartStatuses.ORDER_PRICE_EXCEED_LIMIT.code:
+    case orderDetailsService.makeOrderByCartStatuses.SPAMMER_END_CUSTOMER.code:
+      return CONFLICT;
+    case orderDetailsService.makeOrderByCartStatuses.ORDER_CREATED.code:
+      return CREATED;
+    default:
+      return OK;
+  }
+};
+
+const blockStart = new Date('2022-07-04T21:59:00.000Z');
+const egyBlockEnd = new Date('2022-07-10T07:00:00.000Z');
+const ksaBlockEnd = new Date('2022-07-14T07:00:00.000Z');
+
+function ramadanBlock(req) {
+  const tagerId = req.decodedToken.user.TagerID;
+  const country = req.country.countryIsoCode3;
+  const currentTime = new Date();
+  if (isRamadanBlockEnabled(tagerId)) {
+    if (isBlanketRamadanBlockEnabled(tagerId)) {
+      return true;
+    } else if (country === 'EGY' && currentTime > blockStart && currentTime < egyBlockEnd) {
+      return true;
+    } else if (country === 'SAU' && currentTime > blockStart && currentTime < ksaBlockEnd) {
+      return true;
+    }
+  }
+}
+
+function createOrderPlacedEvent(order): OrderPlacedEvent {
+  return {
+    taagerId: order.TagerID,
+    orderBusinessId: order.orderID,
+    province: order.province,
+    country: order.country,
+    cartSize: order.cartSize,
+    cashOnDelivery: order.cashOnDelivery,
+    endCustomerPhoneNumber: order.phoneNumber,
+  };
+}
+
+/**
+ * makeOrderByCart places order from cart
+ * @param {http request} req
+ * @param {http response} res
+ * @returns {Promise<http response>}
+ */
+export const makeOrderByCart = async (req, res) => {
+  if (ramadanBlock(req)) {
+    return res.status(SERVICE_UNAVAILABLE).json({
+      msg: 'ØªØ§Ø¬Ø± Ù„Ù† ØªØ³ØªÙ‚Ø¨Ù„ Ø·Ù„Ø¨Ø§Øª Ø­ØªÙ‰ Ù†Ù‡Ø§ÙŠØ© Ø§Ø¬Ø§Ø²Ù‡ Ø¹ÙŠØ¯ Ø§Ù„Ø§Ø¶Ø­Ù‰ Ù„Ù„ØªÙØ§ØµÙŠÙ„ ÙŠØ±Ø¬Ù‰ Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª',
+    });
+  }
+
+  const { error, value: orderByCart } = validateOrderByCartRequest(req.body);
+  if (error) {
+    return res.status(UNPROCESSABLE_ENTITY).json({
+      msg: error.details[0].message,
+    });
+  }
+  Logger.info('Creating new order');
+  try {
+    const response = await orderDetailsService.makeOrderByCart(req, orderByCart);
+    if (!response) throw new Error('something went wrong!');
+    res.status(mapMakeOrderByCartStatus(response.status)).json(response.result);
+
+    await Container.of()
+      .get(MerchantOrderPlacedEventHandler)
+      .execute(createOrderPlacedEvent(response.orderDetails));
+  } catch (err) {
+    if (err instanceof InvalidProvinceError) {
+      Logger.error(`makeOrderByCart: ${err.stack}`);
+      res.status(CONFLICT).json({
+        msg: 'Province does not exist in database',
+        province: [err.province],
+      });
+    } else if (err instanceof TooLowProductPriceError) {
+      Logger.error(`makeOrderByCart: ${err.stack}`);
+      res.status(CONFLICT).json({
+        msg: 'Product sold below base price',
+        products: [err.product],
+      });
+    } else if (err instanceof ProductNotFoundError) {
+      Logger.error(`makeOrderByCart: ${err.stack}`);
+      res.status(CONFLICT).json({
+        msg: 'Product not found',
+      });
+    } else if (err instanceof Error) {
+      return res.status(INTERNAL_SERVER_ERROR).json({
+        msg: err.message,
+      });
+    } else {
+      Logger.error(`Unexpected error: ${err}`);
+    }
+  }
+};
+
+
+

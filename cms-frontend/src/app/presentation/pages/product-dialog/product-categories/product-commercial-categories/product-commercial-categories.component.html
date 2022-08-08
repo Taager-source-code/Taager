@@ -1,0 +1,36 @@
+<nb-accordion>
+  <nb-accordion-item expanded [nbSpinner]="isLoadingLevelOneCategoriesList" nbSpinnerSize="giant" nbSpinnerStatus="primary">
+    <nb-accordion-item-header class="accordion-header"> Commercial Categories </nb-accordion-item-header>
+    <nb-accordion-item-body *ngIf="!isLoadingLevelOneCategoriesList">
+      <form [formGroup]="productsService.productForm.get('productCategoryForm')">
+        <p>Category</p>
+        <nb-select fullWidth class="down-spacing" (selectedChange)="setCategoryName($event)" formControlName="categoryId">
+          <nb-option *ngFor="let category of categoriesList" [value]="category._id">
+            {{category.name.arName}}
+          </nb-option>
+        </nb-select>
+      </form>
+      <div *ngIf="addEditProductCommercialCategoryFlag">
+        <ngx-product-commercial-category-card
+          *ngFor="let cardFormGroup of cardsFormGroupList.controls; let idx = index"
+          [cardIndex]="idx + 1"
+          [levelOneCategoriesList]="levelOneCategoriesList"
+          [shouldShowDeleteButton]="cardsFormGroupList.length > 1"
+          [commercialCategoryFormGroup]="cardFormGroup"
+          (deleteCardClicked)="onDeleteCard(idx)"
+        ></ngx-product-commercial-category-card>
+        <div class="add-button-container">
+          <button
+            *ngIf="cardsFormGroupList.length < 3"
+            class="add-category-button"
+            (click)="onAddNewCard()"
+          >
+            <p class="add-category-button__text">
+              + Add one more commercial Category
+            </p>
+          </button>
+        </div>
+      </div>
+    </nb-accordion-item-body>
+  </nb-accordion-item>
+</nb-accordion>

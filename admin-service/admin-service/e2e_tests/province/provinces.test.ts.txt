@@ -1,0 +1,763 @@
+import dotenv from 'dotenv';
+dotenv.config();
+process.env.SECRET = 'yallahabibi';
+process.env.ROLLBAR_ACCESS_TOKEN = 'yallahabibi2';
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import ProvinceModel from '../../src/order-management/common/infrastructure/db/schemas/province';
+import User from '../../src/models/user.model';
+import CountryModel from '../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import { countryFixture } from '../fixtures/countryFixture';
+import { differentCountriesProvinces, egyProvinces } from '../fixtures/provinceFixtures';
+
+jest.mock('axios');
+
+import axios from 'axios';
+import { when } from 'jest-when';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import { FORBIDDEN } from 'http-status';
+
+describe('/api/province', () => {
+  let app: any = null;
+  let accessToken: string;
+  let userId: string;
+
+  const createUser = async () => {
+    const user = await User.create(ADMIN_1);
+    userId = user._id;
+    await UserRoles.create({ role: 'admin' });
+  };
+
+  const login = async (app: any) => {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  };
+
+  const createEgyProvinces = async () => {
+    await ProvinceModel.insertMany(egyProvinces);
+  };
+
+  const createDifferentCountriesProvinces = async () => {
+    await ProvinceModel.insertMany(differentCountriesProvinces);
+  };
+
+  const createCountries = async () => {
+    await CountryModel.insertMany(countryFixture);
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+
+    await createUser();
+    await createCountries();
+    await login(app);
+  });
+
+  describe('/getProvinces', () => {
+    test('Should get provinces', async () => {
+      // Arrange
+      await createEgyProvinces();
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/getProvinces')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(egyProvinces);
+    });
+
+    test('Should get ARE provinces with request query being set to ARE', async () => {
+      // Arrange
+      await createDifferentCountriesProvinces();
+      const anAREProvince = {
+        _id: '507f191e810c19729de861ad',
+        location: 'province_2',
+        branch: 'Giza_2',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'ARE',
+      };
+
+      await expressServer.setUserAreRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/getProvinces?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual([anAREProvince]);
+    });
+
+    test('Viewing ARE provinces should be forbidden if admin permissions are EGY', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/getProvinces?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(FORBIDDEN);
+    });
+  });
+
+  describe('/viewProvinces', () => {
+    test('Should get provinces paginated', async () => {
+      // Arrange
+      await createEgyProvinces();
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/viewProvinces')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(egyProvinces);
+      expect(countryResponse.body.count).toEqual(4);
+    });
+
+    test('Should get ARE provinces with request query being set to ARE', async () => {
+      // Arrange
+      await createDifferentCountriesProvinces();
+      const anAREProvince = {
+        _id: '507f191e810c19729de861ad',
+        location: 'province_2',
+        branch: 'Giza_2',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'ARE',
+      };
+
+      await expressServer.setUserAreRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/viewProvinces?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual([anAREProvince]);
+    });
+
+    test('Viewing ARE provinces should be forbidden if admin permissions are EGY', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/viewProvinces?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(FORBIDDEN);
+    });
+  });
+
+  describe('/aramex-cities', () => {
+    test('Should get aramex cities', async () => {
+      // Arrange
+      const aramexCities = { data: { Cities: ['Abasya', 'Abo Rawash'] } };
+
+      // @ts-ignore
+      when(axios).calledWith(expect.anything()).mockReturnValue(aramexCities);
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/aramex-cities')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(aramexCities.data.Cities);
+    });
+  });
+
+  describe('/updateProvince/:id', () => {
+    test('Should update province successfully', async () => {
+      // Arrange
+      const provinceToBeCreatedAndUpdated = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+      const updatedProvince = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 50,
+        shippingCost: 80,
+        minETA: 4,
+        maxETA: 6,
+        isActive: false,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+
+      await ProvinceModel.create(provinceToBeCreatedAndUpdated);
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .patch(`/api/province/updateProvince/${provinceToBeCreatedAndUpdated._id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          location: updatedProvince.location,
+          branch: updatedProvince.branch,
+          shippingRevenue: updatedProvince.shippingRevenue,
+          shippingCost: updatedProvince.shippingCost,
+          minETA: updatedProvince.minETA,
+          maxETA: updatedProvince.maxETA,
+          isActive: updatedProvince.isActive,
+        });
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(provinceToBeCreatedAndUpdated);
+    });
+
+    test('Should update province successfully with country  request being set properly', async () => {
+      // Arrange
+      const provinceToBeCreatedAndUpdated = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+      const updatedProvince = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 50,
+        shippingCost: 80,
+        minETA: 4,
+        maxETA: 6,
+        isActive: false,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+
+      await ProvinceModel.create(provinceToBeCreatedAndUpdated);
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .patch(`/api/province/updateProvince/${provinceToBeCreatedAndUpdated._id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          location: updatedProvince.location,
+          branch: updatedProvince.branch,
+          shippingRevenue: updatedProvince.shippingRevenue,
+          shippingCost: updatedProvince.shippingCost,
+          minETA: updatedProvince.minETA,
+          maxETA: updatedProvince.maxETA,
+          isActive: updatedProvince.isActive,
+          country: 'EGY',
+        });
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(provinceToBeCreatedAndUpdated);
+    });
+
+    test('updating province of country admin doesnt have access to should be forbidden', async () => {
+      // Arrange
+      const updatedProvince = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 50,
+        shippingCost: 80,
+        minETA: 4,
+        maxETA: 6,
+        isActive: false,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .patch(`/api/province/updateProvince/${updatedProvince._id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          location: updatedProvince.location,
+          branch: updatedProvince.branch,
+          shippingRevenue: updatedProvince.shippingRevenue,
+          shippingCost: updatedProvince.shippingCost,
+          minETA: updatedProvince.minETA,
+          maxETA: updatedProvince.maxETA,
+          isActive: updatedProvince.isActive,
+          country: 'ARE',
+        });
+
+      expect(countryResponse.statusCode).toEqual(FORBIDDEN);
+    });
+
+    test('Should not update province with country body request being set improperly', async () => {
+      // Arrange
+      const province = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 50,
+        shippingCost: 80,
+        minETA: 4,
+        maxETA: 6,
+        isActive: false,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+
+      // Act
+      const countryResponse = await request(app)
+        .patch(`/api/province/updateProvince/${province._id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          location: province.location,
+          branch: province.branch,
+          shippingRevenue: province.shippingRevenue,
+          shippingCost: province.shippingCost,
+          minETA: province.minETA,
+          maxETA: province.maxETA,
+          isActive: province.isActive,
+          country: 'BLAH_EGY_BLAH',
+        });
+
+      expect(countryResponse.statusCode).toEqual(400);
+    });
+
+    test('Should error 422 if something missing in the request body like location', async () => {
+      // Arrange
+      const provinceToBeCreatedAndUpdated = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      };
+      const updatedProvince = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 50,
+        shippingCost: 80,
+        minETA: 4,
+        maxETA: 6,
+        isActive: false,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      };
+
+      await ProvinceModel.create(provinceToBeCreatedAndUpdated);
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .patch(`/api/province/updateProvince/${provinceToBeCreatedAndUpdated._id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          branch: updatedProvince.branch,
+          shippingRevenue: updatedProvince.shippingRevenue,
+          shippingCost: updatedProvince.shippingCost,
+          minETA: updatedProvince.minETA,
+          maxETA: updatedProvince.maxETA,
+          isActive: updatedProvince.isActive,
+          country: 'EGY',
+        });
+
+      expect(countryResponse.statusCode).toEqual(422);
+      expect(countryResponse.body.msg).toEqual('"location" is required');
+    });
+
+    test("Should error 404 if province doesn't exist", async () => {
+      // Arrange
+      const updatedProvince = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 50,
+        shippingCost: 80,
+        minETA: 4,
+        maxETA: 6,
+        isActive: false,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      };
+
+      // Act
+      const countryResponse = await request(app)
+        .patch(`/api/province/updateProvince/507f191e810c19729de860ac`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          location: updatedProvince.location,
+          branch: updatedProvince.branch,
+          shippingRevenue: updatedProvince.shippingRevenue,
+          shippingCost: updatedProvince.shippingCost,
+          minETA: updatedProvince.minETA,
+          maxETA: updatedProvince.maxETA,
+          isActive: updatedProvince.isActive,
+          country: 'EGY',
+        });
+
+      expect(countryResponse.statusCode).toEqual(404);
+      expect(countryResponse.body.msg).toEqual('Un-able to find required resource');
+    });
+  });
+
+  describe('/addProvinceZones', () => {
+    test('Should return with deprecation message', async () => {
+      // Arrange
+      const provinceToBeCreatedAndUpdated = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      };
+      const provinceWithRedAndGreenZones = {
+        province: 'maadi',
+        greenZones: ['green_area'],
+        redZones: ['red_area'],
+      };
+
+      await ProvinceModel.create(provinceToBeCreatedAndUpdated);
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .post('/api/province/addProvinceZones')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          provinces: [provinceWithRedAndGreenZones],
+        });
+
+      expect(countryResponse.statusCode).toEqual(403);
+      expect(countryResponse.body.msg).toEqual(
+        'Province zone addition/deletion feature is disabled. Contact tech-support',
+      );
+    });
+
+    test('Should return with deprecation message when country body request being set properly', async () => {
+      // Arrange
+      const provinceToBeCreatedAndUpdated = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+      const provinceWithRedAndGreenZones = {
+        province: 'maadi',
+        greenZones: ['green_area'],
+        redZones: ['red_area'],
+      };
+
+      await ProvinceModel.create(provinceToBeCreatedAndUpdated);
+
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .post('/api/province/addProvinceZones')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          provinces: [provinceWithRedAndGreenZones],
+        });
+
+      expect(countryResponse.statusCode).toEqual(403);
+      expect(countryResponse.body.msg).toEqual(
+        'Province zone addition/deletion feature is disabled. Contact tech-support',
+      );
+    });
+
+    test("Adding zones to countries admin doesn't have access to should fail", async () => {
+      // Arrange
+      const provinceToBeCreatedAndUpdated = {
+        _id: '507f191e810c19729de860ac',
+        location: 'maadi',
+        branch: 'Nile',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+        country: 'EGY',
+      };
+      const provinceWithRedAndGreenZones = {
+        province: 'maadi',
+        greenZones: ['green_area'],
+        redZones: ['red_area'],
+      };
+
+      await ProvinceModel.create(provinceToBeCreatedAndUpdated);
+
+      await expressServer.setUserAreRole(app, accessToken, userId);
+
+      // Act
+      const countryResponse = await request(app)
+        .post('/api/province/addProvinceZones')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          provinces: [provinceWithRedAndGreenZones],
+        });
+
+      expect(countryResponse.statusCode).toEqual(FORBIDDEN);
+    });
+
+    test('Should not add province zones with country body request being set improperly', async () => {
+      // Arrange
+      const provinceWithRedAndGreenZones = {
+        province: 'maadi',
+        greenZones: ['green_area'],
+        redZones: ['red_area'],
+      };
+
+      // Act
+      const countryResponse = await request(app)
+        .post('/api/province/addProvinceZones')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          provinces: [provinceWithRedAndGreenZones],
+          country: 'WRONG_COUNTRY_CODE',
+        });
+
+      expect(countryResponse.statusCode).toEqual(400);
+    });
+  });
+
+  describe('/createProvince', () => {
+    test('Should create ARE province with country set to ARE in body', async () => {
+      // Act
+      await expressServer.setUserAreRole(app, accessToken, userId);
+
+      const createProvinceResponse = await request(app)
+        .post('/api/province/createProvince')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          country: 'ARE',
+          location: 'doha',
+          branch: 'doha',
+          shippingRevenue: 30,
+          shippingCost: 50,
+          minETA: 1,
+          maxETA: 3,
+          isActive: true,
+        });
+
+      const getProvinceResponse = await request(app)
+        .get('/api/province/getProvinces?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      //Assert
+      expect(createProvinceResponse.statusCode).toEqual(201);
+      expect(createProvinceResponse.body.msg).toEqual('Province created!');
+      expect(getProvinceResponse.statusCode).toEqual(200);
+      expect(getProvinceResponse.body.data).toMatchObject([
+        {
+          country: 'ARE',
+          location: 'doha',
+          branch: 'doha',
+          shippingRevenue: 30,
+          shippingCost: 50,
+          minETA: 1,
+          maxETA: 3,
+          isActive: true,
+        },
+      ]);
+    });
+
+    test('Should not create province if admin doesnt have access to countries', async () => {
+      // Act
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const createProvinceResponse = await request(app)
+        .post('/api/province/createProvince')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          country: 'ARE',
+          location: 'doha',
+          branch: 'doha',
+          shippingRevenue: 30,
+          shippingCost: 50,
+          minETA: 1,
+          maxETA: 3,
+          isActive: true,
+        });
+
+      //Assert
+      expect(createProvinceResponse.statusCode).toEqual(FORBIDDEN);
+    });
+
+    test('Should create EGY province with no country in body', async () => {
+      // Act
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const createProvinceResponse = await request(app)
+        .post('/api/province/createProvince')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          country: 'EGY',
+          location: 'location_egy',
+          branch: 'branch_egy',
+          shippingRevenue: 30,
+          shippingCost: 50,
+          minETA: 1,
+          maxETA: 3,
+          isActive: true,
+        });
+
+      const getProvinceResponse = await request(app)
+        .get('/api/province/getProvinces?country=EGY')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(createProvinceResponse.statusCode).toEqual(201);
+      expect(createProvinceResponse.body.msg).toEqual('Province created!');
+      expect(getProvinceResponse.statusCode).toEqual(200);
+      expect(getProvinceResponse.body.data).toMatchObject([
+        {
+          country: 'EGY',
+          location: 'location_egy',
+          branch: 'branch_egy',
+          shippingRevenue: 30,
+          shippingCost: 50,
+          minETA: 1,
+          maxETA: 3,
+          isActive: true,
+        },
+      ]);
+    });
+
+    test('Should give bad request error with wrong country in body', async () => {
+      // Act
+      const createProvinceResponse = await request(app)
+        .post('/api/province/createProvince')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          country: 'USA',
+          location: 'doha',
+          branch: 'doha',
+          shippingRevenue: 30,
+          shippingCost: 50,
+          minETA: 1,
+          maxETA: 3,
+          isActive: true,
+        });
+
+      // Assert
+      expect(createProvinceResponse.statusCode).toEqual(400);
+    });
+  });
+
+  afterEach(async () => {
+    await ProvinceModel.deleteMany({});
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

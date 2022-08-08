@@ -1,0 +1,32 @@
+<nb-card
+  [nbSpinner]="isUploadingImages"
+  nbSpinnerSize="small"
+  nbSpinnerStatus="primary"
+>
+  <nb-card-body>
+    <div class="product-image-wrapper__uploader">
+      <div class="img-preview" *ngFor="let url of imageUrlList; let i = index">
+        <img [src]="url" class="preview" />
+        <button class="remove-img-btn" (click)="removeImage(i)">
+          <img src="assets/images/remove-img.svg" alt="delete image" />
+        </button>
+      </div>
+      <label class="upload-btn">
+        <input
+          class="hidden"
+          type="file"
+          accept="image/*"
+          accept=".jpg, .jpeg, .png, .mp4, video/*"
+          multiple
+          (change)="uploadFiles($event)"
+        />
+        <img
+          class="upload-btn__image"
+          src="assets/images/upload-img.svg"
+          alt="upload image"
+        />
+        <p>Click to Upload</p>
+      </label>
+    </div>
+  </nb-card-body>
+</nb-card>

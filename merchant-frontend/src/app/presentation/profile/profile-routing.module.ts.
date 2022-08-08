@@ -1,0 +1,38 @@
+import { InjectionToken, NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+import { ProfileRoutingModule } from './profile-routing.module';
+import { SharedModule } from '../shared/shared.module';
+import { AccountComponent } from './account.component';
+import { PersonalInfoComponent } from './personal-info/personal-info.component';
+import { ChangePasswordComponent } from './change-password/change-password.component';
+import { ReferredAccountComponent } from './referred-account/referred-account.component';
+import { profileComponentsAssetsPath, profileComponentsAssetsPathToken } from './shared/config/profile.component.assets.path.config';
+import { ChangeWalletPasswordComponent } from './change-wallet-password/change-wallet-password.component';
+import { FormFieldErrorComponent } from './shared/components/form-field-error/form-field-error.component';
+import { ProfileMainHeaderComponent } from './shared/components/profile-main-header/profile-main-header.component';
+
+@NgModule({
+  declarations: [
+    AccountComponent,
+    PersonalInfoComponent,
+    ChangePasswordComponent,
+    ReferredAccountComponent,
+    ChangeWalletPasswordComponent,
+
+    // shared components
+    FormFieldErrorComponent,
+    ProfileMainHeaderComponent
+  ],
+  imports: [
+    SharedModule,
+    CommonModule,
+    ProfileRoutingModule
+  ],
+  providers: [
+    { provide: profileComponentsAssetsPathToken, useValue: profileComponentsAssetsPath }
+  ]
+})
+export class ProfileModule { }
+
+

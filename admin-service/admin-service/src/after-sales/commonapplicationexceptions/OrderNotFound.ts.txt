@@ -1,0 +1,5 @@
+export class OrderNotFound extends Error {
+  constructor(orderId?: string) {
+    super(`After sales order with id ${orderId} not found.`);
+  }
+}

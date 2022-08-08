@@ -1,0 +1,1085 @@
+import dotenv from 'dotenv';
+dotenv.config();
+process.env.SECRET = 'yallahabibi';
+process.env.ROLLBAR_ACCESS_TOKEN = 'yallahabibi2';
+process.env.BOSTA_API_KEY = `3972f449344cd8f6fb64a9184c26f3ebc4f9ccf4c655dacf2dc9cf3348015f6d`;
+process.env.BOSTA_ROOT_URL = `http://stg-app.bosta.co`;
+process.env.BOSTA_CALLBACK_AUTH_HEADER = `njwbBdsPuxuTPIdw0IbWp5zXnWitasvYVWrs8J`;
+process.env.VHUBS_ROOT_URL = 'https://vhubsdev.com-eg.net/api/ClientUsers';
+process.env.VHUBS_ACCESS_TOKEN = '4E6B9679-2F0E-46A4-8166-B5C8DA4341DC';
+process.env.VHUBS_VALUE = `VEJyZEtJd3QzR1I2bm4zMnB2MWY6TXoyUDBiQWNZMDBkd25o`;
+process.env.LINK_CHAIN_ROOT_URL = 'https://vhubsdev.com-eg.net/api/ClientUsers';
+process.env.LINK_CHAIN_ACCESS_TOKEN = '4E6B9679-2F0E-46A4-8166-B5C8DA4341DC';
+process.env.LINK_CHAIN_VALUE = `VEJyZEtJd3QzR1I2bm4zMnB2MWY6TXoyUDBiQWNZMDBkd25o`;
+process.env.OPEX_VALUE = `VEJyZEtJd3QzR1I2bm4zMnB2MWY6TXoyUDBiQWNZMDBkd25x`;
+process.env.OTO_CALLBACK_AUTH_HEADER = `njwbBdsPuxuTPIdw0IbWp5zXnWitasvYVWrs8J`;
+process.env.SALASA_CALLBACK_AUTH_HEADER = `njwbBdsPuxuTPIdw0IbWp5zXnWitasvYVWrs9J`;
+process.env.YFS_CALLBACK_AUTH_HEADER = `njwbBdsPuxuTPIdw0IbWp5zXnWitasvYVWrs9X`;
+process.env.DIGGIPACKS_CALLBACK_AUTH_HEADER = `Gypry8u2TB2rQZFRidsKmUOCQdzW3Q7hWpCk13bMyM94n`;
+process.env.TEST_MODE = `true`;
+process.env.R2S_CLIENT_CODE = 'ACME';
+process.env.R2S_CUSTOMER_CODE = 'ACME';
+process.env.R2S_MOCK_ACTIVE = 'true';
+process.env.SPRINT_CLIENT_CODE = 'ARSLAN';
+process.env.SPRINT_CUSTOMER_CODE = 'ARSLAN';
+process.env.SPRINT_MOCK_ACTIVE = 'true';
+process.env.BOSTA_MOCK_ACTIVE = 'true';
+process.env.VHUBS_MOCK_ACTIVE = 'true';
+process.env.LINK_CHAIN_MOCK_ACTIVE = 'true';
+
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import User from '../../src/models/user.model';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import { ProductBuilder } from '../fixtures/product.fixture';
+import { ORDER_1, ORDER_2, ORDER_3 } from '../fixtures/orderFixture';
+import { MERCHANT_1 } from '../fixtures/users/merchantFixtures';
+import ProductSchema from '../../src/models/product.model';
+import OrderSchema from '../../src/models/order.model';
+import ShipmentSchema from '../../src/shipping/command/infrastructure/db/schema/ShipmentSchema';
+import Env from '../../src/Env';
+import each from 'jest-each';
+import MigrationExecutor from '../../src/migrations/migrationExecutor';
+import ShippingSlackNotifierImpl from '../../src/shipping/command/infrastructure/integrations/ShippingSlackNotifierImpl';
+import { mock, instance } from 'ts-mockito';
+import { Container } from 'typedi';
+import ShippingLocationDbo from '../../src/shipping/command/infrastructure/db/models/ShippingLocationDbo';
+import ShippingLocationSchema from '../../src/shipping/command/infrastructure/db/schema/ShippingLocationSchema';
+import ShipmentCreatedProducer from '../../src/shipping/command/infrastructure/producers/ShipmentCreatedProducer';
+import ShippingUpdateSlackNotifierImpl from '../../src/shipping/command/infrastructure/integrations/ShippingUpdateSlackNotifierImpl';
+import ShipmentDeletedProducer from '../../src/shipping/command/infrastructure/producers/ShipmentDeletedProducer';
+import DeleteShipmentsSlackNotifierImpl from '../../src/shipping/command/infrastructure/integrations/DeleteShipmentsSlackNotifierImpl';
+import ShipmentWarehouseCancelledProducer from '../../src/shipping/command/infrastructure/producers/ShipmentWarehouseCancelledProducer';
+import ShipmentCreationFailedProducer from '../../src/shipping/command/infrastructure/producers/ShipmentCreationFailedProducer';
+import CreditEligibleAmountProducer from '../../src/merchant/commands/infrastructure/withdrawals/producers/CreditEligibleAmountProducer';
+import OrderConfirmedProducer from '../../src/order-management/commands/infrastructure/producers/orders/OrderConfirmedProducer';
+import CountryModel from '../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import OrderUnConfirmedProducer from '../../src/order-management/commands/infrastructure/producers/orders/OrderUnConfirmedProducer';
+import { DIGGIPACKS } from '../../src/shipping/command/domain/models/ShippingCompanies';
+import ShippingCompany from '../../src/shipping/common/db/schema/ShippingCompany';
+import { REPLACEMENT_ORDER_1 } from '../fixtures/afterSaleOrdersFixtures';
+import AfterSaleOrderModel from '../../src/models/afterSaleOrder.model';
+import { DELIVERED, REFUND_VERIFIED } from '../../src/order-management/common/domain/models/OrderStatuses';
+jest.mock('../../src/logging/general.log');
+import Logger from '../../src/logging/general.log';
+
+const time = new Date();
+const defaultWarehouse = 'H01';
+
+describe('/api/shipping', () => {
+  let app: any = null;
+  let accessToken: string;
+  let insertedProducts: any;
+  let shipmentCreatedProducerMock: ShipmentCreatedProducer;
+  let shipmentDeletedProducerMock: ShipmentDeletedProducer;
+  let shipmentWarehouseCancelledMock: ShipmentWarehouseCancelledProducer;
+  let shipmentCreationFailedProducerMock: ShipmentCreationFailedProducer;
+  let creditEligibleAmountProducerMock: CreditEligibleAmountProducer;
+  let orderConfirmedProducerMock: OrderConfirmedProducer;
+  let orderUnConfirmedProducerMock: OrderUnConfirmedProducer;
+
+  const createUser = async () => {
+    await User.create(ADMIN_1);
+    await UserRoles.create({ role: 'admin' });
+  };
+
+  const login = async (app: any) => {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  };
+
+  async function createOrders(status: string) {
+    insertedProducts = await ProductSchema.insertMany([
+      new ProductBuilder().available().build(),
+      new ProductBuilder().available().build(),
+      new ProductBuilder().available().build(),
+    ]);
+    ORDER_1.TagerID = MERCHANT_1.TagerID;
+    ORDER_1.status = status;
+    ORDER_1['confirmationDate'] = new Date('December 01, 2021 00:00:00');
+    ORDER_1.products = [insertedProducts[0]._id, insertedProducts[1]._id, insertedProducts[2]._id];
+    ORDER_1.productIds = [insertedProducts[0].prodID, insertedProducts[1].prodID, insertedProducts[2].prodID];
+    await OrderSchema.insertMany([ORDER_1, ORDER_2]);
+  }
+
+  async function createNewConfirmedOrder() {
+    const insertedProductsNew = await ProductSchema.insertMany([new ProductBuilder().available().build()]);
+    ORDER_3.products = [insertedProductsNew[0]._id];
+    ORDER_3.status = 'confirmed';
+    ORDER_3.TagerID = MERCHANT_1.TagerID;
+    ORDER_3.country = 'EGY';
+    ORDER_3['confirmationDate'] = new Date('December 01, 2021 00:00:00');
+    await OrderSchema.insertMany([ORDER_3]);
+  }
+
+  async function createLocationMappings() {
+    const locations: ShippingLocationDbo[] = [
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_1.zone.name,
+        province: ORDER_1.province,
+        shippingCompany: 'r2s',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_2.zone.name,
+        province: ORDER_2.province,
+        shippingCompany: 'r2s',
+        country: 'EGY',
+      },
+
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_1.zone.name,
+        province: ORDER_1.province,
+        shippingCompany: 'sprint',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_2.zone.name,
+        province: ORDER_2.province,
+        shippingCompany: 'sprint',
+        country: 'EGY',
+      },
+    ];
+    await ShippingLocationSchema.insertMany(locations);
+  }
+  async function createCountries() {
+    await CountryModel.insertMany([
+      {
+        countryIsoCode3: 'EGY',
+        countryIsoCode2: 'EG',
+        countryIsoNumber: 818,
+        currencyIsoCode: 'EGP',
+      },
+      {
+        countryIsoCode3: 'ARE',
+        countryIsoCode2: 'AE',
+        countryIsoNumber: 784,
+        currencyIsoCode: 'AED',
+      },
+      {
+        countryIsoCode3: 'SAU',
+        countryIsoCode2: 'SA',
+        countryIsoNumber: 682,
+        currencyIsoCode: 'SAR',
+      },
+    ]);
+  }
+
+  async function createShippingCompanies() {
+    await ShippingCompany.insertMany([
+      {
+        companyId: 'EG_FEDEX',
+        name: 'fedex',
+        country: 'EGY',
+        isIntegrated: true,
+      },
+      {
+        companyId: 'EG_BOSTA',
+        name: 'bosta',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+      {
+        companyId: 'EG_VHUBS',
+        name: 'vhubs',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+      {
+        companyId: 'EG_OPEX',
+        name: 'opex',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+      {
+        companyId: 'EG_R2S',
+        name: 'r2s',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+    ]);
+  }
+
+  async function createBulkShipments(status) {
+    const orderLineDbo = {
+      productId: '61482e40a992087686b00000',
+      productName: 'productName',
+      color: 'color:',
+      size: 'size',
+      quantity: 1,
+    };
+    const order = {
+      orderBusinessId: ORDER_1.orderID,
+      cashOnDelivery: 190,
+      orderLines: [orderLineDbo],
+    };
+    const receiver = {
+      name: 'testReceiver',
+      mobileNumber: '01234567891',
+      mobileNumber2: '01234567892',
+      province: 'testProvince',
+      address: 'address',
+    };
+    const shipmentStatusDbo = {
+      status,
+      shippingCompanyStatus: 'manually',
+      date: new Date(),
+    };
+    const shipment = {
+      trackingNumber: '1060794',
+      order,
+      shippingCompany: 'opex',
+      receiver,
+      allowToOpenPackage: true,
+      stateTracking: [shipmentStatusDbo],
+      warehouse: defaultWarehouse,
+    };
+    await ShipmentSchema.insertMany([shipment]);
+  }
+
+  interface StateTracking {
+    status: string;
+    date: string;
+    shippingCompanyStatus: string;
+  }
+
+  async function createShipmentInDB(
+    trackingNumber: string,
+    orderId: string,
+    company: string,
+    stateTracking: StateTracking[] = [],
+  ) {
+    const order = {
+      orderBusinessId: orderId,
+      cashOnDelivery: 190,
+      orderLines: [],
+    };
+    const receiver = {
+      name: 'testReceiver',
+      mobileNumber: '01234567891',
+      mobileNumber2: '01234567892',
+      province: 'testProvince',
+      address: 'address',
+    };
+    const shipment = {
+      trackingNumber: trackingNumber,
+      order,
+      shippingCompany: company,
+      receiver,
+      allowToOpenPackage: true,
+      stateTracking,
+      warehouse: defaultWarehouse,
+    };
+    await ShipmentSchema.insertMany([shipment]);
+  }
+
+  function createShipmentsFromSheet(
+    shippingCompany: string,
+    creationDate: Date = new Date(),
+    warehouse = defaultWarehouse,
+  ) {
+    // Act
+    return request(app)
+      .post('/api/shipping/shipments/bulk-sheet')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        orders: [
+          {
+            orderBusinessId: ORDER_1.orderID,
+            allowToOpenPackage: false,
+            trackingNumber: '1234',
+            createdAt: creationDate,
+          },
+        ],
+        shippingCompany: shippingCompany,
+        country: 'EGY',
+        warehouse: warehouse,
+      });
+  }
+
+  function getShippingCompanies() {
+    return request(app).get('/api/shipping/shipping-companies').set('Authorization', `Bearer ${accessToken}`).send({});
+  }
+
+  function createMultipleShipmentsFromSheet(shippingCompany: string, warehouse = defaultWarehouse) {
+    // Act
+    return request(app)
+      .post('/api/shipping/shipments/bulk-sheet')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        orders: [
+          {
+            orderBusinessId: ORDER_1.orderID,
+            allowToOpenPackage: false,
+            trackingNumber: '1234',
+            createdAt: new Date(),
+          },
+          {
+            orderBusinessId: ORDER_3.orderID,
+            allowToOpenPackage: false,
+            trackingNumber: '4321',
+            createdAt: new Date(),
+          },
+        ],
+        shippingCompany: shippingCompany,
+        country: 'EGY',
+        warehouse: warehouse,
+      });
+  }
+
+  function sendShipmentUpdate(company: string, trackingNumber: string | number, status = '') {
+    if (company.toLowerCase() == 'vhubs') {
+      return request(app)
+        .post('/api/shipping/vhubs/shipment-status')
+        .set('Authorization', `Basic ${Env.VHUBS_VALUE}`)
+        .send({
+          awb: trackingNumber,
+          ref: ORDER_1.orderID,
+          status: 'picked up',
+          data: {
+            auditDate: new Date().toISOString(),
+          },
+        });
+    } else if (company.toLowerCase() == 'bosta') {
+      return request(app)
+        .post('/api/shipping/bosta/shipment-status')
+        .set('Authorization', `Basic ${Env.BOSTA_CALLBACK_AUTH_HEADER}`)
+        .send({
+          _id: '12345',
+          trackingNumber: trackingNumber,
+          businessReference: ORDER_1.orderID,
+          state: 21,
+          cod: '989',
+          exceptionReason: '',
+          timeStamp: new Date().getTime().toString(),
+        });
+    } else if (company.toLowerCase() == 'r2s') {
+      return request(app).get(
+        `/api/shipping/r2s/shipment-status?waybillNumber=${trackingNumber}&businessReference=1234/5678&status=${status}&modifiedOn=${
+          new Date(time.setDate(time.getDate() + 5)).toISOString().replace('T', ' ').split('.')[0]
+        }`,
+      );
+    } else if (company.toLowerCase() == 'sprint') {
+      return request(app).get(
+        `/api/shipping/sprint/shipment-status?waybillNumber=${trackingNumber}&businessReference=1234/5678&status=${status}&modifiedOn=${
+          new Date(time.setDate(time.getDate() + 5)).toISOString().replace('T', ' ').split('.')[0]
+        }`,
+      );
+    } else if (company.toLowerCase() == 'link chain') {
+      return request(app)
+        .post('/api/shipping/link-chain/shipment-status')
+        .set('Authorization', `Basic ${Env.LINK_CHAIN_VALUE}`)
+        .send({
+          awb: trackingNumber,
+          ref: ORDER_1.orderID,
+          status,
+          data: {
+            auditDate: new Date().toISOString(),
+          },
+        });
+    } else if (company.toLowerCase() == 'opex') {
+      return request(app)
+        .post('/api/shipping/opex/shipment-status')
+        .set('Authorization', `Basic ${Env.OPEX_VALUE}`)
+        .send({
+          trackingNumber,
+          status,
+          modifiedOn: `${status}&modifiedOn=${
+            new Date(time.setDate(time.getDate() + 5)).toISOString().replace('T', ' ').split('.')[0]
+          }`,
+        });
+    } else if (company.toLowerCase() == 'oto') {
+      return request(app)
+        .post('/api/shipping/oto/shipment-status')
+        .set('Authorization', `Basic ${Env.OTO_CALLBACK_AUTH_HEADER}`)
+        .send({
+          trackingNumber: trackingNumber,
+          orderId: ORDER_1.orderID,
+          status: status,
+          deliveryCompany: 'testing',
+          timestamp: new Date().toString(),
+          signature: 'any-signature-now',
+        });
+    } else if (company.toLowerCase() == 'salasa') {
+      return request(app)
+        .post('/api/shipping/salasa/shipment-status')
+        .set('Authorization', `Basic ${Env.SALASA_CALLBACK_AUTH_HEADER}`)
+        .send({
+          tracking_number: trackingNumber,
+          order_id: ORDER_1.orderID,
+          status_id: status,
+          carrier: 'bosta',
+          updated_at: new Date(time.setDate(time.getDate() + 5)).toISOString().replace('T', ' ').split('.')[0],
+        });
+    } else if (company.toLowerCase() == 'diggipacks') {
+      return request(app)
+        .post('/api/shipping/diggipacks/shipment-status')
+        .set('Authorization', `Basic ${Env.DIGGIPACKS_CALLBACK_AUTH_HEADER}`)
+        .send({
+          Timestamp: new Date(time.setDate(time.getDate() + 5)).toISOString().replace('T', ' ').split('.')[0],
+          DiggipacksStatuscode: status,
+          DiggipacksStatus: status,
+          CarrierName: 'imile',
+          CarriertrackingNumber: trackingNumber,
+          CarrierStatus: null,
+          CarrierStatusdetails: null,
+          OrderId: trackingNumber,
+          Orderref_number: ORDER_1.orderID,
+        });
+    } else if (company.toLowerCase() == 'yfs') {
+      return request(app)
+        .post('/api/shipping/yfs/shipment-status')
+        .set('Authorization', `Basic ${Env.YFS_CALLBACK_AUTH_HEADER}`)
+        .send({
+          id: Number(trackingNumber),
+          job_id: Number(trackingNumber),
+          orderid: ORDER_1.orderID,
+          status,
+          action_datetime: {
+            date: new Date(time.setDate(time.getDate() + 5)).toISOString().replace('T', ' ').split('.')[0],
+          },
+          notes: 'some notes',
+        });
+    } else if (company.toLowerCase() == 'jt') {
+      const bizContent = JSON.stringify({
+        billCode: trackingNumber,
+        txlogisticId: ORDER_1.orderID,
+        details: [{ scanType: status }],
+      });
+      return request(app)
+        .post('/api/shipping/jt-eg/shipment-status')
+        .set('apiAccount', `${Env.JT_EG_CALLBACK_AUTH_SIGNATURE}`)
+        .send({ bizContent });
+    }
+  }
+
+  function sendBulkShipmentUpdate(trackingNumber: string, status) {
+    return request(app)
+      .put('/api/shipping/shipments/shipment-status')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        status: status,
+        shipments: [{ trackingNumber: trackingNumber, updatedAt: new Date() }],
+      });
+  }
+
+  function revertShipment(trackingNumber: string) {
+    return request(app)
+      .patch('/api/shipping/shipments/revert')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        shipments: [{ trackingNumber }],
+      });
+  }
+
+  async function assertShipmentStatus(status: string) {
+    const updatedShipment = await ShipmentSchema.findOne({
+      'order.orderBusinessId': ORDER_1.orderID,
+    })
+      .lean(true)
+      .exec();
+    expect(updatedShipment?.stateTracking.at(-1)?.status).toEqual(status);
+    return updatedShipment;
+  }
+
+  async function assertOrderStatus(status: string) {
+    const order = await OrderSchema.findOne({ orderID: ORDER_1.orderID }).lean(true).exec();
+    expect(order?.status).toEqual(status);
+  }
+
+  async function assertOrderRefundAmount(amount: number) {
+    const order = await OrderSchema.findOne({ orderID: ORDER_1.orderID }).lean(true).exec();
+    expect(order?.refundAmount).toEqual(amount);
+  }
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    const shippingSlackNotifierImplMock = mock(ShippingSlackNotifierImpl);
+    const shippingUpdateSlackNotifierImplMock = mock(ShippingUpdateSlackNotifierImpl);
+    const deleteShipmentsSlackNotifierImplMock = mock(DeleteShipmentsSlackNotifierImpl);
+    const shippingSlackNotifierImplInstance = instance(shippingSlackNotifierImplMock);
+    const shippingUpdateSlackNotifierImplInstance = instance(shippingUpdateSlackNotifierImplMock);
+    const deleteShipmentsSlackNotifierImplInstance = instance(deleteShipmentsSlackNotifierImplMock);
+    Container.set(ShippingSlackNotifierImpl, shippingSlackNotifierImplInstance);
+    Container.set(ShippingUpdateSlackNotifierImpl, shippingUpdateSlackNotifierImplInstance);
+    Container.set(DeleteShipmentsSlackNotifierImpl, deleteShipmentsSlackNotifierImplInstance);
+
+    app = expressServer.setupServer();
+    await createCountries();
+    await createLocationMappings();
+    await createUser();
+    await login(app);
+    await createShippingCompanies();
+
+    const migrator = new MigrationExecutor();
+    await migrator.migrate('bostaStatusMappingInsertion', './scripts/1643522613000-bosta-status-mapping');
+    await migrator.migrate('vhubsStatusMappingInsertion', './scripts/1643522614000-vhubs-status-mapping');
+    await migrator.migrate('linkChainStatusMappingInsertion', './scripts/1647961696000-link-chain-add-status-mapping');
+    await migrator.migrate('opexStatusMappingInsertion', './scripts/1649616968000-opex-add-status-mapping');
+    await migrator.migrate('r2sStatusMappingInsertion', './scripts/1645790576000-r2s-status-mapping');
+    await migrator.migrate('sprintStatusMappingInsertion', './scripts/1646224029000-sprint-status-mapping');
+    await migrator.migrate('otoStatusMapping', './scripts/1649864770000-oto-status-mapping');
+    await migrator.migrate('salasaStatusMapping', './scripts/1650977819000-salasa-status-mapping');
+    await migrator.migrate('yfsStatusMapping', './scripts/1651059677000-yfs-status-mapping');
+    await migrator.migrate('diggipacksStatusMapping', './scripts/1654071213000-diggipacks-status-mapping');
+    await migrator.migrate('EgJtStatusMapping', './scripts/1659362480000-eg-jt-status-mapping');
+    shipmentCreatedProducerMock = mock(ShipmentCreatedProducer);
+    shipmentDeletedProducerMock = mock(ShipmentDeletedProducer);
+    shipmentWarehouseCancelledMock = mock(ShipmentWarehouseCancelledProducer);
+    shipmentCreationFailedProducerMock = mock(ShipmentCreationFailedProducer);
+    creditEligibleAmountProducerMock = mock(CreditEligibleAmountProducer);
+    orderConfirmedProducerMock = mock(OrderConfirmedProducer);
+    orderUnConfirmedProducerMock = mock(OrderUnConfirmedProducer);
+    const shipmentCreatedProducerInstance = instance(shipmentCreatedProducerMock);
+    const shipmentDeletedProducerInstance = instance(shipmentDeletedProducerMock);
+    const shipmentWarehouseCancelledProducerInstance = instance(shipmentWarehouseCancelledMock);
+    const shipmentCreationFailedProducerInstance = instance(shipmentCreationFailedProducerMock);
+    const creditEligibleAmountProducerInstance = instance(creditEligibleAmountProducerMock);
+    const orderConfirmedProducerInstance = instance(orderConfirmedProducerMock);
+    const orderUnConfirmedProducerInstance = instance(orderUnConfirmedProducerMock);
+    Container.set(ShipmentCreatedProducer, shipmentCreatedProducerInstance);
+    Container.set(ShipmentDeletedProducer, shipmentDeletedProducerInstance);
+    Container.set(ShipmentWarehouseCancelledProducer, shipmentWarehouseCancelledProducerInstance);
+    Container.set(ShipmentCreationFailedProducer, shipmentCreationFailedProducerInstance);
+    Container.set(CreditEligibleAmountProducer, creditEligibleAmountProducerInstance);
+    Container.set(OrderConfirmedProducer, orderConfirmedProducerInstance);
+    Container.set(OrderUnConfirmedProducer, orderUnConfirmedProducerInstance);
+  });
+
+  beforeEach(async () => {
+    await ShipmentSchema.deleteMany({});
+    await ProductSchema.deleteMany({});
+    await OrderSchema.deleteMany({});
+  });
+
+  describe('Callback returns correct status code', () => {
+    each([
+      ['r2s', 'In Transit'],
+      ['sprint', 'In Transit'],
+      ['link chain', 'picked up'],
+      ['opex', 'With Delivery Courier'],
+      ['oto', 'pickedUp'],
+      ['salasa', '2'], // 2 means out_for_delivery. we don't have a status that maps to shipped_out
+      ['yfs', 'unassigned'],
+      ['diggipacks', 'Dispatched to LM'],
+      ['jt', 'Sending Scan'],
+    ]).it("with '%s'", async (company: string, status: string) => {
+      // Arrange
+      await createOrders('confirmed');
+
+      // Act + Assert
+      const stateTracking = [
+        {
+          shippingCompanyStatus: 'Data Received',
+          status: 'created',
+          date: '2022-02-14T16:14:47.514Z',
+        },
+      ];
+      await createShipmentInDB('1234', ORDER_1.orderID, company, stateTracking);
+      // Assert
+      const updatedShipment = await assertShipmentStatus('created');
+
+      // Act: Receive shipping company status
+      await sendShipmentUpdate(
+        company,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        updatedShipment!.trackingNumber!,
+        status,
+      ).expect(200);
+
+      // Assert
+      if (company === 'salasa') {
+        // we don't have a status that maps to shipped_out
+        await assertShipmentStatus('out_for_delivery');
+      } else {
+        await assertShipmentStatus('shipped_out');
+      }
+      await assertOrderStatus('delivery_in_progress');
+    });
+    each([
+      ['r2s'],
+      ['sprint'],
+      ['vhubs'],
+      ['bosta'],
+      ['link chain'],
+      ['opex'],
+      ['oto'],
+      ['salasa'],
+      ['yfs'],
+      ['diggipacks'],
+      ['jt'],
+    ]).it("'409, when shipment does not exist with '%s'", async (company: string) => {
+      if (company === 'yfs') {
+        await sendShipmentUpdate(company, 2165421212, 'In Transit').expect(409);
+      } else {
+        await sendShipmentUpdate(company, 'whatever tracking number', 'In Transit').expect(409);
+      }
+    });
+  });
+
+  describe('After sales orders callback with Bosta', () => {
+    each([
+      ['replacement', 'M', '21', 'replacement_in_progress'],
+      ['refund', 'R', '21', 'refund_in_progress'],
+      ['addition', 'S', '21', 'order_addition_inprogress'],
+      ['replacement', 'M', '46', 'replacement_verified'],
+      ['refund', 'R', '46', 'refund_verified'],
+      ['addition', 'S', '46', 'order_addition'],
+    ]).it(
+      'when bosta status %s received, for type %s, parent order status should be %s',
+      async (afterSalesType: string, postfixLetter: string, bostaStatus: string, parentOrderStatus: string) => {
+        // Arrange
+        await createOrders('delivered');
+        REPLACEMENT_ORDER_1.orderID = postfixLetter + ORDER_1.orderID;
+        REPLACEMENT_ORDER_1.parentOrderId = ORDER_1.orderID;
+        REPLACEMENT_ORDER_1.type = afterSalesType;
+        await AfterSaleOrderModel.insertMany([REPLACEMENT_ORDER_1]);
+        // Act: Receive shipping company status
+        await request(app)
+          .post('/api/shipping/bosta/shipment-status')
+          .set('Authorization', `Basic ${Env.BOSTA_CALLBACK_AUTH_HEADER}`)
+          .send({
+            _id: '12345',
+            trackingNumber: '123456',
+            businessReference: postfixLetter + ORDER_1.orderID,
+            state: bostaStatus,
+            cod: '989',
+            exceptionReason: '',
+            timeStamp: new Date().getTime().toString(),
+          })
+          .expect(200);
+
+        // Assert
+        await assertOrderStatus(parentOrderStatus);
+      },
+    );
+  });
+
+  describe('After sales orders callback with Bosta2, parent order should take refund amount from child order profit', () => {
+    test('Parent order should not be updated twice if it is in final state like refund_verified', async () => {
+      const timeStamp = new Date().getTime().toString();
+      await createOrders(DELIVERED);
+      REPLACEMENT_ORDER_1.orderID = 'R' + ORDER_1.orderID;
+      REPLACEMENT_ORDER_1.parentOrderId = ORDER_1.orderID;
+      REPLACEMENT_ORDER_1.type = 'refund';
+      await AfterSaleOrderModel.insertMany([REPLACEMENT_ORDER_1]);
+      await request(app)
+        .post('/api/shipping/bosta/shipment-status')
+        .set('Authorization', `Basic ${Env.BOSTA_CALLBACK_AUTH_HEADER}`)
+        .send({
+          _id: '12345',
+          trackingNumber: '123456',
+          businessReference: 'R' + ORDER_1.orderID,
+          state: '46',
+          cod: '989',
+          exceptionReason: '',
+          timeStamp,
+        })
+        .expect(200);
+      await assertOrderStatus(REFUND_VERIFIED);
+      await assertOrderRefundAmount(Math.abs(REPLACEMENT_ORDER_1.orderProfit));
+      expect(Logger.info).toBeCalledTimes(3);
+      expect(Logger.info).toHaveBeenNthCalledWith(3, `after sales order updated`, {
+        newStatus: 'item_received_in_inventory',
+        parentOrderStatus: REFUND_VERIFIED,
+        domain: 'order-management',
+      });
+
+      await request(app)
+        .post('/api/shipping/bosta/shipment-status')
+        .set('Authorization', `Basic ${Env.BOSTA_CALLBACK_AUTH_HEADER}`)
+        .send({
+          _id: '12345',
+          trackingNumber: '123456',
+          businessReference: 'R' + ORDER_1.orderID,
+          state: '46',
+          cod: '989',
+          exceptionReason: '',
+          timeStamp,
+        })
+        .expect(200);
+      await assertOrderStatus(REFUND_VERIFIED);
+      await assertOrderRefundAmount(Math.abs(REPLACEMENT_ORDER_1.orderProfit));
+      expect(Logger.info).toBeCalledTimes(6);
+      expect(Logger.info).toHaveBeenNthCalledWith(6, `parent after sales order is in final state`, {
+        orderId: ORDER_1.orderID,
+        status: REFUND_VERIFIED,
+        domain: 'order-management',
+      });
+    });
+
+    each([['refund', 'R', '46', 'refund_verified']]).it(
+      'when bosta status %s received, for type %s, parent order status should be %s',
+      async (afterSalesType: string, postfixLetter: string, bostaStatus: string, parentOrderStatus: string) => {
+        // Arrange
+        await createOrders('delivered');
+        REPLACEMENT_ORDER_1.orderID = postfixLetter + ORDER_1.orderID;
+        REPLACEMENT_ORDER_1.parentOrderId = ORDER_1.orderID;
+        REPLACEMENT_ORDER_1.type = afterSalesType;
+        await AfterSaleOrderModel.insertMany([REPLACEMENT_ORDER_1]);
+        // Act: Receive shipping company status
+        await request(app)
+          .post('/api/shipping/bosta/shipment-status')
+          .set('Authorization', `Basic ${Env.BOSTA_CALLBACK_AUTH_HEADER}`)
+          .send({
+            _id: '12345',
+            trackingNumber: '123456',
+            businessReference: postfixLetter + ORDER_1.orderID,
+            state: bostaStatus,
+            cod: '989',
+            exceptionReason: '',
+            timeStamp: new Date().getTime().toString(),
+          })
+          .expect(200);
+
+        // Assert
+        await assertOrderStatus(parentOrderStatus);
+        await assertOrderRefundAmount(Math.abs(REPLACEMENT_ORDER_1.orderProfit));
+      },
+    );
+  });
+
+  describe('Diggipacks callback returns 200, if trackingNumber missing', () => {
+    test('Diggipacks callback with trackingNumber empty string', async () => {
+      // Arrange
+      await createOrders('confirmed');
+      const stateTracking = [
+        {
+          shippingCompanyStatus: 'Order Created',
+          status: 'created',
+          date: '2022-02-14T16:14:47.514Z',
+        },
+      ];
+      await createShipmentInDB('1234', ORDER_1.orderID, DIGGIPACKS, stateTracking);
+
+      // Act: Receive shipping company status
+      await request(app)
+        .post('/api/shipping/diggipacks/shipment-status')
+        .set('Authorization', `Basic ${Env.DIGGIPACKS_CALLBACK_AUTH_HEADER}`)
+        .send({
+          Timestamp: new Date(time.setDate(time.getDate() + 5)).toISOString().replace('T', ' ').split('.')[0],
+          DiggipacksStatuscode: 'OC',
+          DiggipacksStatus: 'ORder Created',
+          CarrierName: null,
+          CarriertrackingNumber: '',
+          CarrierStatus: null,
+          CarrierStatusdetails: null,
+          OrderId: 'dummy number',
+          Orderref_number: ORDER_1.orderID,
+        })
+        .expect(200);
+
+      // Assert
+      await assertShipmentStatus('created');
+    });
+  });
+
+  describe(`shipment should be created if it's not found and order status is CONFIRMED`, () => {
+    describe('Should success', () => {
+      beforeAll(async () => {
+        await ShippingCompany.insertMany([
+          {
+            companyId: 'SA_BOSTA',
+            name: 'bosta',
+            country: 'SAU',
+            isIntegrated: true,
+          },
+          {
+            companyId: 'SA_IMILE',
+            name: 'imile',
+            country: 'SAU',
+            isIntegrated: true,
+          },
+          {
+            companyId: 'SA_TESTING',
+            name: 'testing',
+            country: 'SAU',
+            isIntegrated: true,
+          },
+        ]);
+      });
+      afterAll(async () => {
+        await ShippingCompany.deleteMany({ companyId: { $in: ['SA_BOSTA', 'SA_IMILE', 'SA_TESTING'] } });
+      });
+      each([
+        ['oto', 'new'],
+        ['salasa', '1'],
+        ['diggipacks', 'Order Created'],
+      ]).it("when '%s' sends '%s'", async (company: string, status: string) => {
+        // Arrange
+        await createOrders('confirmed');
+
+        await sendShipmentUpdate(company, '123456', status).expect(200);
+
+        // Assert
+        await assertShipmentStatus('created');
+
+        await assertOrderStatus('pending_shipping_company');
+      });
+    });
+  });
+
+  describe(`Create shipment from bulk-sheet, successful for Bosta and Vhubs`, () => {
+    each([['vhubs'], ['bosta']]).it("with '%s'", async (company: string) => {
+      // Arrange
+      await createOrders('confirmed');
+
+      // Act + Assert
+      await createShipmentsFromSheet(company, new Date(), 'H02')
+        .expect(201)
+        .expect((result) => {
+          expect(result.body.data).toMatchObject({
+            description: 'Created 1 shipments',
+            failedShipments: [],
+          });
+        });
+      // Assert
+      const updatedShipment = await assertShipmentStatus('created');
+      expect(updatedShipment?.warehouse).toEqual('H02');
+      await assertOrderStatus('pending_shipping_company');
+
+      // Act: Receive shipping company status
+      await sendShipmentUpdate(
+        company,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        updatedShipment!.trackingNumber!,
+      ).expect(200);
+
+      // Assert
+      await assertShipmentStatus('shipped_out');
+      await assertOrderStatus('delivery_in_progress');
+    });
+  });
+
+  describe(`Create shipment from bulk-sheet, successful for non-integrated companies`, () => {
+    each([['r2s'], ['opex']]).it("with '%s'", async (company: string) => {
+      // Arrange
+      await createOrders('confirmed');
+
+      // Act + Assert
+      await createShipmentsFromSheet(company)
+        .expect(201)
+        .expect((result) => {
+          expect(result.body.data).toMatchObject({
+            description: 'Created 1 shipments',
+            failedShipments: [],
+          });
+        });
+      // Assert
+      const updatedShipment = await assertShipmentStatus('created');
+      await assertOrderStatus('pending_shipping_company');
+
+      // Act: Update shipment status
+      await sendBulkShipmentUpdate(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        updatedShipment!.trackingNumber!,
+        'shipped_out',
+      ).expect(200);
+
+      // Assert
+      await assertShipmentStatus('shipped_out');
+      await assertOrderStatus('delivery_in_progress');
+    });
+  });
+
+  describe(`Create shipment from bulk-sheet, with some duplicate orders`, () => {
+    test('with confirmed orders', async () => {
+      // Arrange
+      await createOrders('confirmed');
+      await createNewConfirmedOrder();
+      await createShipmentInDB('1234', ORDER_1.orderID, 'bosta');
+
+      // Act + Assert
+      await createMultipleShipmentsFromSheet('bosta')
+        .expect(201)
+        .expect((result) => {
+          expect(result.body.data).toMatchObject({
+            description: "Created 1 shipments , and 1 orders can't be shipped",
+            failedShipments: [
+              {
+                orderId: ORDER_1.orderID,
+                reason: `duplicate trackingNumber 1234`,
+              },
+            ],
+          });
+        });
+
+      // Arrange
+      const shipmentEntity = await ShipmentSchema.findOne({
+        'order.orderBusinessId': ORDER_3.orderID,
+      })
+        .lean(true)
+        .exec();
+      const order = await OrderSchema.findOne({ orderID: ORDER_3.orderID }).lean(true).exec();
+
+      // Assert
+      expect(shipmentEntity?.stateTracking.at(-1)?.status).toEqual('created');
+      expect(order?.status).toEqual('pending_shipping_company');
+
+      // Act: Update shipment status
+      await sendBulkShipmentUpdate(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        shipmentEntity!.trackingNumber!.toLowerCase(),
+        'shipped_out',
+      ).expect(200);
+
+      // Arrange
+      const shipmentEntity1 = await ShipmentSchema.findOne({
+        'order.orderBusinessId': ORDER_3.orderID,
+      })
+        .lean(true)
+        .exec();
+      const order1 = await OrderSchema.findOne({ orderID: ORDER_3.orderID }).lean(true).exec();
+
+      // Assert
+      // Assert
+      expect(shipmentEntity1?.stateTracking.at(-1)?.status).toEqual('shipped_out');
+      expect(order1?.status).toEqual('delivery_in_progress');
+    });
+  });
+
+  describe(`Create shipment from bulk-sheet, with all orders having duplicate`, () => {
+    test('with confirmed orders', async () => {
+      // Arrange
+      await createOrders('confirmed');
+      await createNewConfirmedOrder();
+      await createShipmentInDB('1234', ORDER_1.orderID, 'bosta');
+      await createShipmentInDB('4321', ORDER_3.orderID, 'bosta');
+
+      // Act + Assert
+      await createMultipleShipmentsFromSheet('bosta')
+        .expect(201)
+        .expect((result) => {
+          expect(result.body.data).toMatchObject({
+            description: "Created 0 shipments , and 2 orders can't be shipped",
+            failedShipments: [
+              {
+                orderId: ORDER_1.orderID,
+                reason: `duplicate trackingNumber 1234`,
+              },
+              {
+                orderId: ORDER_3.orderID,
+                reason: `duplicate trackingNumber 4321`,
+              },
+            ],
+          });
+        });
+    });
+  });
+
+  describe('Update bulk shipment should be succeed', () => {
+    describe('Non-integrated company', () => {
+      test('Should work successfully', async () => {
+        await createOrders('delivery_in_progress');
+        await createBulkShipments('shipped_out');
+        const updatedShipment = await assertShipmentStatus('shipped_out');
+        await assertOrderStatus('delivery_in_progress');
+
+        await sendBulkShipmentUpdate(
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          updatedShipment!.trackingNumber!,
+          'delivered',
+        ).expect(200);
+
+        await assertShipmentStatus('delivered');
+        await assertOrderStatus('delivered');
+      });
+
+      test('Should work successfully and not fail the api if the trackingNumber is empty', async () => {
+        await sendBulkShipmentUpdate('', 'delivered').expect(200);
+      });
+    });
+  });
+
+  describe(`Revert shipments should be succeed`, () => {
+    test('Should work successfully', async () => {
+      await createOrders('confirmed');
+      await createShipmentsFromSheet('opex')
+        .expect(201)
+        .expect((result) => {
+          expect(result.body.data).toMatchObject({
+            description: 'Created 1 shipments',
+            failedShipments: [],
+          });
+        });
+
+      await assertOrderStatus('pending_shipping_company');
+      const shipment = await assertShipmentStatus('created');
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      await revertShipment(shipment!.trackingNumber!).expect(200);
+
+      await assertOrderStatus('confirmed');
+      const revertedShipment = await assertShipmentStatus('created');
+      expect(revertedShipment?.isDeleted).toBeTruthy();
+    });
+  });
+
+  describe(`Get shipping companies should be succeed`, () => {
+    const shippingCompanyOne = {
+      companyId: 'EG_FEDEX',
+      country: 'EGY',
+      name: 'fedex',
+    };
+    const shippingCompanyTwo = {
+      companyId: 'EG_BOSTA',
+      country: 'EGY',
+      name: 'bosta',
+    };
+    const shippingCompanyThree = {
+      companyId: 'EG_VHUBS',
+      country: 'EGY',
+      name: 'vhubs',
+    };
+    const shippingCompanyFour = {
+      companyId: 'EG_OPEX',
+      country: 'EGY',
+      name: 'opex',
+    };
+    const shippingCompanyFive = {
+      companyId: 'EG_R2S',
+      country: 'EGY',
+      name: 'r2s',
+    };
+    test('Should work successfully', async () => {
+      await getShippingCompanies()
+        .expect(200)
+        .expect((result) => {
+          expect(result.body.data).toMatchObject([
+            shippingCompanyOne,
+            shippingCompanyTwo,
+            shippingCompanyThree,
+            shippingCompanyFour,
+            shippingCompanyFive,
+          ]);
+        });
+    });
+  });
+
+  afterEach(async () => {
+    await ShipmentSchema.deleteMany({});
+    await ProductSchema.deleteMany({});
+    await OrderSchema.deleteMany({});
+    await AfterSaleOrderModel.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await ShippingCompany.deleteMany({});
+    await mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

@@ -1,0 +1,33 @@
+<form [formGroup]="bundleAttributesDetailsFormGroup">
+    <div class="input-container">
+        <p>Bundle Description</p>
+        <textarea
+            type="text"
+            nbInput
+            class="details-input"
+            [ngClass]="{'--has-error': (showFormErrors$ | async) && this.bundleAttributesDetailsFormGroup.get('bundleDescription').errors}"
+            fullWidth
+            formControlName="bundleDescription"></textarea>
+    </div>
+    <div class="input-container">
+        <p>Bundle Specification</p>
+        <textarea
+            type="text"
+            nbInput
+            class="details-input"
+            [ngClass]="{'--has-error': (showFormErrors$ | async) && this.bundleAttributesDetailsFormGroup.get('bundleSpecification').errors}"
+            fullWidth
+            (keyup)="onBundleSpecificationsChange()"
+            formControlName="bundleSpecification"></textarea>
+    </div>
+    <div class="product-video-links">
+        <p class="product-image-wrapper__title">Video Link (Optional)</p>
+        <div class="product-video-links__input" *ngFor="let link of videoLinks; let i = index">
+            <input [id]="'video-link-' + i" type="text" (change)="onVideoLinkChange($event, i)" [value]="link.url" />
+            <button (click)="removeLink(i)">
+            <img src="assets/images/remove-img.svg" alt="delete video" />
+            </button>
+        </div>
+        <a class="add-video-link" href="#" (click)="addLink($event)">+ Add another video link</a>
+    </div>
+</form>

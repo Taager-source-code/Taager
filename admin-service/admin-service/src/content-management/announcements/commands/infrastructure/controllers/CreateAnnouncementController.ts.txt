@@ -1,0 +1,28 @@
+import { CREATED, UNPROCESSABLE_ENTITY } from 'http-status';
+import { Container } from 'typedi';
+import { validateCreateAnnouncementRequest } from '../validators/CreateAnnouncementValidator';
+import CreateAnnouncement from '../../application/usecases/CreateAnnouncement';
+
+const container = Container.of();
+
+function handleSuccess(res) {
+  res.status(CREATED).json({
+    msg: 'announcement added!',
+  });
+}
+
+function handleValidationError(res, error) {
+  return res.status(UNPROCESSABLE_ENTITY).json({
+    msg: error.details[0].message,
+  });
+}
+export const execute = async (req, res) => {
+  const { error, value: createAnnouncementRequest } = validateCreateAnnouncementRequest(req);
+  if (error) {
+    handleValidationError(res, error);
+  }
+  const createAnnouncement = container.get(CreateAnnouncement);
+  await createAnnouncement.execute(createAnnouncementRequest);
+
+  return handleSuccess(res);
+};

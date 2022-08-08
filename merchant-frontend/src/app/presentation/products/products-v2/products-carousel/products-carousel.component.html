@@ -1,0 +1,39 @@
+<div class="products-carousel" *ngIf="!loading && (products?.length || variantGroups?.length)">
+
+  <div class="d-flex flex-wrap justify-content-between category-header-container">
+
+    <div class="category-section-header">
+
+      {{title}}
+
+    </div>
+
+    <div class="view-all" (click)="goToLink()">
+
+        عرض الكل
+
+    </div>
+
+  </div>
+
+  <div class="d-flex">
+
+    <carousel [cellsToShow]="itemsPerSlide" [overflowCellsLimit]="10" [arrowsOutside]="arrowsOutside" [arrows]="showNavigationArrows" >
+
+      <div class="carousel-cell" *ngFor="let variantGroup of variantGroups">
+
+        <app-product-card *ngIf="isCatalogDataLoaded" [variantGroup]="variantGroup" [tooltipVisible]="tooltipVisible"></app-product-card>
+
+      </div>
+
+      <div class="carousel-cell" *ngFor="let product of products">
+
+        <app-product-card *ngIf="isCatalogDataLoaded" [product]="product" [tooltipVisible]="tooltipVisible"></app-product-card>
+
+      </div>
+
+    </carousel>
+
+  </div>
+
+</div>

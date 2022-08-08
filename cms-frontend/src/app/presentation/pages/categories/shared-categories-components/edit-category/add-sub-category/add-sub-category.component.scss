@@ -1,0 +1,33 @@
+nb-card {
+  width: 800px;
+  padding: 20px;
+  border-radius: 20px;
+  .card-header {
+    font-family: 'Taager-Bold';
+    background-color: white;
+  }
+  .card-body {
+    display: flex;
+    justify-content: space-between;
+    &__form-input {
+      display: flex;
+      width: 47%;
+      flex-direction: column;
+      input {
+        font-weight: 400;
+      }
+    }
+  }
+  .card-footer {
+    display: flex;
+    justify-content: flex-end;
+    background-color: white;
+    &__button {
+      width: 100px;
+      border-radius: 7px;
+    }
+    .card-footer__button + .card-footer__button {
+      margin-left: 20px;
+    }
+  }
+}

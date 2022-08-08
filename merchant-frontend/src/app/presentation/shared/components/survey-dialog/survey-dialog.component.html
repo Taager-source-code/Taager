@@ -1,0 +1,91 @@
+<div id="survey" class="d-flex flex-column justify-content-around align-items-center">
+
+    <div class="section d-flex flex-column align-items-center">
+
+        <span class="title">
+
+            استبيان رأي
+
+        </span>
+
+        <span class="sub-title">
+
+            رأيك يهمنا
+
+        </span>
+
+    </div>
+
+    
+
+    <div class="section d-flex flex-column align-items-center">
+
+        <span class="question mb-2">
+
+            {{survey.question}} *
+
+        </span>
+
+    
+
+        <div class="answer d-flex align-items-center justify-content-around">
+
+            <div class="option">
+
+                <input type="radio" name="answer" id="radioYes" [value]="true" [(ngModel)]="answer">
+
+                <label for="radioYes">نعم</label>
+
+            </div>
+
+            <div class="option">
+
+                <input type="radio" name="answer" id="radioNo" [value]="false" [(ngModel)]="answer">
+
+                <label for="radioNo">لا</label>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="section d-flex flex-column align-items-center">
+
+        <span class="message-text mb-2">
+
+            قل لنا اكثر عن اختيارك
+
+        </span>
+
+        <textarea name="message" id="message" [(ngModel)]="message"></textarea> 
+
+    </div>
+
+    
+
+        
+
+    <div class="section actions d-flex justify-content-around">
+
+        <button 
+
+            class="btn submit-button"
+
+            [ngClass]="{hoverable: answer !== undefined}" 
+
+            (click)="onSubmit()"
+
+            [disabled]="answer === undefined"
+
+        >
+
+            تأكيد
+
+        </button>
+
+        <button class="skip-button hoverable" (click)="onSkip()">لا أريد المشاركه</button>
+
+    </div>
+
+</div>

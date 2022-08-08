@@ -1,0 +1,24 @@
+import { Service } from 'typedi';
+import AnnouncementDao from '../../../common/infrastructure/db/access/AnnouncementDao';
+import Logger from '../../../../../logging/general.log';
+import { Announcement } from '../../../common/infrastructure/db/models/Announcement';
+
+@Service({ global: true })
+export default class AnnouncementRepo {
+  private announcementDao: AnnouncementDao;
+  constructor(announcementDao: AnnouncementDao) {
+    this.announcementDao = announcementDao;
+  }
+
+  createAnnouncement(announcement: Announcement): Promise<Announcement> {
+    Logger.info('Creating new announcement in the DB');
+    return this.announcementDao.createAnnouncement(announcement);
+  }
+
+  deleteAnnouncement(announcementId: string): Promise<Announcement | null> {
+    Logger.info('Deleting announcement from DB', {
+      announcementId: announcementId,
+    });
+    return this.announcementDao.deleteAnnouncement(announcementId);
+  }
+}

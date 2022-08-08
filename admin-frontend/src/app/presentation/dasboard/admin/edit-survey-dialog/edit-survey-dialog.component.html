@@ -1,0 +1,29 @@
+<h2 mat-dialog-title>Edit survey</h2>
+<form class="question-group">
+  <mat-dialog-content>
+    <mat-form-field>
+      <mat-label>Survey name</mat-label>
+      <input
+        matInput
+        name="surveyName"
+        placeholder="Enter survey name"
+        [(ngModel)]="formData.name"
+      />
+    </mat-form-field>
+    <div class="survey-question">
+      <p class="title">Survey question</p>
+      <p class="question">{{ formData.question }}</p>
+    </div>
+    <mat-checkbox name="surveyEnabled" [(ngModel)]="formData.isEnabled">
+      Enable survey
+    </mat-checkbox>
+    <button
+      class="btn btn-success float-right"
+      (click)="onSubmitForm()"
+      type="submit"
+      [disabled]="!formData.name"
+    >
+      Confirm edit
+    </button>
+  </mat-dialog-content>
+</form>

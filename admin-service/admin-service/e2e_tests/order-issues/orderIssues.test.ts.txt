@@ -1,0 +1,265 @@
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import User from '../../src/models/user.model';
+import request from 'supertest';
+
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+import * as expressServer from '../expressServer/expressServer';
+import MigrationExecutor from '../../src/migrations/migrationExecutor';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import OrderIssues from '../../src/models/orderIssues.model';
+import { ORDERISSUE_1, ORDERISSUE_2, ORDERISSUE_3, ORDERISSUE_4 } from '../fixtures/orderIssuesFixtures';
+import OrderModel from '../../src/models/order.model';
+import { ORDER_6 } from '../fixtures/orderFixture';
+
+const assertParentOrder = async (orderObjectID, status, orderProfit) => {
+  const order = await OrderModel.findById(orderObjectID).lean(true).exec();
+  expect(order?.status).toEqual(status);
+  expect(order?.orderProfit).toEqual(orderProfit);
+};
+
+describe('/api/orderIssues', () => {
+  let app: any = null;
+  let accessToken: string;
+  let adminUserId: string;
+
+  async function createUsers() {
+    const user = await User.create(ADMIN_1);
+    adminUserId = user._id;
+    await UserRoles.create({ role: 'admin' });
+  }
+
+  async function login(app: any) {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  }
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    const mongoUrl = `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`;
+    await mongooseConnector.connectToMongoDB(mongoUrl);
+
+    await new MigrationExecutor().migrateAll();
+    app = expressServer.setupServer();
+  });
+
+  beforeEach(async () => {
+    await createUsers();
+  });
+
+  afterEach(async () => {
+    await User.remove({});
+  });
+
+  describe('POST /ViewOrderIssues', () => {
+    async function createOrderIssues() {
+      await OrderIssues.insertMany([ORDERISSUE_1, ORDERISSUE_2, ORDERISSUE_3, ORDERISSUE_4]);
+    }
+
+    beforeAll(async () => {
+      await createOrderIssues();
+    });
+
+    test('viewOrderIssues returns all issue, when no country in body', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      await request(app)
+        .post('/api/orderIssues/viewOrderIssues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 20 })
+        .expect(200)
+        .then((returnedOrderIssue) => {
+          expect(returnedOrderIssue.body.msg).toEqual('Issues list found!');
+          expect(returnedOrderIssue.body.data).toMatchObject([ORDERISSUE_1, ORDERISSUE_2, ORDERISSUE_3, ORDERISSUE_4]);
+        });
+    });
+
+    test('viewOrderIssues returns all EGY issues, when country EGY in body', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act adn Assert
+      await request(app)
+        .post('/api/orderIssues/viewOrderIssues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 20, country: 'EGY' })
+        .expect(200)
+        .then((returnedOrderIssue) => {
+          expect(returnedOrderIssue.body.msg).toEqual('Issues list found!');
+          expect(returnedOrderIssue.body.data.length).toEqual(2);
+          expect(returnedOrderIssue.body.data).toMatchObject([ORDERISSUE_1, ORDERISSUE_3]);
+        });
+    });
+
+    test('viewOrderIssues returns all ARE issues, when country ARE in body', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserAreRole(app, accessToken, adminUserId);
+
+      // Act and Assert
+      await request(app)
+        .post('/api/orderIssues/viewOrderIssues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 20, country: 'ARE' })
+        .expect(200)
+        .then((returnedOrderIssue) => {
+          expect(returnedOrderIssue.body.msg).toEqual('Issues list found!');
+          expect(returnedOrderIssue.body.data.length).toEqual(2);
+          expect(returnedOrderIssue.body.data).toMatchObject([ORDERISSUE_2, ORDERISSUE_4]);
+        });
+    });
+
+    test('viewOrderIssues returns 403, forbidden when admin does not have access to country', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserAreRole(app, accessToken, adminUserId);
+
+      // Act
+      await request(app)
+        .post('/api/orderIssues/viewOrderIssues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 20, country: 'EGY' })
+        .expect(403);
+    });
+
+    test('viewOrderIssues returns 400, wrong country in body', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserAreRole(app, accessToken, adminUserId);
+
+      // Act
+      await request(app)
+        .post('/api/orderIssues/viewOrderIssues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ page: 1, pageSize: 20, country: 'USA' })
+        .expect(400);
+    });
+
+    test('viewOrderIssues returns order by orderId, when no country in body', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act and Assert
+      await request(app)
+        .post('/api/orderIssues/viewOrderIssues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          page: 1,
+          pageSize: 20,
+          filterObj: {
+            orderId: '123/12345',
+          },
+        })
+        .expect(200)
+        .then((returnedOrderIssue) => {
+          expect(returnedOrderIssue.body.msg).toEqual('Issues list found!');
+          expect(returnedOrderIssue.body.data).toMatchObject([ORDERISSUE_1]);
+        });
+    });
+
+    afterAll(async () => {
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe('POST /getOrderIssue', () => {
+    async function createOrderIssues() {
+      await OrderIssues.insertMany([ORDERISSUE_1, ORDERISSUE_2, ORDERISSUE_3, ORDERISSUE_4]);
+    }
+
+    beforeAll(async () => {
+      await createOrderIssues();
+    });
+
+    test('getOrderIssue returns the issue, irrespective of country in body', async () => {
+      // Arrange
+      await login(app);
+
+      // Act and Assert
+      await request(app)
+        .post('/api/orderIssues/getOrderIssue')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ orderId: ORDERISSUE_1.order.orderObjectId, country: 'ARE' })
+        .expect(200)
+        .then((returnedOrderIssue) => {
+          expect(returnedOrderIssue.body.msg).toEqual('Issue found!');
+          expect(returnedOrderIssue.body.data).toMatchObject([ORDERISSUE_1]);
+        });
+    });
+
+    afterAll(async () => {
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe('POST /ResolveOrderIssues', () => {
+    let insertOrderIssues: any;
+    async function createOrderIssues() {
+      insertOrderIssues = await OrderIssues.insertMany([ORDERISSUE_1, ORDERISSUE_2, ORDERISSUE_3, ORDERISSUE_4]);
+    }
+    async function createParentOrders() {
+      await OrderModel.insertMany([ORDER_6]);
+    }
+
+    beforeAll(async () => {
+      await createOrderIssues();
+      await createParentOrders();
+    });
+
+    test('ResolveOrderIssues returns 200, irrespective of country in body', async () => {
+      // Arrange
+      const resolveIssueRequest = {
+        declineReasons: '',
+        accept: true,
+        _id: insertOrderIssues[0]._id,
+        order: ORDERISSUE_1.order,
+        issueType: ORDERISSUE_1.issueType,
+      };
+      await login(app);
+
+      // Act
+      await request(app)
+        .post('/api/orderIssues/ResolveOrderIssues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(resolveIssueRequest)
+        .expect(200)
+        .then((returnedOrderIssue) => {
+          expect(returnedOrderIssue.body.msg).toEqual('Issue resolved!');
+          expect(returnedOrderIssue.body.data).toMatchObject({
+            issueType: ORDERISSUE_1.issueType,
+            order: ORDERISSUE_1.order,
+            product: ORDERISSUE_1.product,
+            _id: insertOrderIssues[0]._id.toString(),
+          });
+        });
+      await assertParentOrder(ORDERISSUE_1.order.orderObjectId, 'refund_in_progress', ORDER_6.orderProfit);
+
+      // Act and Assert
+      await request(app)
+        .post('/api/orderIssues/getOrderIssue')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ orderId: ORDERISSUE_1.order.orderObjectId })
+        .expect(200)
+        .then((returnedOrderIssue) => {
+          expect(returnedOrderIssue.body.data[0].resolved).toBeTruthy();
+        });
+    });
+
+    afterAll(async () => {
+      await OrderIssues.remove({});
+      await OrderModel.remove({});
+    });
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+  });
+});

@@ -1,0 +1,206 @@
+import dotenv from 'dotenv';
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import { CONFLICT, CREATED, OK } from 'http-status';
+import { CreateChildInternalCategoryRequest } from '../../src/content-management/internal-categories/commands/application/models/CreateChildInternalCategoryRequest';
+import { UpdateInternalCategoryRequest } from '../../src/content-management/internal-categories/commands/application/models/UpdateInternalCategoryRequest';
+
+dotenv.config();
+
+describe('/api/internal-categories', () => {
+  let app: any = null;
+  let accessToken: string;
+
+  const createClothesRootInternalCategory = async () => {
+    await request(app)
+      .post('/api/internal-categories/root')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        englishName: 'Clothes',
+        arabicName: 'Ù…Ù„Ø§Ø¨Ø³',
+      })
+      .expect(CREATED);
+  };
+
+  const createElectronicsRootInternalCategory = async () => {
+    await request(app)
+      .post('/api/internal-categories/root')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        englishName: 'Electronics',
+        arabicName: 'Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ§Øª',
+      })
+      .expect(CREATED);
+  };
+
+  const getRootInternalCategories = async () => {
+    return request(app)
+      .get('/api/internal-categories/roots')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK)
+      .then((rootInternalCategoryResponse) => {
+        expect(rootInternalCategoryResponse.body.data).toMatchObject([
+          {
+            englishName: 'Clothes',
+            arabicName: 'Ù…Ù„Ø§Ø¨Ø³',
+          },
+          {
+            englishName: 'Electronics',
+            arabicName: 'Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ§Øª',
+          },
+        ]);
+        return rootInternalCategoryResponse.body.data;
+      });
+  };
+
+  const getInternalCategoryWithAncestors = async (id: string) => {
+    return request(app)
+      .get(`/api/internal-categories/${id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK)
+      .then((internalCategoryResponse) => {
+        expect(internalCategoryResponse.body.data).toMatchObject({
+          englishName: 'Shoes',
+          arabicName: 'Ø£Ø­Ø°ÙŠØ©',
+          ancestors: [
+            {
+              englishName: 'Men Clothes',
+              arabicName: 'Ù…Ù„Ø§Ø¨Ø³ Ø±Ø¬Ø§Ù„ÙŠÙ‡',
+            },
+          ],
+        });
+        return internalCategoryResponse.body.data;
+      });
+  };
+
+  const failToCreateAChildInternalCategoryWithNonexistentParent = async () => {
+    await request(app)
+      .post('/api/internal-categories/child')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        englishName: 'Clothes',
+        arabicName: 'Ù…Ù„Ø§Ø¨Ø³',
+        parentId: 'non-sense',
+      })
+      .expect(CONFLICT)
+      .then((createChildResponse) => {
+        expect(createChildResponse.body.errorCode).toEqual('internal-category-0001');
+        expect(createChildResponse.body.description).toEqual('Parent category not found.');
+        expect(createChildResponse.body.message).toEqual('Parent category with id non-sense not found.');
+      });
+  };
+
+  const createChildInternalCategory = async (category: CreateChildInternalCategoryRequest) => {
+    await request(app)
+      .post('/api/internal-categories/child')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(category)
+      .expect(CREATED);
+  };
+
+  const getChildrenInternalCategories = async (id: string) => {
+    return request(app)
+      .get(`/api/internal-categories/${id}/children`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK)
+      .then((childrenInternalCategoriesResponse) => {
+        expect(childrenInternalCategoriesResponse.body.data).toMatchObject([
+          {
+            englishName: 'Shoes',
+            arabicName: 'Ø£Ø­Ø°ÙŠØ©',
+          },
+          {
+            englishName: 'Hats',
+            arabicName: 'Ø§Ù„Ù‚Ø¨Ø¹Ø§Øª',
+          },
+          {
+            englishName: 'Jackets',
+            arabicName: 'Ø¬Ø§ÙƒÙŠØªØ§Øª',
+          },
+        ]);
+        return childrenInternalCategoriesResponse.body.data;
+      });
+  };
+
+  const updateInternalCategory = async (category: UpdateInternalCategoryRequest) => {
+    const { categoryId, ...rest } = category;
+    return request(app)
+      .patch(`/api/internal-categories/${categoryId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(rest)
+      .expect(OK);
+  };
+
+  const deleteInternalCategory = async (id: string) => {
+    return request(app)
+      .delete(`/api/internal-categories/${id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK);
+  };
+
+  const failToDeleteInternalCategoryWithSubcategories = async (id: string) => {
+    return request(app)
+      .delete(`/api/internal-categories/${id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(CONFLICT)
+      .then((deleteInternalCategoryResponse) => {
+        expect(deleteInternalCategoryResponse.body).toMatchObject({
+          errorCode: 'internal-category-0002',
+          description: 'Internal category has subcategories.',
+          message: `Internal category with id ${id} has children, no categories should be orphaned`,
+        });
+      });
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+    await expressServer.createUser();
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  });
+
+  test('Internal Category Flows', async () => {
+    // Act + Assert
+    await createClothesRootInternalCategory();
+    await createElectronicsRootInternalCategory();
+    const rootInternalCategoriesResult = await getRootInternalCategories();
+    const clothesInternalCategoryId = rootInternalCategoriesResult[0].categoryId;
+
+    await failToCreateAChildInternalCategoryWithNonexistentParent();
+    await createChildInternalCategory({
+      parentId: clothesInternalCategoryId,
+      englishName: 'Shoes',
+      arabicName: 'Ø£Ø­Ø°ÙŠØ©',
+    });
+    await createChildInternalCategory({
+      parentId: clothesInternalCategoryId,
+      englishName: 'Hats',
+      arabicName: 'Ø§Ù„Ù‚Ø¨Ø¹Ø§Øª',
+    });
+    await createChildInternalCategory({
+      parentId: clothesInternalCategoryId,
+      englishName: 'Jackets',
+      arabicName: 'Ø¬Ø§ÙƒÙŠØªØ§Øª',
+    });
+    await updateInternalCategory({
+      categoryId: clothesInternalCategoryId,
+      englishName: 'Men Clothes',
+      arabicName: 'Ù…Ù„Ø§Ø¨Ø³ Ø±Ø¬Ø§Ù„ÙŠÙ‡',
+    });
+    const childrenInternalCategoriesResult = await getChildrenInternalCategories(clothesInternalCategoryId);
+    const shoesInternalCategoryId = childrenInternalCategoriesResult[0].categoryId;
+    await getInternalCategoryWithAncestors(shoesInternalCategoryId);
+    await deleteInternalCategory(shoesInternalCategoryId);
+    await failToDeleteInternalCategoryWithSubcategories(clothesInternalCategoryId);
+  });
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

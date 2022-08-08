@@ -1,0 +1,44 @@
+<ngx-one-column-layout>
+  <nb-menu [items]="menu"></nb-menu>
+  <router-outlet></router-outlet>
+</ngx-one-column-layout>
+<ejs-sidebar
+  id="edit-category-sidebar" #editInternalCategorySidebar position="Right" type="Over" width="800px"
+  zIndex="1004" showBackdrop="true" [closeOnDocumentClick]="false" [enableGestures]="false">
+    <ngx-edit-internal-categories
+      *ngIf="editInternalCategorySidebar.isOpen"
+      [internalCategory]="editedInternalCategory"
+      (navigateBack)="onNavigateToInternalCategories()">
+    </ngx-edit-internal-categories>
+</ejs-sidebar>
+<ejs-sidebar
+  id="edit-category-sidebar" #editCommercialCategorySidebar position="Right" type="Over" width="1200px"
+  zIndex="1004" showBackdrop="true" [closeOnDocumentClick]="false" [enableGestures]="false">
+    <ngx-edit-commercial-categories
+      *ngIf="editCommercialCategorySidebar.isOpen"
+      [commercialCategory]="editedCommercialCategory"
+      (navigateBack)="onNavigateToCommercialCategories()">
+    </ngx-edit-commercial-categories>
+</ejs-sidebar>
+<ejs-sidebar
+  id="add-product-sidebar" #productDialogSidebar position="Right" type="Over" width="1170px"
+  zIndex="1004" showBackdrop="true" [closeOnDocumentClick]="false" [enableGestures]="false">
+    <ngx-product-dialog  *ngIf="productDialogSidebar.isOpen" (closeProductDialog)="onCloseProductDialog()"></ngx-product-dialog>
+</ejs-sidebar>
+<ejs-sidebar
+  id="internal-categories-sidebar" #internalCategoriesSidebar position="Right" type="Over" width="600px"
+  zIndex="1004" showBackdrop="true" [closeOnDocumentClick]="true" [enableGestures]="false">
+    <ngx-internal-categories
+      *ngIf="internalCategoriesSidebar.isOpen"
+      (editCategoryClicked)="onEditInternalCategoryClicked($event)">
+    </ngx-internal-categories>
+</ejs-sidebar>
+<ejs-sidebar
+  id="commercial-categories-sidebar" #commercialCategoriesSidebar position="Right" type="Over" width="600px"
+  zIndex="1004" showBackdrop="true" [closeOnDocumentClick]="true" [enableGestures]="false">
+    <ngx-commercial-categories
+      *ngIf="commercialCategoriesSidebar.isOpen"
+      (editCategoryClicked)="onEditCommercialCategoryClicked($event)">
+    ></ngx-commercial-categories>
+</ejs-sidebar>
+<p class="version-overlay">{{appVersion}}</p>

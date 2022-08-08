@@ -1,0 +1,71 @@
+<section class="top-section">
+  <button nbButton ghost class="top-section__back-button" (click)="onClickBackButton()">
+    <nb-icon class="top-section__back-button__icon" icon="arrow-ios-back-outline"></nb-icon>
+  </button>
+  <p class="top-section__title">Edit Category</p>
+</section>
+<hr>
+<form (ngSubmit)="onConfirmEditCategory()" [formGroup]="categoryForm">
+  <div class="category-form-inputs">
+    <div class="category-form-inputs__input-control">
+      <label class="category-form-inputs__input-label" for="category-english-name">English name</label>
+      <input
+        type="text"
+        class="category-form-inputs__input"
+        name="category-english-name"
+        formControlName="englishName"
+        placeholder="English name"
+      >
+    </div>
+    <div class="category-form-inputs__input-control">
+      <label class="category-form-inputs__input-label" for="category-arabic-name">Arabic name</label>
+      <input
+        type="text"
+        class="category-form-inputs__input"
+        name="category-arabic-name"
+        formControlName="arabicName"
+        placeholder="Arabic name"
+      >
+    </div>
+  </div>
+  <div class="action-buttons-section">
+    <button 
+      nbButton 
+      (click)="onCancelEditCategory()"
+      type="button"
+      class="action-buttons-section__cancel-button"
+    >
+      Cancel
+    </button>
+    <button 
+      nbButton 
+      status="primary"
+      [disabled]="categoryForm.invalid"
+      class="action-buttons-section__submit-button" 
+    >
+      Update
+    </button>
+  </div>
+</form>
+<hr>
+<section class="sub-categories-section">
+  <p class="sub-categories-section__title">Sub-categories Hierarchies</p>
+  <div class="sub-categories-section__levels">
+    <ng-container *ngFor="let subCategoryHeirarchy of subCategoryLevels">
+      <ngx-sub-category-level
+        [levelNumber]="subCategoryHeirarchy.level"
+        [parentCategory]="subCategoryHeirarchy.parentCategory"
+        [levelSubCategories]="subCategoryHeirarchy.subCategoriesList"
+        [selectedSubCategoryId]="subCategoryHeirarchy.selectedSubCategoryId"
+        [loading]="subCategoryHeirarchy.subCategoryListLoading"
+        [categoryType]="categoryType"
+        (reloadSubCategoryLevel)="getSubCategoryLevelList(subCategoryHeirarchy.level)"
+        (selectedSubCategoryChanged)="onSelectedSubCategoryChanged($event, subCategoryHeirarchy.level)"
+        (subCategoryEditClicked)="onEditSubCategory($event, subCategoryHeirarchy.level)"
+        (subCategoryDeleteClicked)="onSubCategoryDeleteClicked($event, subCategoryHeirarchy.level)"
+      ></ngx-sub-category-level>
+      <div class="vertical-separator"></div>
+    </ng-container>
+  </div>
+</section>
+<hr>

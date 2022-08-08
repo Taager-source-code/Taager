@@ -1,0 +1,16 @@
+import mongoose from 'mongoose';
+
+export const runTransactionally = async (functionToWrap) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const functionResult = await functionToWrap(session);
+    await session.commitTransaction();
+    return functionResult;
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
+  }
+};

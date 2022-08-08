@@ -1,0 +1,204 @@
+import { deepEqual, instance, mock, verify, capture, anything } from 'ts-mockito';
+import WithdrawalRepo from '../../../../../../src/merchant/commands/infrastructure/withdrawals/repositories/WithdrawalRepo';
+import DebitEligibleAmount from '../../../../../../src/merchant/commands/application/wallet/usecases/DebitEligibleAmount';
+import RequestWithdrawal from '../../../../../../src/merchant/commands/application/withdrawals/usecases/RequestWithdrawal';
+import { findUserWallet } from '../../../../../../src/services/userWallet.service';
+import { findUserById } from '../../../../../../src/services/user.service';
+import { UserNotFoundError } from '../../../../../../src/merchant/commands/application/withdrawals/exceptions/MerchantExceptions';
+import WithdrawalRequest from '../../../../../../src/merchant/commands/application/withdrawals/models/WithdrawalRequest';
+import { when } from 'jest-when';
+import { User } from '../../../../../../src/interfaces/UserModel';
+import { UserWalletEntity } from '../../../../../../src/merchant/common/infrastructure/db/models/UserWalletEntity';
+import TransactionRequest from '../../../../../../src/merchant/commands/application/wallet/models/TransactionRequest';
+import {
+  InsufficientEligibleAmountError,
+  WalletNotFoundError,
+} from '../../../../../../src/merchant/commands/application/withdrawals/exceptions/WithdrawalsExceptions';
+
+jest.mock('../../../../../../src/services/userWallet.service');
+jest.mock('../../../../../../src/services/user.service');
+
+function initializeRequestWithdrawal() {
+  const withdrawalRepoMocked = mock(WithdrawalRepo);
+  const debitEligibleAmountMocked = mock(DebitEligibleAmount);
+  const requestWithdrawal = new RequestWithdrawal(instance(withdrawalRepoMocked), instance(debitEligibleAmountMocked));
+  return { withdrawalRepoMocked, debitEligibleAmountMocked, requestWithdrawal };
+}
+
+describe('RequestWithdrawal', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Request Withdrawal', () => {
+    test('When requesting withdrawal, check all dependencies are called with correct parameters, save withdrawal data and debit eligible amount', async () => {
+      const { withdrawalRepoMocked, debitEligibleAmountMocked, requestWithdrawal } = initializeRequestWithdrawal();
+      const request: WithdrawalRequest = {
+        adminId: '628e09d59ad446c793243202',
+        userId: '628e09de3ae716a9277057ef',
+        amount: 100,
+        paymentMethod: 'vodafone_cash',
+        phoneNum: '01019847969',
+        currency: 'EGP',
+      };
+      const user: User = {
+        TagerID: 505,
+        _id: '628e09de3ae716a9277057ef',
+        cart: [],
+        deviceTokens: [],
+        firstName: '',
+        fullName: '',
+        lastName: '',
+        listedProducts: [],
+        userCollection: [],
+        userLevel: 0,
+        userReferrals: [],
+        username: '',
+      };
+      const userWallets: UserWalletEntity[] = [
+        {
+          userID: '628e09de3ae716a9277057ef',
+          eligibleProfit: 1000,
+        },
+      ];
+      when(findUserById).calledWith(request.userId).mockResolvedValue(user);
+      when(findUserWallet)
+        .calledWith({
+          userID: request.userId,
+          currency: request.currency,
+        })
+        .mockResolvedValue(userWallets);
+
+      await requestWithdrawal.execute(request);
+
+      const [withdrawalArg] = capture(withdrawalRepoMocked.save).last();
+      const transactionRequest: TransactionRequest = {
+        userId: String(user._id),
+        currency: request.currency,
+        serviceTransactionId: withdrawalArg.withdrawalId,
+        serviceType: 'Withdrawals',
+        serviceSubType: 'WithdrawalRequested',
+        amount: request.amount,
+        taagerId: user.TagerID,
+      };
+
+      expect(findUserById).toHaveBeenCalledTimes(1);
+      expect(findUserWallet).toHaveBeenCalledTimes(1);
+      verify(withdrawalRepoMocked.save(anything())).once();
+      verify(debitEligibleAmountMocked.execute(deepEqual(transactionRequest))).once();
+    });
+    test('When requesting withdrawal but user doesnt exist, throw user not found error', async () => {
+      const { withdrawalRepoMocked, debitEligibleAmountMocked, requestWithdrawal } = initializeRequestWithdrawal();
+      const request: WithdrawalRequest = {
+        adminId: '628e09d59ad446c793243202',
+        userId: '628e09de3ae716a9277057ef',
+        amount: 100,
+        paymentMethod: 'vodafone_cash',
+        phoneNum: '01019847969',
+        currency: 'EGP',
+      };
+
+      when(findUserById).calledWith(request.userId).mockResolvedValue(null);
+
+      await expect(async () => {
+        await requestWithdrawal.execute(request);
+      }).rejects.toThrow(UserNotFoundError);
+
+      expect(findUserById).toHaveBeenCalledTimes(1);
+      expect(findUserWallet).not.toHaveBeenCalled();
+      verify(withdrawalRepoMocked.save(anything())).never();
+      verify(debitEligibleAmountMocked.execute(anything())).never();
+    });
+    test('When requesting withdrawal but user wallet doesnt exist, throw user wallet not found error', async () => {
+      const { withdrawalRepoMocked, debitEligibleAmountMocked, requestWithdrawal } = initializeRequestWithdrawal();
+      const request: WithdrawalRequest = {
+        adminId: '628e09d59ad446c793243202',
+        userId: '628e09de3ae716a9277057ef',
+        amount: 100,
+        paymentMethod: 'vodafone_cash',
+        phoneNum: '01019847969',
+        currency: 'EGP',
+      };
+      const user: User = {
+        TagerID: 505,
+        _id: '628e09de3ae716a9277057ef',
+        cart: [],
+        deviceTokens: [],
+        firstName: '',
+        fullName: '',
+        lastName: '',
+        listedProducts: [],
+        userCollection: [],
+        userLevel: 0,
+        userReferrals: [],
+        username: '',
+      };
+      const userWallets: UserWalletEntity[] = [];
+
+      when(findUserById).calledWith(request.userId).mockResolvedValue(user);
+      when(findUserWallet)
+        .calledWith({
+          userID: request.userId,
+          currency: request.currency,
+        })
+        .mockResolvedValue(userWallets);
+
+      await expect(async () => {
+        await requestWithdrawal.execute(request);
+      }).rejects.toThrow(WalletNotFoundError);
+
+      expect(findUserById).toHaveBeenCalledTimes(1);
+      expect(findUserWallet).toHaveBeenCalledTimes(1);
+      verify(withdrawalRepoMocked.save(anything())).never();
+      verify(debitEligibleAmountMocked.execute(anything())).never();
+    });
+    test('When requesting withdrawal but requested amount is bigger than the eligible amount, throw insufficient eligible amount error', async () => {
+      const { withdrawalRepoMocked, debitEligibleAmountMocked, requestWithdrawal } = initializeRequestWithdrawal();
+      const request: WithdrawalRequest = {
+        adminId: '628e09d59ad446c793243202',
+        userId: '628e09de3ae716a9277057ef',
+        amount: 1000,
+        paymentMethod: 'vodafone_cash',
+        phoneNum: '01019847969',
+        currency: 'EGP',
+      };
+      const user: User = {
+        TagerID: 505,
+        _id: '628e09de3ae716a9277057ef',
+        cart: [],
+        deviceTokens: [],
+        firstName: '',
+        fullName: '',
+        lastName: '',
+        listedProducts: [],
+        userCollection: [],
+        userLevel: 0,
+        userReferrals: [],
+        username: '',
+      };
+      const userWallets: UserWalletEntity[] = [
+        {
+          userID: '628e09de3ae716a9277057ef',
+          eligibleProfit: 100,
+        },
+      ];
+
+      when(findUserWallet)
+        .calledWith({
+          userID: request.userId,
+          currency: request.currency,
+        })
+        .mockResolvedValue(userWallets);
+      when(findUserById).calledWith(request.userId).mockResolvedValue(user);
+
+      await expect(async () => {
+        await requestWithdrawal.execute(request);
+      }).rejects.toThrow(InsufficientEligibleAmountError);
+
+      expect(findUserById).toHaveBeenCalledTimes(1);
+      expect(findUserWallet).toHaveBeenCalledTimes(1);
+      verify(withdrawalRepoMocked.save(anything())).never();
+      verify(debitEligibleAmountMocked.execute(anything())).never();
+    });
+  });
+});

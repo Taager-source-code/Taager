@@ -1,0 +1,42 @@
+import { Answer, Question, Questionnaire, MultilingualText } from '../../../application/models/Questionnaire';
+import {
+  AnswerModel,
+  QuestionnaireModel,
+  QuestionModel,
+  MultilingualTextModel,
+} from '../../../../common/infrastructure/db/models/QuestionnaireModel';
+
+export default class QuestionnaireModelConverter {
+  public static toQuestionnaireModel(questionnaireModel: QuestionnaireModel): Questionnaire {
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      id: questionnaireModel._id!,
+      name: questionnaireModel.name,
+      questions: questionnaireModel.questions.map(q => this.mapQuestion(q)),
+    };
+  }
+
+  private static mapQuestion(question: QuestionModel): Question {
+    return {
+      id: question.id,
+      text: this.mapText(question.text),
+      iconUrl: question.iconUrl,
+      maxAllowedAnswers: question.maxAllowedAnswers,
+      answers: question.answers.map(a => this.mapAnswer(a)),
+    };
+  }
+
+  private static mapAnswer(answer: AnswerModel): Answer {
+    return {
+      id: answer.id,
+      text: this.mapText(answer.text),
+      iconUrl: answer.iconUrl,
+    };
+  }
+
+  private static mapText(textModel: MultilingualTextModel): MultilingualText {
+    return { en: textModel.en, ar: textModel.ar };
+  }
+}
+
+

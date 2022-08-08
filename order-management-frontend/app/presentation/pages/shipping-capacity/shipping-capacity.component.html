@@ -1,0 +1,55 @@
+<ngx-spinner type="ball-scale-multiple"><p class="loading">Loading</p></ngx-spinner>
+<div class="row">
+    <div class="col-12 button-alignment">
+        <button (click)="showUnAllocationSidebar()" nbButton outline status="primary"><nb-icon icon="undo-outline"></nb-icon>Un Allocate Orders</button>
+        <button (click)="showAllocationServiceSidebar()" nbButton outline status="primary"><nb-icon icon="settings-outline"></nb-icon>Allocation Service</button>
+        </div>
+</div>
+<div class="filter-container">
+    <p>Search</p>
+        <div class="row">
+            <div class="col-md-10">
+                <nb-form-field class="full">
+                    <nb-icon nbPrefix icon="search-outline" pack="eva"></nb-icon>
+                    <input class="width-80" type="text" placeholder="Search by Province name" nbInput [(ngModel)]="searchTerm">
+                    <button nbSuffix nbButton ghost type="button" *ngIf="searchTerm?.length > 0" (click)="clearSearch()">
+                        <nb-icon icon='close-outline' pack="eva" (click)="fetchProvinceList()"></nb-icon>
+                      </button>
+                </nb-form-field>
+            </div>
+            <div class="col-md-2 filter-search-btn-container pos-center">
+                <button class="filter-search" nbButton status="primary" type="submit" (click)="searchProvince()">Search</button>
+            </div>
+        </div>
+</div>
+<section class="province-section">
+    <ng-container *ngIf="provinceCapacity?.length > 0 else showNoResultsFound">
+        <ngx-province-card *ngFor="let province of provinceCapacity" [capacity]="province"></ngx-province-card>
+    </ng-container>
+    <ng-template #showNoResultsFound>
+        <h6>No results found</h6>
+    </ng-template>
+</section>
+<ejs-sidebar #sidebar id="edit-sidebar" position="Right" type="Over" style="visibility: hidden" width="25vw"
+    zIndex="1004" showBackdrop="true">
+    <ng-container>
+        <allocation-service #allocationService></allocation-service>
+    </ng-container>
+    <div class="confirm-buttons">
+        <div class="row">
+            <button class="cancel-btn" nbButton ghost (click)="closeSideBar()">Cancel</button>
+            <button class="filter-search" nbButton status="primary" (click)="updateStatus()">Update</button>
+        </div>
+    </div>
+</ejs-sidebar>
+<ejs-sidebar #unAllocationSidebar id="edit-sidebar" position="Right" type="Over" style="visibility: hidden" width="25vw"
+    zIndex="1004" showBackdrop="true">
+    <ng-container>
+        <un-allocation-service (closeSideBar)="closeUnAllocationSidebar()"></un-allocation-service>
+    </ng-container>
+    <div class="confirm-buttons">
+        <div class="row">
+            <button class="cancel-btn" nbButton ghost (click)="closeUnAllocationSidebar()">Close</button>
+        </div>
+    </div>
+</ejs-sidebar>

@@ -1,0 +1,39 @@
+import GetSupportedCountries from '../../../../../src/shared-kernel/application/usecases/GetSupportedCountries';
+import CountryRepo from '../../../../../src/shared-kernel/infrastructure/repositories/CountryRepo';
+
+import { instance, mock, when } from 'ts-mockito';
+import { Country } from '../../../../../src/shared-kernel/infrastructure/db/models/Country';
+
+const countries: Country[] = [
+  {
+    countryIsoCode3: 'EGY',
+    countryIsoCode2: 'EG',
+    countryIsoNumber: 818,
+    currencyIsoCode: 'EGP',
+  },
+  {
+    countryIsoCode3: 'ARE',
+    countryIsoCode2: 'AE',
+    countryIsoNumber: 784,
+    currencyIsoCode: 'AED',
+  },
+  {
+    countryIsoCode3: 'SAU',
+    countryIsoCode2: 'SA',
+    countryIsoNumber: 682,
+    currencyIsoCode: 'SAR',
+  },
+];
+
+describe('GetSupportedCountries', () => {
+  test('return list of supported countries', async () => {
+    // Arrange
+    const mockedRepo = mock(CountryRepo);
+    const getSupportedCountries = new GetSupportedCountries(instance(mockedRepo));
+    when(mockedRepo.getCountries()).thenReturn(Promise.resolve(countries));
+
+    // Act
+    const expectedCountries = await getSupportedCountries.execute();
+    expect(expectedCountries).toEqual(countries);
+  });
+});

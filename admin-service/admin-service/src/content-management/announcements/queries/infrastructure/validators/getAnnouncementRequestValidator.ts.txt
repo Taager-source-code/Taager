@@ -1,0 +1,8 @@
+import joi from 'joi';
+
+export const getAnnouncementRequestValidator = (req) => {
+  const schema = joi.object({
+    country: joi.string().uppercase().optional().valid('EGY', 'SAU', 'ARE').default('EGY'),
+  });
+  return schema.validate(req.query);
+};

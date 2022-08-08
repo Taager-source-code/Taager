@@ -1,0 +1,9 @@
+export class UnansweredQuestionError extends Error {
+  questionId: string;
+  constructor(questionId: string) {
+    super(`Question with id=${questionId} must be answered`);
+    this.questionId = questionId;
+  }
+}
+
+

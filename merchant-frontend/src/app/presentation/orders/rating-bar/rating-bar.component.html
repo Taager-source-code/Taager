@@ -1,0 +1,151 @@
+<div class="order-status-form">
+
+    <div class="dialog-title">
+
+        تقييم الطلب
+
+    </div>
+
+    <div class="rating d-flex justify-content-center">
+
+        <div class="rating-wrapper">
+
+            <div class="rating-button" [ngClass]="{'button-selected':currentRate === 1}" (click)="OnSelectRating(1)">
+
+                <img src="../../../../../assets/img/rating-1.svg" alt="غير راضي تماما">
+
+            </div>
+
+            <p>غير راضي تماما</p>
+
+        </div>
+
+        <div class="rating-wrapper">
+
+            <div class="rating-button" [ngClass]="{'button-selected':currentRate === 2}" (click)="OnSelectRating(2)">
+
+                <img src="../../../../../assets/img/rating-2.svg" alt="لم ينل اعجابي">
+
+            </div>
+
+            <p>لم ينل اعجابي</p>
+
+        </div>
+
+        <div class="rating-wrapper">
+
+            <div class="rating-button" [ngClass]="{'button-selected':currentRate === 3}" (click)="OnSelectRating(3)">
+
+                <img src="../../../../../assets/img/rating-3.svg" alt="مقبول">
+
+            </div>
+
+            <p>مقبول</p>
+
+        </div>
+
+        <div class="rating-wrapper">
+
+            <div class="rating-button" [ngClass]="{'button-selected':currentRate === 4}" (click)="OnSelectRating(4)">
+
+                <img src="../../../../../assets/img/rating-4.svg" alt="راضي">
+
+            </div>
+
+            <p>راضي</p>
+
+        </div>
+
+        <div class="rating-wrapper">
+
+            <div class="rating-button" [ngClass]="{'button-selected':currentRate === 5}" (click)="OnSelectRating(5)">
+
+                <img src="../../../../../assets/img/rating-5.svg" alt="راضي جدا">
+
+            </div>
+
+            <p>راضي جدا</p>
+
+        </div>
+
+    </div>
+
+    <div class="negative-rating">
+
+        <select 
+
+            [(ngModel)]="complain" 
+
+            placeholder="سبب التقييم"
+
+            [ngClass]="{'negative-rating-appear': currentRate <= 3 && currentRate > 0}"
+
+            >
+
+                <option value="حالة المنتج">
+
+                    حالة المنتج
+
+                </option>
+
+                <option value="حالة تغليف المنتج">
+
+                    حالة تغليف المنتج
+
+                </option>
+
+                <option value="خدمة التوصيل">
+
+                    خدمة التوصيل
+
+                </option>
+
+                <option value="سرعة الخدمة">
+
+                    سرعة الخدمة
+
+                </option>
+
+                <option value="خدمة العملاء">
+
+                    خدمة العملاء
+
+                </option>
+
+                <option value="الاسعار">
+
+                    الاسعار
+
+                </option>
+
+                <option value="اخرى">
+
+                    اخرى
+
+                </option>
+
+        </select>
+
+    </div>
+
+    <div class="submit-button d-flex justify-content-center"
+
+        [ngClass]="{'submit-button-adjust-position': currentRate <= 3 && currentRate > 0}"
+
+        >
+
+            <button 
+
+                (click)="onSubmitRating()"
+
+                [ngClass]="{'submit-button-disabled': (currentRate === 0 || (currentRate <= 3 && !complain))}"
+
+                >
+
+                تأكيد
+
+            </button>
+
+    </div>
+
+</div>

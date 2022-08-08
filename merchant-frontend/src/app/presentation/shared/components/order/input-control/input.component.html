@@ -1,0 +1,89 @@
+<div class="form-group">
+
+  <label>{{ label }} <span *ngIf="requiredField"></span></label>
+
+  <input
+
+    class="form-control"
+
+    [ngClass]="{ 'input-error': isInvalid }"
+
+    [type]="type"
+
+    [id]="id"
+
+    [formControl]="formControl"
+
+    (blur)="onBlur($event)"
+
+    [name]="name"
+
+    [readonly]="readonlyField"
+
+    [min]="min"
+
+    [placeholder]="placeholder"
+
+  />
+
+  <div *ngIf="isInvalid">
+
+    <div *ngIf="formControl.errors.required">
+
+      <p class="input-error">هذا الحقل مطلوب</p>
+
+    </div>
+
+    <div *ngIf="formControl.errors.pattern">
+
+      <p class="input-error">هذا الحقل غير صحيح</p>
+
+    </div>
+
+    <div
+
+      *ngIf="
+
+        isAPhoneInputField &&
+
+        (formControl.errors.minlength || formControl.errors.maxlength)
+
+      "
+
+    >
+
+      <p class="input-error">رقم الهاتف يجب أن يكون 11 رقما</p>
+
+    </div>
+
+    <div *ngIf="!isAPhoneInputField && formControl.errors.minlength">
+
+      <p class="input-error">Value is too short</p>
+
+      <div *ngIf="!isAPhoneInputField && formControl.errors.maxlength">
+
+        <p class="input-error">Value is too large</p>
+
+      </div>
+
+      <div *ngIf="formControl.errors.min">
+
+        <p class="input-error">هذه القيمة أقل من المحدد لها</p>
+
+      </div>
+
+      <div
+
+        *ngIf="formControl.errors.provinceName && !formControl.errors.required"
+
+      >
+
+        <p class="input-error">اختر اسم محافظة صحيح</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

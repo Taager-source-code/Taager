@@ -1,0 +1,289 @@
+<div class="products-container">
+    <ng-container
+        *ngTemplateOutlet="isAddingProduct ? addingProductTemplate : notAddingProductTemplate"></ng-container>
+    <ng-template #addingProductTemplate>
+        <div class="products-container__adding">
+            <ng-template [ngTemplateOutlet]="addedProductsTemplate"></ng-template>
+            <div *ngIf="!currentlyEditingABundleAttribute">
+                <ng-template [ngTemplateOutlet]="productSKUSearchAreaTemplate"></ng-template>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #notAddingProductTemplate>
+        <div class="products-container__not-adding">
+            <div class="products-container__not-adding__instruction">
+                <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g clip-path="url(#clip0_1_712)">
+                        <path d="M24.9833 50.0003C24.8187 50.0003 24.6521 49.9607 24.5021 49.8815L0.560417 37.3815C0.216667 37.2024 0 36.8461 0 36.4586V13.0211C0 12.6607 0.1875 12.3253 0.49375 12.1357C0.8 11.9461 1.18542 11.9294 1.50625 12.0898L25.4479 24.069C25.8 24.2461 26.0229 24.6065 26.0229 25.0003V48.9586C26.0229 49.3232 25.8333 49.6607 25.5208 49.8503C25.3583 49.9503 25.1708 50.0003 24.9833 50.0003ZM2.08333 35.8274L23.9417 47.2398V25.644L2.08333 14.7065V35.8274Z" fill="#AAAAAA"/>
+                        <path d="M25.0163 49.9999C24.8288 49.9999 24.6413 49.9499 24.4767 49.8499C24.1663 49.6603 23.9746 49.3228 23.9746 48.9582V24.9999C23.9746 24.6061 24.1975 24.2457 24.5496 24.0686L48.4913 12.0894C48.81 11.9269 49.1975 11.9436 49.5038 12.1353C49.8121 12.3249 49.9996 12.6603 49.9996 13.0207V36.4582C49.9996 36.8457 49.7829 37.2019 49.4392 37.3811L25.4975 49.8811C25.3475 49.9603 25.1809 49.9999 25.0163 49.9999ZM26.0579 25.6436V47.2394L47.9163 35.8269V14.7061L26.0579 25.6436ZM48.9579 36.4582H48.9788H48.9579Z" fill="#AAAAAA"/>
+                        <path d="M1.04188 14.0624C0.658545 14.0624 0.291879 13.852 0.108545 13.4874C-0.149788 12.9729 0.0606287 12.3479 0.575212 12.0895L24.5502 0.110352C24.844 -0.0354818 25.1898 -0.0354818 25.4815 0.110352L49.4231 12.0895C49.9377 12.3479 50.146 12.9729 49.8898 13.4874C49.6315 14.002 49.0085 14.2083 48.4919 13.9541L25.0169 2.20619L1.50855 13.952C1.35855 14.027 1.20021 14.0624 1.04188 14.0624Z" fill="#AAAAAA"/>
+                        <path d="M37.4995 31.2497C36.9245 31.2497 36.4578 30.783 36.4578 30.208V19.3934L13.0911 7.70177C12.5765 7.44552 12.3682 6.81844 12.6265 6.30385C12.8849 5.78927 13.5099 5.58302 14.0245 5.83719L37.9661 17.8164C38.3182 17.9955 38.5411 18.3559 38.5411 18.7497V30.208C38.5411 30.783 38.0745 31.2497 37.4995 31.2497Z" fill="#AAAAAA"/>
+                    </g>
+                    <defs>
+                        <clipPath id="clip0_1_712">
+                            <rect width="50" height="50" fill="white"/>
+                        </clipPath>
+                    </defs>
+                </svg>
+                <span class="products-container__not-adding__instruction__text">
+                    Start adding products to the bundle
+                </span>
+                <svg width="51" height="50" viewBox="0 0 51 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5292 43.8366C19.9613 40.7599 21.5791 37.097 23.8193 33.8816C26.0167 30.7318 27.8451 27.2841 29.6113 23.9008C33.1974 17.0499 35.9685 9.6225 36.6803 1.91306C36.7748 0.889373 35.286 0.461055 34.9032 1.46277C32.211 8.57878 29.3291 15.6163 26.3242 22.5986C24.8652 26.0036 23.3585 29.3931 21.8041 32.7669C20.1574 36.3294 17.9211 39.6089 16.3137 43.1639C15.9813 43.9088 17.0493 44.4472 17.5292 43.8366Z" fill="#0F1933"/>
+                    <path d="M13.915 48.3075C13.9882 48.4682 14.0968 48.6103 14.2328 48.7232C14.3688 48.836 14.5286 48.9169 14.7005 48.9596C14.8724 49.0024 15.0518 49.006 15.2256 48.9702C15.3993 48.9343 15.5629 48.86 15.7041 48.7527C18.7916 46.8056 22.0721 45.1097 24.8352 42.7046C25.0047 42.5695 25.1136 42.3729 25.138 42.1582C25.1624 41.9435 25.1002 41.7283 24.9652 41.5599C24.8301 41.3915 24.6333 41.2836 24.418 41.2601C24.2026 41.2366 23.9864 41.2993 23.8169 41.4345C21.1923 43.2815 18.3072 44.6101 15.5392 46.1894C15.0718 45.1013 14.6028 44.0092 14.1896 42.8932C13.6018 41.3817 13.2644 39.7486 12.4566 38.3411C12.0726 37.6781 10.771 37.5975 10.7654 38.5971C10.7107 41.9038 12.6324 45.3212 13.915 48.3075Z" fill="#0F1933"/>
+                </svg>
+            </div>
+            <button nbButton class="products-container__not-adding__add-button" (click)="toggleIsAddingProduct()">
+                <span class="products-container__not-adding__add-button__icon">
+                    <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.25 12.499H18.75" stroke="#0F1933" stroke-width="2.22082" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12.5 18.749V6.24902" stroke="#0F1933" stroke-width="2.22082" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="products-container__not-adding__add-button__text">Add new Product</span>
+            </button>
+        </div>
+    </ng-template>
+</div>
+<!-- templates -->
+<ng-template #addedProductsTemplate>
+    <!-- list of added products -->
+    <div *ngIf="addedVariantsList.length > 0" class="products-container__adding__added-products-list">
+        <!-- the added products can be in either view or edit mode -->
+        <ng-container *ngFor="let addedVariant of addedVariantsList, let index=index">
+            <ng-container
+                *ngTemplateOutlet="addedVariant.mode === 'edit' ? addedVariantEditModeTemplate : addedVariantViewModeTemplate; context: {productVariant: addedVariant, index: index + 1}"></ng-container>
+        </ng-container>
+    </div>
+</ng-template>
+<ng-template #productSKUSearchAreaTemplate>
+    <div class="products-container__adding__search">
+        <div class="products-container__adding__search__title">
+            <div class="products-container__adding__search__title__icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.5562 4.94693C19.5562 4.92579 19.5562 4.92579 19.5562 4.90465C19.535 4.86237 19.535 4.82009 19.5139 4.77781V4.75666C19.4928 4.71438 19.4505 4.6721 19.4293 4.65096L19.4082 4.62982C19.3871 4.60868 19.3448 4.58754 19.3236 4.5664L19.3025 4.54526H19.2814L19.2602 4.52412L10.2754 0.0634222C10.1063 -0.0211407 9.89488 -0.0211407 9.70461 0.0634222L6.68148 1.56441L15.7086 6.19424L15.7297 6.21538C15.7509 6.21538 15.7509 6.23652 15.772 6.23652C15.7931 6.25766 15.7931 6.2788 15.8143 6.29994C15.8143 6.32108 15.8143 6.32108 15.8143 6.34222V6.36336V11.268C15.8143 11.3526 15.772 11.416 15.7086 11.4583L13.8905 12.4096C13.7848 12.473 13.6579 12.4308 13.5945 12.325C13.5734 12.3039 13.5734 12.2616 13.5734 12.2193V7.4204L4.44057 2.70601L4.41943 2.68487L0.76208 4.50298L0.740939 4.52412H0.719798L0.698658 4.54526C0.677517 4.5664 0.635235 4.58754 0.614095 4.60868L0.592954 4.62982C0.550673 4.6721 0.529532 4.71438 0.48725 4.75666V4.77781C0.46611 4.82009 0.444969 4.86237 0.444969 4.90465C0.444969 4.92579 0.444969 4.92579 0.444969 4.94693C0.444969 4.98921 0.423828 5.01035 0.423828 5.05264V5.07378V14.9254C0.423828 15.1579 0.550673 15.3905 0.783221 15.4962L9.68347 19.9357C9.81031 19.9991 9.9583 20.0203 10.1063 19.978L10.1486 19.9569C10.1908 19.9569 10.212 19.9357 10.2543 19.9146L19.2179 15.475C19.4293 15.3693 19.5773 15.1579 19.5773 14.9042V5.07378V5.05264C19.5562 5.01035 19.5562 4.98921 19.5562 4.94693Z" fill="white"/>
+                </svg>
+            </div>
+            <span class="products-container__adding__search__title__text">
+                Enter product SKU to proceed
+            </span>
+        </div>
+        <div class="products-container__adding__search__input">
+            <span class="products-container__adding__search__input__label">SKU</span>
+            <div class="products-container__adding__search__input__search-field-and-button">
+                <div class="products-container__adding__search__input__search-field-and-button__search-field">
+                    <input nbInput type="text" [(ngModel)]="addVariantInputValue" (ngModelChange)="onAddVariantInputValueChange()">
+                </div>
+                <div class="products-container__adding__search__input__search-field-and-button__add-button">
+                    <button status="primary" nbButton (click)="addVariant()" [disabled]="!addVariantInputValue">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-template>
+<!-- modes for the added product variant -->
+<ng-template #addedVariantEditModeTemplate let-productVariant="productVariant">
+    <div class="added-variant-container">
+        <div class="added-variant-container__header">
+            <div class="added-variant-container__header__english-heading">
+                <span class="added-variant-container__header__arabic-heading__label">English Heading:</span>
+                <input nbInput type="text" (change)="updateVariantEnglishName(productVariant.variantUUID, $event.target.value)" [value]="productVariant.englishName">
+            </div>
+            <div class="added-variant-container__header__arabic-heading">
+                <span class="added-variant-container__header__arabic-heading__label">Arabic Heading:</span>
+                <input nbInput type="text" (change)="updateVariantArabicName(productVariant.variantUUID, $event.target.value)" [value]="productVariant.arabicName">
+            </div>
+            <div class="added-variant-container__header__instruction">
+                <span class="added-variant-container__header__instruction__text">The heading will be shown above the product variants</span>
+            </div>
+        </div>
+        <div class="added-variant-container__body">
+            <div class="added-variant-container__body__section-one">
+                <ng-template
+                    [ngTemplateOutlet]="availabilityTemplate"
+                    [ngTemplateOutletContext]="{availability: productVariant.productAvailability}"></ng-template>
+            </div>
+            <div class="added-variant-container__body__section-two">
+                <ng-template
+                    [ngTemplateOutlet]="productDetailsTemplate"
+                    [ngTemplateOutletContext]="{productDetails: {
+                        image: productVariant.productPicture,
+                        name: productVariant.productName,
+                        sku: productVariant.sku
+                    }}"></ng-template>
+                <div class="added-variant-container__body__section-two__variant-quantity">
+                    <nb-form-field>
+                        <nb-icon nbPrefix icon="minus" (click)="updateVariantQuantity(productVariant.variantUUID, productVariant.quantity, -1)"></nb-icon>
+                        <input type="number" nbInput [value]="productVariant.quantity" (change)="updateVariantQuantityManually(productVariant.variantUUID, $event.target.value)">
+                        <nb-icon nbSuffix icon="plus" (click)="updateVariantQuantity(productVariant.variantUUID, productVariant.quantity, 1)"></nb-icon>
+                    </nb-form-field>
+                </div>
+            </div>
+            <div class="added-variant-container__body__section-three">
+                <ng-template
+                    [ngTemplateOutlet]="productVariantsTemplate"
+                    [ngTemplateOutletContext]="{variants: productVariant.variants}"></ng-template>
+            </div>
+        </div>
+        <div class="added-variant-container__footer">
+            <button nbButton ghost class="added-variant-container__footer__discard-button" (click)="discardAddingOrEditingVariant(productVariant)">
+                Discard
+            </button>
+            <button
+                nbButton
+                ghost
+                [ngClass]="{'disabled': !productVariant.arabicName || !productVariant.englishName}"
+                class="added-variant-container__footer__add-button"
+                [disabled]="!productVariant.arabicName || !productVariant.englishName"
+                (click)="saveOrUpdateVariant(productVariant)">
+                    {{ productVariant.isNew ? 'Save' : 'Update' }}
+            </button>
+        </div>
+    </div>
+</ng-template>
+<ng-template #addedVariantViewModeTemplate let-productVariant="productVariant" let-index="index">
+    <div class="added-variant-container-view-mode">
+        <div class="added-variant-container-view-mode__header">
+            <div class="added-variant-container-view-mode__header__labels">
+                <div class="added-variant-container-view-mode__header__labels__index">
+                    <span>{{ index }}</span>
+                </div>
+                <div class="added-variant-container-view-mode__header__labels__names">
+                    <span class="added-variant-container-view-mode__header__labels__names__english">
+                        {{ productVariant.englishName }}
+                    </span>
+                    <span>/</span>
+                    <span class="added-variant-container-view-mode__header__labels__names__arabic">
+                        {{ productVariant.arabicName }}
+                    </span>
+                </div>
+            </div>
+            <div class="added-variant-container-view-mode__header__actions">
+                <span class="added-variant-container-view-mode__header__actions__edit" (click)="updateExistingVariant(productVariant)">
+                    Edit product
+                </span>
+                <span class="added-variant-container-view-mode__header__actions__delete" (click)="removeExistingVariant(productVariant.variantUUID)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="#CE0021" stroke-width="1.12727" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="#CE0021" stroke-width="1.12727" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18.8499 9.14014L18.1999 19.2101C18.0899 20.7801 17.9999 22.0001 15.2099 22.0001H8.7899C5.9999 22.0001 5.9099 20.7801 5.7999 19.2101L5.1499 9.14014" stroke="#CE0021" stroke-width="1.12727" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10.3301 16.5H13.6601" stroke="#CE0021" stroke-width="1.12727" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9.5 12.5H14.5" stroke="#CE0021" stroke-width="1.12727" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            </div>
+        </div>
+        <div class="added-variant-container-view-mode__body">
+            <div class="added-variant-container-view-mode__body__section-one">
+                <ng-template
+                    [ngTemplateOutlet]="availabilityTemplate"
+                    [ngTemplateOutletContext]="{availability: productVariant.productAvailability}"></ng-template>
+            </div>
+            <div class="added-variant-container-view-mode__body__section-two">
+                <ng-template
+                    [ngTemplateOutlet]="productDetailsTemplate"
+                    [ngTemplateOutletContext]="{productDetails: {
+                        image: productVariant.productPicture,
+                        name: productVariant.productName,
+                        sku: productVariant.sku
+                    }}"></ng-template>
+                <div class="added-variant-container-view-mode__body__section-two__quantity">
+                    <span class="added-variant-container-view-mode__body__section-two__quantity__label">Qty:</span>
+                    <span class="added-variant-container-view-mode__body__section-two__quantity__times">x</span>
+                    <span class="added-variant-container-view-mode__body__section-two__quantity__value">{{ productVariant.quantity }}</span>
+                </div>
+            </div>
+            <div class="added-variant-container-view-mode__body__section-three">
+                <ng-template
+                    [ngTemplateOutlet]="productVariantsTemplate"
+                    [ngTemplateOutletContext]="{variants: productVariant.variants}"></ng-template>
+            </div>
+        </div>
+    </div>
+</ng-template>
+<ng-template #productVariantsTemplate let-variants="variants">
+    <ng-container
+        *ngTemplateOutlet="variants ? showVariantsTemplate : showNoVariantsAvailableTemplate"></ng-container>
+    
+    <ng-template #showVariantsTemplate>
+        <!-- product variants go here -->
+        <div class="product-variants">
+            <ng-template
+                [ngTemplateOutlet]="productsColorVariantsTemplate"
+                [ngTemplateOutletContext]="{color: variants.color}"></ng-template>
+            <ng-template
+                [ngTemplateOutlet]="productsSizesVariantsTemplate"
+                [ngTemplateOutletContext]="{sizes: variants.size}"></ng-template>
+            <ng-template
+                [ngTemplateOutlet]="productsNumericSizesVariantsTemplate"
+                [ngTemplateOutletContext]="{numericSizes: variants.numericSizes}"></ng-template>
+        </div>
+    </ng-template>
+    <ng-template #showNoVariantsAvailableTemplate>
+        <div class="no-variants">
+            <span>No variants available</span>
+        </div>
+    </ng-template>
+    <ng-template #productsColorVariantsTemplate let-color="color">
+        <!-- product color variants -->
+        <div *ngIf="color?.values.length > 0" class="product-variants__variant-group product-variants__color-variants-container">
+            <ng-template [ngTemplateOutlet]="variantsTitle" [ngTemplateOutletContext]="{title: color.label}"></ng-template>
+            <div class="product-variants__color-variants-container__content">
+                <div *ngFor="let color of color?.values" class="product-variants__color-variants-container__content__outer">
+                    <div class="product-variants__color-variants-container__content__outer__inner" [style.backgroundColor]="color"></div>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #productsSizesVariantsTemplate let-sizes="sizes">
+        <!-- product sizes variants -->
+        <div *ngIf="sizes?.values.length > 0" class="product-variants__variant-group product-variants__sizes-variants-container">
+            <ng-template [ngTemplateOutlet]="variantsTitle" [ngTemplateOutletContext]="{title: sizes.label}"></ng-template>
+            <div class="product-variants__sizes-variants-container__content">
+                <div *ngFor="let size of sizes.values" class="product-variants__sizes-variants-container__content__outer">
+                    <span class="product-variants__sizes-variants-container__content__outer__inner">{{ size }}</span>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #productsNumericSizesVariantsTemplate let-numericSizes="numericSizes">
+        <!-- product numeric sizes variants -->
+        <div *ngIf="numericSizes?.values.length > 0" class="product-variants__variant-group product-variants__numeric-sizes-variants-container">
+            <ng-template [ngTemplateOutlet]="variantsTitle" [ngTemplateOutletContext]="{title: numericSizes.label}"></ng-template>
+            <div class="product-variants__numeric-sizes-variants-container__content">
+                <div *ngFor="let numericSize of numericSizes.values" class="product-variants__numeric-sizes-variants-container__content__outer">
+                    <span class="product-variants__numeric-sizes-variants-container__content__outer__inner">{{ numericSize }}</span>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #variantsTitle let-title="title">
+        <div class="product-variants__title">{{ title }}</div>
+    </ng-template>
+</ng-template>
+<!-- shareable content -->
+<ng-template #availabilityTemplate let-availability="availability">
+    <div class="variant-availability">
+        <div [class]="'variant-availability--'+availability.value">
+            <div [class]="'variant-availability--'+availability.value+'__content'">
+                <span [class]="'variant-availability--'+availability.value+'__content__text'">{{ availability.label }}</span>
+            </div>
+        </div>
+    </div>
+</ng-template>
+<ng-template #productDetailsTemplate let-productDetails="productDetails">
+    <div class="product-details">
+        <div class="product-details__image">
+            <img [src]="productDetails.image" [alt]="productDetails.name">
+        </div>
+        <div class="product-details__name-and-sku">
+            <span class="product-details__name-and-sku__name">{{ productDetails.name }}</span>
+            <span class="product-details__name-and-sku__sku">
+                <span class="product-details__name-and-sku__sku__label">
+                    SKU:
+                </span>
+                <span class="product-details__name-and-sku__sku__value">{{ productDetails.sku }}</span>
+            </span>
+        </div>
+    </div>
+</ng-template>

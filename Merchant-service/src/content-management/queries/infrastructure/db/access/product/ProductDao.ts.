@@ -1,0 +1,13 @@
+import { Service } from 'typedi';
+import { GetProductQuery } from '../../../../application/models/product/GetProductQuery';
+import ProductSchema from '../../schemas/ProductModel';
+import { ProductModel as ProductEntity } from '../../models/ProductModel';
+
+@Service({ global: true })
+export default class ProductDao {
+  getProduct(getProductQuery: GetProductQuery): Promise<ProductEntity | null> {
+    return ProductSchema.findOne(getProductQuery).exec();
+  }
+}
+
+

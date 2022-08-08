@@ -1,0 +1,92 @@
+@import './colors';
+table.capacity-table {
+  border-spacing: 0;
+  width: 100%;
+  th,
+  td {
+    padding: 10px;
+  }
+  thead {
+    background-color: $grey-light;
+    th {
+      border-left: 1px solid $grey-medium;
+      border-right: 1px solid $grey-medium;
+    }
+    th:first-child {
+      border-left: none !important;
+    }
+    th:last-child {
+      border-right: none !important;
+    }
+  }
+  tbody {
+    .priority-number,
+    .shipping-name {
+      display: inline-block;
+    }
+    .priority-number {
+      padding: 10px;
+      background-color: $grey-light;
+      margin-right: 10px;
+    }
+  }
+  td {
+    border: 1px solid $grey-medium;
+  }
+  td:first-child {
+    padding: 0;
+    border-left: 0 !important;
+    cursor: move;
+  }
+  td:last-child {
+    border-right: 0 !important;
+  }
+  .no-padding {
+    padding: 0 !important;
+  }
+  .icon-right-space {
+    margin-right: 5px;
+  }
+  .priority-button-cell {
+    background: rgb(70 184 176 / 10%);
+    button {
+      display: block;
+      margin: auto;
+      color: $primary;
+      text-transform: capitalize;
+    }
+  }
+  .pointer-cursor {
+    cursor: pointer;
+  }
+}
+.edit-active {
+  filter: invert(1) sepia(1) saturate(10) hue-rotate(175deg);
+}
+.cutoff-time-cell {
+  width: 218px !important;
+}
+.button-container {
+  margin-top: 5rem;
+  display: block;
+  text-align: right;
+  button {
+    margin-right: 1rem;
+  }
+}
+.edit-btn-container {
+  text-align: center;
+}
+button.mini-btn {
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+}
+.edit-save-btn {
+  background-color: $success;
+  margin-right: 1rem;
+}
+.cancel-save-btn {
+  background-color: #666;
+}

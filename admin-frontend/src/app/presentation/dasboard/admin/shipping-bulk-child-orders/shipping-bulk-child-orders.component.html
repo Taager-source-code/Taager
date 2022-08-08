@@ -1,0 +1,89 @@
+<ngx-spinner
+  bdColor="rgba(0, 0, 0, 0.8)"
+  size="large"
+  color="#fff"
+  type="timer"
+  [fullScreen]="true"
+  ><p style="color: white">Loading...</p></ngx-spinner
+>
+<h1 mat-dialog-title></h1>
+<div mat-dialog-content>
+  <form>
+    <h3>Child Bulk Upload (excluding red zones)</h3>
+    <br /><br />
+    <app-country-dropdown
+      (selectedCountry)="getSelectedCountry($event)"
+    ></app-country-dropdown>
+    <mat-form-field class="example-full-width">
+      <input
+        matInput
+        (dateInput)="OnFromDateChange($event)"
+        (dateChange)="OnFromDateChange($event.value)"
+        [matDatepicker]="fromPicker"
+        placeholder="Choose from date"
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="fromPicker"
+      ></mat-datepicker-toggle>
+      <mat-datepicker
+        #fromPicker
+        (dateInput)="OnFromDateChange($event)"
+      ></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field class="example-full-width">
+      <input
+        matInput
+        (dateInput)="OnToDateChange($event)"
+        (dateChange)="OnToDateChange($event.value)"
+        [matDatepicker]="toPicker"
+        placeholder="Choose To date"
+      />
+      <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+      <mat-datepicker
+        #toPicker
+        (dateInput)="OnToDateChange($event)"
+      ></mat-datepicker>
+    </mat-form-field>
+    <mat-label>Select Shipping Company</mat-label>
+    <mat-select name="shippingCompany" [(ngModel)]="shippingCompany">
+      <mat-option>Select Shipping Company</mat-option>
+      <mat-option [value]="'bosta'">Bosta</mat-option>
+    </mat-select>
+    <mat-label>Select Order Status</mat-label>
+    <mat-select
+      name="status"
+      [(ngModel)]="status"
+      (selectionChange)="OnStatusChange($event.value)"
+    >
+      <mat-option [value]="'all'">All child orders</mat-option>
+      <mat-option [value]="'refund_request_accepted'">Refund</mat-option>
+      <mat-option [value]="'replacement_request_accepted'"
+        >Replacement</mat-option
+      >
+      <mat-option [value]="'order_addition_request_approved'"
+        >Addition</mat-option
+      >
+    </mat-select>
+    <div class="custom-file">
+      <input
+        type="file"
+        class="custom-file-input"
+        (change)="onSendFile($event)"
+        accept=".csv"
+        required
+      />
+      <label class="custom-file-label"></label>
+    </div>
+    <br /><br />
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="downloadTemplate()"
+      [disabled]="!shippingCompany"
+    >
+      Download Template
+    </button>
+  </form>
+</div>
+<div mat-dialog-actions></div>

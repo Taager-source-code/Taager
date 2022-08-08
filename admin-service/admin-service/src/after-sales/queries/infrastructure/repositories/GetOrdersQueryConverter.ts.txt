@@ -1,0 +1,31 @@
+import { CustomerDetails } from '../../application/models/Order';
+import { OrderDbo as OrderDbo } from '../../../../order-management/common/infrastructure/db/models/OrderDbo';
+import GetOrdersQueryResult, { Order } from '../../application/models/GetOrdersQueryResult';
+
+export default class GetOrdersQueryConverter {
+  static convert(ordersDbo: OrderDbo[], count): GetOrdersQueryResult {
+    const orders = ordersDbo.map((dbo) => this.getOrderModel(dbo));
+    return {
+      orders: orders,
+      count: count,
+    };
+  }
+
+  private static getOrderModel(dbo: OrderDbo): Order {
+    return {
+      orderId: dbo.orderID,
+      status: dbo.status,
+      placedAt: dbo.createdAt,
+      deliveredAt: dbo.deliveryDate,
+      customerDetails: this.getCustomerDetails(dbo),
+    };
+  }
+
+  private static getCustomerDetails(dbo: OrderDbo): CustomerDetails {
+    return {
+      customerName: dbo.receiverName,
+      customerPhoneNum1: dbo.phoneNumber,
+      customerPhoneNum2: dbo.phoneNumber2,
+    };
+  }
+}

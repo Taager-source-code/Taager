@@ -1,0 +1,63 @@
+<div class="categories-sidebar-container">
+
+  <div class="categories-sidebar">
+
+    <p class="sidebar-title">فئات القسم</p>
+
+    <div
+
+      class="categories-levels-two"
+
+      *ngFor="let levelTwoCategoryNode of levelTwoCategoryNodes"
+
+    >
+
+      <div
+
+        class="level-container"
+
+        [ngClass]="{'level-container--selected': levelTwoCategoryNode.key === selectedCategoryNodes.levelTwo?.key }"
+
+      >
+
+        <b
+
+          class="fa fa-chevron-left custom-chevron"
+
+          aria-hidden="true"
+
+        ></b>
+
+        <a class="level-button" [routerLink]="['/','products','category', levelTwoCategoryNode.key]">
+
+          {{ levelTwoCategoryNode.value.name.arabicName }}
+
+        </a>
+
+      </div>
+
+      <div class="level-three-container" *ngIf="levelTwoCategoryNode.key === selectedCategoryNodes.levelTwo?.key">
+
+        <div *ngFor="let levelThreeCategoryNode of levelTwoCategoryNode.children">
+
+          <a class="level-three-text" 
+
+            [routerLink]="['/','products','category', levelThreeCategoryNode.key]"
+
+            [ngClass]="{'level-three-text--selected': selectedCategoryNodes.levelThree?.key === levelThreeCategoryNode.key}">
+
+            {{ levelThreeCategoryNode.value.name.arabicName }}
+
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+

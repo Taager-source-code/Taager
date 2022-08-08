@@ -1,0 +1,23 @@
+export class WarehouseApiKeyError extends Error {
+  constructor() {
+    super('Invalid Warehouse Api Key.');
+  }
+}
+
+export class WarehouseBadRequestError extends Error {
+  constructor() {
+    super('Data is not populated right.');
+  }
+}
+
+export class WarehouseIsDownError extends Error {
+  constructor() {
+    super('Warehouse is down at this moment.');
+  }
+}
+
+export class WarehouseGeneralError extends Error {
+  constructor() {
+    super('Something went wrong with the warehouse.');
+  }
+}

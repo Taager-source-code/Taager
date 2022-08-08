@@ -1,0 +1,344 @@
+import ShipmentDeletedProducer from '../../../../../src/shipping/command/infrastructure/producers/ShipmentDeletedProducer';
+
+process.env.R2S_MOCK_ACTIVE = 'true';
+process.env.BOSTA_MOCK_ACTIVE = 'true';
+process.env.VHUBS_MOCK_ACTIVE = 'true';
+process.env.LINK_CHAIN_MOCK_ACTIVE = 'true';
+
+import 'reflect-metadata';
+import { OK } from 'http-status';
+import { AsyncCreateShipmentsController } from '../../../../../src/shipping/command/infrastructure/controllers/AsyncCreateShipmentsController';
+import ProductSchema from '../../../../../src/models/product.model';
+import { ProductBuilder } from '../../../../../e2e_tests/fixtures/product.fixture';
+import { ORDER_1, ORDER_2 } from '../../../../../e2e_tests/fixtures/orderFixture';
+import { MERCHANT_1 } from '../../../../../e2e_tests/fixtures/users/merchantFixtures';
+import OrderSchema from '../../../../../src/models/order.model';
+import * as dockerMongo from '../../../../../e2e_tests/mongo/docker.mongo';
+import * as mongooseConnector from '../../../../../e2e_tests/mongo/mongoose.connector';
+import { Container } from 'typedi';
+import Logger from '../../../../../src/logging/general.log';
+import ShipmentSchema from '../../../../../src/shipping/command/infrastructure/db/schema/ShipmentSchema';
+import each from 'jest-each';
+import ShippingLocationDbo from '../../../../../src/shipping/command/infrastructure/db/models/ShippingLocationDbo';
+import ShippingLocationSchema from '../../../../../src/shipping/command/infrastructure/db/schema/ShippingLocationSchema';
+import CreateShipmentsIntegrated from '../../../../../src/shipping/command/application/usecases/CreateShipmentsIntegrated';
+import ShipmentCreatedProducer from '../../../../../src/shipping/command/infrastructure/producers/ShipmentCreatedProducer';
+import { anything, mock, when } from 'ts-mockito';
+import ShipmentWarehouseCancelledProducer from '../../../../../src/shipping/command/infrastructure/producers/ShipmentWarehouseCancelledProducer';
+import ShipmentCreationFailedProducer from '../../../../../src/shipping/command/infrastructure/producers/ShipmentCreationFailedProducer';
+import OrderConfirmedProducer from '../../../../../src/order-management/commands/infrastructure/producers/orders/OrderConfirmedProducer';
+import CreditEligibleAmountProducer from '../../../../../src/merchant/commands/infrastructure/withdrawals/producers/CreditEligibleAmountProducer';
+import OrderUnConfirmedProducer from '../../../../../src/order-management/commands/infrastructure/producers/orders/OrderUnConfirmedProducer';
+import ShippingCompany from '../../../../../src/shipping/common/db/schema/ShippingCompany';
+import CountryModel from '../../../../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+
+jest.mock('../../../../../src/logging/general.log');
+
+const time = new Date();
+
+async function setUpPulsar() {
+  const shipmentCreatedProducerMocked = mock(ShipmentCreatedProducer);
+  const shipmentDeletedProducerMocked = mock(ShipmentDeletedProducer);
+  const shipmentWarehouseCancelledProducerMocked = mock(ShipmentWarehouseCancelledProducer);
+  const shipmentCreationFailedProducerMocked = mock(ShipmentCreationFailedProducer);
+  const orderConfirmedProducerMocked = mock(OrderConfirmedProducer);
+  const creditEligibleAmountProducerMocked = mock(CreditEligibleAmountProducer);
+  const orderUnConfirmedProducerMock = mock(OrderUnConfirmedProducer);
+  when(shipmentCreatedProducerMocked.send(anything())).thenResolve();
+  when(shipmentDeletedProducerMocked.send(anything())).thenResolve();
+  when(shipmentWarehouseCancelledProducerMocked.send(anything())).thenResolve();
+  when(shipmentCreationFailedProducerMocked.send(anything())).thenResolve();
+  when(orderConfirmedProducerMocked.send(anything())).thenResolve();
+  when(creditEligibleAmountProducerMocked.send(anything())).thenResolve();
+  when(orderUnConfirmedProducerMock.send(anything())).thenResolve();
+  Container.set(ShipmentCreatedProducer, shipmentCreatedProducerMocked);
+  Container.set(ShipmentDeletedProducer, shipmentDeletedProducerMocked);
+  Container.set(ShipmentWarehouseCancelledProducer, shipmentWarehouseCancelledProducerMocked);
+  Container.set(ShipmentCreationFailedProducer, shipmentCreationFailedProducerMocked);
+  Container.set(OrderConfirmedProducer, orderConfirmedProducerMocked);
+  Container.set(CreditEligibleAmountProducer, creditEligibleAmountProducerMocked);
+  Container.set(OrderUnConfirmedProducer, orderUnConfirmedProducerMock);
+}
+
+describe('AsyncCreateShipmentsController', () => {
+  let insertedProducts: any;
+
+  async function createOrders() {
+    const products = await ProductSchema.insertMany([
+      new ProductBuilder().available().build(),
+      new ProductBuilder().available().build(),
+      new ProductBuilder().available().build(),
+    ]);
+    ORDER_1.TagerID = MERCHANT_1.TagerID;
+    ORDER_1.status = 'confirmed';
+    ORDER_1['confirmationDate'] = new Date(time.setDate(time.getDate() - 3));
+    ORDER_1.products = [products[0]._id, products[1]._id, products[2]._id];
+    ORDER_1.productIds = [products[0].prodID, products[1].prodID, products[2].prodID];
+    await OrderSchema.insertMany([ORDER_1, ORDER_2]);
+    insertedProducts = products;
+  }
+  async function createCountries() {
+    await CountryModel.insertMany([
+      {
+        countryIsoCode3: 'EGY',
+        countryIsoCode2: 'EG',
+        countryIsoNumber: 818,
+        currencyIsoCode: 'EGP',
+      },
+      {
+        countryIsoCode3: 'ARE',
+        countryIsoCode2: 'AE',
+        countryIsoNumber: 784,
+        currencyIsoCode: 'AED',
+      },
+      {
+        countryIsoCode3: 'SAU',
+        countryIsoCode2: 'SA',
+        countryIsoNumber: 682,
+        currencyIsoCode: 'SAR',
+      },
+    ]);
+  }
+  async function createR2SMappings() {
+    const locations: ShippingLocationDbo[] = [
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_1.zone.name,
+        province: ORDER_1.province,
+        shippingCompany: 'bosta',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_2.zone.name,
+        province: ORDER_2.province,
+        shippingCompany: 'bosta',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_1.zone.name,
+        province: ORDER_1.province,
+        shippingCompany: 'link chain',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_2.zone.name,
+        province: ORDER_2.province,
+        shippingCompany: 'link chain',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_1.zone.name,
+        province: ORDER_1.province,
+        shippingCompany: 'r2s',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_2.zone.name,
+        province: ORDER_2.province,
+        shippingCompany: 'r2s',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_1.zone.name,
+        province: ORDER_1.province,
+        shippingCompany: 'sprint',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_2.zone.name,
+        province: ORDER_2.province,
+        shippingCompany: 'sprint',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_1.zone.name,
+        province: ORDER_1.province,
+        shippingCompany: 'vhubs',
+        country: 'EGY',
+      },
+      {
+        shippingCompanyProvince: 'CAIRO',
+        shippingCompanyZone: 'CAIRO',
+        zone: ORDER_2.zone.name,
+        province: ORDER_2.province,
+        shippingCompany: 'vhubs',
+        country: 'EGY',
+      },
+    ];
+    await ShippingLocationSchema.insertMany(locations);
+  }
+  async function createShippingCompanies() {
+    await ShippingCompany.insertMany([
+      {
+        companyId: 'EG_FEDEX',
+        name: 'fedex',
+        country: 'EGY',
+        isIntegrated: true,
+      },
+      {
+        companyId: 'EG_BOSTA',
+        name: 'bosta',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+      {
+        companyId: 'EG_VHUBS',
+        name: 'vhubs',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+      {
+        companyId: 'EG_OPEX',
+        name: 'opex',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+      {
+        companyId: 'EG_R2S',
+        name: 'r2s',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+      {
+        companyId: 'EG_LINK',
+        name: 'link chain',
+        country: 'EGY',
+        isIntegrated: false,
+      },
+    ]);
+  }
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+    await createCountries();
+    await createR2SMappings();
+    await setUpPulsar();
+  });
+
+  async function assertShipmentStatus(status: string) {
+    await ShipmentSchema.find({});
+    const updatedShipment = await ShipmentSchema.findOne({
+      'order.orderBusinessId': ORDER_1.orderID,
+    })
+      .lean(true)
+      .exec();
+    expect(updatedShipment?.stateTracking.at(-1)?.status).toEqual(status);
+    return updatedShipment;
+  }
+
+  async function assertOrderStatus(status: string) {
+    const order = await OrderSchema.findOne({ orderID: ORDER_1.orderID }).lean(true).exec();
+    expect(order?.status).toEqual(status);
+  }
+
+  beforeEach(async () => {
+    await createOrders();
+    await createShippingCompanies();
+  });
+  describe('Correct request object, should return 200, executeAfterReply should call correct Logger.info', () => {
+    each([['EG_R2S'], ['EG_VHUBS'], ['EG_BOSTA'], ['EG_LINK']]).it(" with '%s'", async (company: string) => {
+      // Arrange
+      const asyncCreateShipmentsController = new AsyncCreateShipmentsController(
+        Container.of().get(CreateShipmentsIntegrated),
+      );
+      const request: any = {
+        body: {
+          orders: [
+            {
+              orderBusinessId: ORDER_1.orderID,
+              notes: 'test',
+              allowToOpenPackage: 'no',
+            },
+          ],
+          shippingCompany: company,
+          country: 'EGY',
+          warehouse: 'H01',
+        },
+        decodedToken: {
+          user: { TagerID: '12345', fullName: 'admin_1' },
+        },
+      };
+      const joiValue: any = {
+        orders: [
+          {
+            orderBusinessId: ORDER_1.orderID,
+            notes: 'test',
+            allowToOpenPackage: 'no',
+          },
+        ],
+        shippingCompany: company,
+        country: 'EGY',
+        warehouse: 'H01',
+      };
+
+      // Act
+
+      const syncResponse = await asyncCreateShipmentsController.execute(request, joiValue);
+      await asyncCreateShipmentsController.executeInBackground(request, joiValue);
+
+      // Assert
+      expect(syncResponse).toMatchObject({
+        status: OK,
+        data: {
+          description: `Batch received, check slack channel for the update`,
+        },
+      });
+      expect(Logger.info).toBeCalledTimes(5);
+      expect(Logger.info).toHaveBeenNthCalledWith(1, 'Getting orders with products based on filter', {
+        request: { country: request.body.country, status: 'confirmed', ids: [request.body.orders[0].orderBusinessId] },
+      });
+      expect(Logger.info).toHaveBeenNthCalledWith(2, `[Shipments] - Create shipments with ${company}`, {
+        shipments: 1,
+      });
+      expect(Logger.info).toHaveBeenNthCalledWith(4, 'Update order status', {
+        domain: 'order-management',
+        orderId: ORDER_1.orderID,
+        fromStatus: 'confirmed',
+        toStatus: 'pending_shipping_company',
+      });
+      expect(Logger.info).toHaveBeenNthCalledWith(5, 'Shipments created', {
+        failedShipments: [],
+        shipmentMessage: 'Created 1 shipments',
+      });
+
+      const updatedShipment = await assertShipmentStatus('created');
+      expect(updatedShipment?.order.orderLines.at(0)?.quantity).toEqual(3);
+      expect(updatedShipment?.order.orderLines.at(0)?.productId).toEqual(insertedProducts[0].prodID);
+      expect(updatedShipment?.order.orderLines.at(1)?.quantity).toEqual(5);
+      expect(updatedShipment?.order.orderLines.at(1)?.productId).toEqual(insertedProducts[1].prodID);
+      expect(updatedShipment?.order.orderLines.at(2)?.quantity).toEqual(2);
+      expect(updatedShipment?.order.orderLines.at(2)?.productId).toEqual(insertedProducts[2].prodID);
+      await assertOrderStatus('pending_shipping_company');
+    });
+  });
+  afterEach(async () => {
+    await ShipmentSchema.deleteMany({});
+    await ProductSchema.deleteMany({});
+    await OrderSchema.deleteMany({});
+    await ShippingCompany.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await mongooseConnector.disconnectFromMongoDB();
+  });
+});

@@ -1,0 +1,47 @@
+import { Service } from 'typedi';
+import OrderRepo from '../../application/contracts/OrderRepo';
+import OrderDao from '../db/access/OrderDao';
+import OrderConverter from './OrderConverter';
+import { OrdersQuery } from '../../OrdersQuery';
+import Order from '../../application/models/Order';
+import GetOrdersQueryConverter from './GetOrdersQueryConverter';
+import GetOrdersQueryResult from '../../application/models/GetOrdersQueryResult';
+import { OrderDbo } from '../../../../order-management/common/infrastructure/db/models/OrderDbo';
+import { Product } from '../../../../interfaces/ProductModel';
+
+@Service({ global: true })
+export default class OrderRepoImpl implements OrderRepo {
+  private afterSalesOrderDao: OrderDao;
+
+  constructor(afterSalesOrderDao: OrderDao) {
+    this.afterSalesOrderDao = afterSalesOrderDao;
+  }
+
+  async getById(orderId: string): Promise<Order | null> {
+    const afterSalesOrderDbo = await this.afterSalesOrderDao.getById(orderId);
+    if (afterSalesOrderDbo == null) {
+      return null;
+    }
+    const products = await this.getOrderProducts(afterSalesOrderDbo);
+    if (products) {
+      const productsMap = new Map(products.map((prod) => [prod.prodID, prod.productName]));
+      return OrderConverter.convert(afterSalesOrderDbo, productsMap);
+    }
+    return OrderConverter.convert(afterSalesOrderDbo);
+  }
+
+  private async getOrderProducts(afterSalesOrderDbo: OrderDbo): Promise<Product[] | null> {
+    if (afterSalesOrderDbo.orderLines && afterSalesOrderDbo.orderLines.length > 0) {
+      const productIds = afterSalesOrderDbo.orderLines.map((prod) => prod.productId);
+      return this.afterSalesOrderDao.getOrderLineProducts(productIds);
+    } else if (afterSalesOrderDbo.productIds) {
+      return this.afterSalesOrderDao.getOrderLineProducts(afterSalesOrderDbo.productIds);
+    }
+    return null;
+  }
+
+  async getOrders(orderQuery: OrdersQuery): Promise<GetOrdersQueryResult> {
+    const queryResult = await this.afterSalesOrderDao.getOrders(orderQuery);
+    return GetOrdersQueryConverter.convert(queryResult.orders, queryResult.count);
+  }
+}

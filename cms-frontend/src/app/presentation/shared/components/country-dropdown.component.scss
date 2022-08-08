@@ -1,0 +1,13 @@
+/* stylelint-disable */
+#countryDropdown .e-ddl.e-input-group.e-control-wrapper {
+  min-width: 280px;
+}
+#countryDropdown .e-ddl.e-input-group.e-control-wrapper .country-option,
+#countryDropdown_popup .e-dropdownbase .e-list-item {
+  p {
+    margin: 0;
+  }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

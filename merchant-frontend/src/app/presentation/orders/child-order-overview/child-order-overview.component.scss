@@ -1,0 +1,391 @@
+@import 'common.scss';
+
+.status-badge {
+
+    width: 170px;
+
+    height: 26px;
+
+    border-radius: 13px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  font-stretch: normal;
+
+  font-style: normal;
+
+  line-height: normal;
+
+  letter-spacing: normal;
+
+  text-align: center;
+
+  margin-top:10px;
+
+  margin-right:10px;
+
+  &:focus{
+
+    outline: none;
+
+  }
+
+}
+
+.received {
+
+    background-color: $order-received-fill;
+
+    color: $order-received-text;
+
+}
+
+.delivered {
+
+    background-color: $order-delievered-fill;
+
+    color: $order-delievered-text;
+
+}
+
+.pending {
+
+    background-color: $order-pending-fill;
+
+    color: $order-pending-text;
+
+}
+
+.cancelled {
+
+    background-color: $order-cancelled-fill;
+
+    color: $order-cancelled-text;
+
+}
+
+.main {
+
+    width:100%;
+
+    height:auto;
+
+    background-color: $fill-white;
+
+    margin-top: 10px;
+
+    border-radius: 5px;
+
+    min-height: 220px;
+
+    overflow: hidden;
+
+}
+
+.title {
+
+    display: inline-flex;
+
+    direction: rtl;
+
+    width:100%;
+
+    min-height:50px;
+
+    background-color: $fill-white;
+
+    border-bottom: 1px solid $border-color-medium-gray;
+
+}
+
+.status {
+
+    width:30%;
+
+    height:auto;
+
+    background-color: $fill-white;
+
+    text-align: center;
+
+}
+
+.code-title {
+
+    opacity: 0.7;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    font-stretch: normal;
+
+    font-style: normal;
+
+    line-height: normal;
+
+    letter-spacing: normal;
+
+    text-align: right;
+
+    color: $text-primary;
+
+    margin-right: 20px;
+
+    margin-top: 15px;
+
+}
+
+.code-value {
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  font-stretch: normal;
+
+  font-style: normal;
+
+  line-height: normal;
+
+  letter-spacing: normal;
+
+  text-align: right;
+
+  color: $text-primary;
+
+  margin-right: 10px;
+
+  text-decoration: underline;
+
+  margin-top: 15px;
+
+}
+
+.date-title {
+
+  opacity: 0.7;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  font-stretch: normal;
+
+  font-style: normal;
+
+  line-height: normal;
+
+  letter-spacing: normal;
+
+  text-align: right;
+
+  color: $text-primary;
+
+  margin-top: 15px;
+
+  margin-right: 20px;
+
+    
+
+}
+
+.date-value {
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  font-stretch: normal;
+
+  font-style: normal;
+
+  line-height: normal;
+
+  letter-spacing: normal;
+
+  text-align: right;
+
+  color: $text-primary;
+
+  margin-right: 10px;
+
+  margin-top: 15px;
+
+  margin-left: 30px;
+
+    
+
+}
+
+.details-container {
+
+    display: inline-flex;
+
+    direction: rtl;
+
+    width:100%;
+
+    height: auto;
+
+}
+
+.details {
+
+    direction: rtl;
+
+    width:75%;
+
+    height:auto;
+
+    background-color: $fill-white;
+
+}
+
+.inline-div {
+
+    display: inline-flex;
+
+    width:100%;
+
+    margin-right: 20px;
+
+    margin-top: 10px;
+
+}
+
+.unit {
+
+    margin-top: 10px;
+
+    text-align: right;
+
+    direction: rtl;
+
+    min-width: 20%;
+
+    flex-grow: 1;
+
+}
+
+.lab-title {
+
+    opacity: 0.8;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    font-stretch: normal;
+
+    font-style: normal;
+
+    line-height: normal;
+
+    letter-spacing: normal;
+
+    text-align: right;
+
+    color: $text-primary;
+
+}
+
+.lab-value {
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    font-stretch: normal;
+
+    font-style: normal;
+
+    line-height: normal;
+
+    letter-spacing: normal;
+
+    text-align: right;
+
+    color: $text-primary;
+
+    max-width: 70%;
+
+}
+
+.btn-viewOrder {
+
+    width: 80%;
+
+    padding: 5px;
+
+    margin-right: 10%;
+
+    margin-left: 10%;
+
+    border-radius: 4px;
+
+    border: solid 1.2px $border-color-primary;
+
+    margin-top: 20px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  font-stretch: normal;
+
+  font-style: normal;
+
+  line-height: normal;
+
+  letter-spacing: normal;
+
+  text-align: center;
+
+  color: $text-light-green;
+
+  background-color: $fill-white;
+
+  white-space: break-spaces;
+
+  }
+
+  .btn-message {
+
+    width: 80%;
+
+    padding: 5px;
+
+    border-radius: 4px;
+
+    margin-right: 10%;
+
+    margin-left: 10%;
+
+    margin-top: 5px;
+
+    border: solid 1.2px $border-color-secondary;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  font-stretch: normal;
+
+  font-style: normal;
+
+  line-height: normal;
+
+  letter-spacing: normal;
+
+  text-align: center;
+
+  color: $text-primary;
+
+  background-color: $fill-white;
+
+  white-space: break-spaces;
+
+  }

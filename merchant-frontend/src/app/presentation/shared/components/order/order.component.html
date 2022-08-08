@@ -1,0 +1,659 @@
+<loader size="lg" [loading]="loading"></loader>
+
+<div class="container">
+
+  <div class="form" *ngIf="!loading">
+
+    <div class="d-flex justify-content-between title">
+
+      <div *ngIf="!isOrderNow" appHoverStyle (click)="backToCart()" class="arrow-back">
+
+        <img src="../../../assets/img/right-chevron.svg" />
+
+      </div>
+
+    </div>
+
+    <form [formGroup]="orderForm" autocomplete="off" (ngSubmit)="onSubmit()">
+
+      <div class="row no-gutters">
+
+        <div class="col-12 col-md-7 right-side">
+
+          <p class="headers">البيانات الشخصية</p>
+
+          <div class="row">
+
+            <div class="col col-12">
+
+              <p class="phone-text">الإسم بالكامل</p>
+
+              <app-input
+
+                ngDefaultControl
+
+                formControlName="receiverName"
+
+                requiredField="true"
+
+                id="receiverName"
+
+                name="receiverName"
+
+                type="text"
+
+                placeholder=""
+
+                [formControl]="orderForm.get('receiverName')"
+
+              >
+
+              </app-input>
+
+            </div>
+
+          </div>
+
+          <div class="row">
+
+            <div class="col col-md-6 col-12">
+
+              <p class="phone-text">
+
+                رقم المحمول<span class="phone-sub-text"
+
+                  >(بالحروف الانجليزية)</span
+
+                >
+
+              </p>
+
+              <app-input
+
+                ngDefaultControl
+
+                formControlName="phoneNumber"
+
+                requiredField="true"
+
+                id="phoneNumber"
+
+                name="phoneNumber"
+
+                type="text"
+
+                placeholder=""
+
+                [formControl]="orderForm.get('phoneNumber')"
+
+              >
+
+              </app-input>
+
+            </div>
+
+            <div class="col col-md-6 col-12">
+
+              <p class="phone-text">
+
+                الرقم البديل<span class="phone-sub-text"
+
+                  >(بالحروف الانجليزية)<span class="phone-2"
+
+                    >(اختياري)</span
+
+                  ></span
+
+                >
+
+              </p>
+
+              <app-input
+
+                ngDefaultControl
+
+                formControlName="phoneNumber2"
+
+                requiredField="true"
+
+                id="phoneNumber2"
+
+                name="phoneNumber2"
+
+                type="text"
+
+                placeholder="يمكنك إدخال رقم ارضي أو محمول"
+
+                [formControl]="orderForm.get('phoneNumber2')"
+
+              >
+
+              </app-input>
+
+            </div>
+
+          </div>
+
+          <div class="row">
+
+            <div class="col col-12">
+
+              <p class="headers" style="margin-top: 41px">بيانات الشحن</p>
+
+              <div class="form-group">
+
+                <p class="phone-text">المحافظة</p>
+
+                <angular2-multiselect
+
+                  [data]="provinceList"
+
+                  [settings]="provincesDropdownSettings"
+
+                  [formControl]="orderForm.get('province')"
+
+                  (ngModelChange)="onProvinceChange()"
+
+                >
+
+                  <c-item>
+
+                    <ng-template class="province" let-item="item">
+
+                      {{item.location}}
+
+                    </ng-template>
+
+                  </c-item>
+
+                  <c-badge>
+
+                    <ng-template class="province" let-item="item">
+
+                      {{item.location}}
+
+                    </ng-template>
+
+                  </c-badge>
+
+                </angular2-multiselect>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="row">
+
+            <div class="col col-12">
+
+              <p class="phone-text">
+
+                العنوان بالتفصيل<span class="phone-sub-text"
+
+                  >(المنطقة, اسم الشارع, رقم العقار , رقم الشقة)</span
+
+                >
+
+              </p>
+
+              <app-input
+
+                ngDefaultControl
+
+                formControlName="streetName"
+
+                requiredField="true"
+
+                id="streetName"
+
+                name="streetName"
+
+                type="text"
+
+                placeholder=""
+
+                [formControl]="orderForm.get('streetName')"
+
+              >
+
+              </app-input>
+
+            </div>
+
+          </div>
+
+          <div class="row" *ngIf="orderFromProduct">
+
+            <div
+
+              [ngClass]="{
+
+                'col col-4': orderForm.get('quantity').value >= 10,
+
+                'col col-6': orderForm.get('quantity').value < 10
+
+              }"
+
+            >
+
+              <app-input
+
+                ngDefaultControl
+
+                formControlName="quantity"
+
+                requiredField="true"
+
+                label="الكمية"
+
+                id="quantity"
+
+                name="quantity"
+
+                type="number"
+
+                min="1"
+
+                placeholder="الكمية"
+
+                [formControl]="orderForm.get('quantity')"
+
+                (input)="countTotal()"
+
+              >
+
+              </app-input>
+
+            </div>
+
+            <div
+
+              [ngClass]="{
+
+                'col col-4': orderForm.get('quantity').value >= 10,
+
+                'col col-6': orderForm.get('quantity').value < 10
+
+              }"
+
+            >
+
+              <app-input
+
+                ngDefaultControl
+
+                formControlName="price"
+
+                requiredField="true"
+
+                label="سعر بيع القطعة"
+
+                id="price"
+
+                name="price"
+
+                type="number"
+
+                placeholder="سعر بيع القطعة"
+
+                [formControl]="orderForm.get('price')"
+
+                (input)="countTotal()"
+
+              >
+
+              </app-input>
+
+              <div>
+
+                <div
+
+                  *ngIf="
+
+                    orderForm.get('price').value < products[0].productPrice &&
+
+                    orderForm.get('quantity').value < 10
+
+                  "
+
+                >
+
+                  <p class="input-error">هذه القيمة أقل من المحدد لها</p>
+
+                </div>
+
+                <div
+
+                  *ngIf="
+
+                    products[0].productPrice - orderForm.get('price').value >
+
+                      profitByProducts(
+
+                        products[0].productProfit,
+
+                        products[0].productPrice,
+
+                        orderForm.get('price').value
+
+                      ) && orderForm.get('quantity').value >= 10
+
+                  "
+
+                >
+
+                  <p class="input-error">هذه القيمة أقل من المحدد لها</p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="col col-4" *ngIf="orderForm.get('quantity').value >= 10">
+
+              <a
+
+                (click)="enableZeroProfit()"
+
+                class="btn btn-outline-info enable-zero-profit shopping-button"
+
+                type="button"
+
+              >
+
+                إلغاء الربح ؟</a
+
+              >
+
+            </div>
+
+          </div>
+
+          <div [formGroup]="orderForm.get('orderSource')" class="row">
+
+            <div class="col col-12" >
+
+              <p class="phone-text">
+
+                  اسم صفحتك البتبيع منها على الفيسبوك<span class="phone-2">(اختياري)</span></p>
+
+                <app-input
+
+                  ngDefaultControl
+
+                  formControlName="pageName"
+
+                  requiredField="false"
+
+                  id="pageName"
+
+                  type="text"
+
+                  name="pageName"
+
+                  placeholder=""
+
+                  [formControl]="orderForm.get('orderSource').get('pageName')"
+
+                ></app-input>
+
+            </div>
+
+            <div class="col col-12">
+
+                <p class="phone-text"
+
+                  >لينك الصفحة <span class="phone-2">(اختياري)</span></p
+
+                >
+
+                <app-input
+
+                  ngDefaultControl
+
+                  formControlName="pageUrl"
+
+                  requiredField="false"
+
+                  id="pageUrl"
+
+                  type="text"
+
+                  name="pageUrl"
+
+                  placeholder=""
+
+                  [formControl]="orderForm.get('orderSource').get('pageUrl')"
+
+                ></app-input>
+
+            </div>
+
+          </div>
+
+          <div class="row">
+
+            <div class="col col-md-12">
+
+              <div class="form-group">
+
+                <label class="phone-text"
+
+                  >ملاحظات<span class="phone-2">(اختياري)</span></label
+
+                >
+
+                <textarea
+
+                  class="form-control textarea"
+
+                  formControlName="notes"
+
+                ></textarea>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="col-12 col-md-5 left-side">
+
+          <div class="left-wrapper">
+
+            <div class="left-header">
+
+              <p class="left-header-text">ملخص الطلب</p>
+
+            </div>
+
+            <div
+
+              *ngFor="let product of products; let index = index"
+
+              class="table-element row no-gutters"
+
+            >
+
+              <div class="col-12 col-md-8 product-info">
+
+                <div
+
+                  class="image-wrap"
+
+                  [routerLink]="['/product-details', product.id]"
+
+                  [queryParams]="{ name: product.productName }"
+
+                  appHoverStyle
+
+                >
+
+                  <img class="product-image" [src]="product.productPicture" />
+
+                </div>
+
+                <div class="product-name">
+
+                  <p
+
+                    class="name"
+
+                    [title]="product.productName"
+
+                    [routerLink]="['/product-details', product.id]"
+
+                    [queryParams]="{ name: product.productName }"
+
+                    appHoverStyle
+
+                  >
+
+                    {{ product.productName }}
+
+                  </p>
+
+                  <p class="count-name">
+
+                    الكمية:<span class="count">{{ product.quantity }}x</span>
+
+                  </p>
+
+                  <div class="product-variants">
+
+                    <span *ngIf="product.productColor" class="color-variant">
+
+                      <span class="color-variant-label">اللون:&nbsp;</span>
+
+                      <span [ngStyle]="{backgroundColor: product.productColorHex}" class="color-ball"></span>
+
+                      <span>&nbsp;{{product.productColor}}</span>
+
+                    </span>
+
+                    <span *ngIf="product.productSize" class="size-variant">
+
+                      <span class="size-variant-label">المقاس:</span>
+
+                      <span>{{product.productSize}}</span></span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div class="col-4 d-none d-md-flex price-info">
+
+                <p class="prod-price">
+
+                  {{ product.newPrice }}<span class="price-text"> {{currency}} </span>
+
+                </p>
+
+                <p class="prod-profit" style="color: #29b6ab">
+
+                  <span class="profit-text">الربح: </span
+
+                  >{{ product.productProfit }} {{currency}}
+
+                </p>
+
+              </div>
+
+            </div>
+
+            <p class="cart-text">
+
+              <span class="products">
+
+                <span
+
+                  >سعر المنتجات<span class="profit-text"
+
+                    >({{ total.count }})
+
+                  </span></span
+
+                >
+
+              </span>
+
+              <span class="price">{{total.price}} {{currency}}</span>
+
+            </p>
+
+            <p class="cart-text">
+
+              <span>الربح الخاص بك</span>
+
+              <span class="profit-text"
+
+                >{{ total.profit }} {{currency}}
+
+                <span
+
+                  class="profit-text"
+
+                  *ngIf="offerBonus"
+
+                  style="color: #dc3545"
+
+                  >+ {{ offerBonus }} = {{ total.profit + offerBonus }}</span
+
+                ></span
+
+              >
+
+            </p>
+
+            <p class="cart-text bonus" *ngIf="offerBonus">
+
+              <span>بونص {{ offer.name }}</span>
+
+              <span>{{ offerBonus }}</span>
+
+            </p>
+
+            <p class="cart-text delivery">
+
+              <span>سعر الشحن</span>
+
+              <span>{{ shippingCost }} {{currency}}</span>
+
+            </p>
+
+            <app-order-promotions *ngIf="isShippingCalculated" [promotionEntitled]="promotionEntitled"></app-order-promotions>
+
+            <p *ngIf="!province.pristine" class="delivery"></p>
+
+            <div class="total-cost">
+
+              <span>المستحق للدفع</span>
+
+              <span>{{ total.price + shippingCost }} {{currency}}</span>
+
+            </div>
+
+            <button class="btn mat-raised-button order-btn" type="submit" [disabled]="orderForm.invalid || !isShippingCalculated">
+
+              ارسال الطلب
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>

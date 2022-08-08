@@ -1,0 +1,21 @@
+@import url("https://fonts.googleapis.com/css?family=Tajawal:400,500&display=swap");
+@import "~perfect-scrollbar/css/perfect-scrollbar.css";
+
+html,
+body {
+  font-family: Tajawal;
+}
+
+.page-height {
+  min-height: 660px;
+}
+
+.version-overlay {
+  position: fixed;
+  bottom: -2px;
+  left: 10px;
+  margin: 0;
+  z-index: 10;
+  color: #aaa;
+  mix-blend-mode: difference;
+}

@@ -1,0 +1,26 @@
+import Withdrawals from '../schemas/paymentRequest.model';
+import { Service } from 'typedi';
+import { WithdrawalEntity } from '../models/WithdrawalEntity';
+
+@Service({ global: true })
+export default class WithdrawalDao {
+  save = async (withdrawalEntity: WithdrawalEntity) => {
+    await Withdrawals.updateOne({ withdrawalId: withdrawalEntity.withdrawalId }, withdrawalEntity, {
+      upsert: true,
+    }).exec();
+  };
+
+  getByWithdrawalId = async id => Withdrawals.findOne({ withdrawalId: id }).exec();
+
+  getAll = async (query, page = 0, pageSize = 100, lean = true) =>
+    Withdrawals.find(query)
+      .populate('userId')
+      .limit(pageSize)
+      .skip(pageSize * page)
+      .lean(lean)
+      .sort({ createdAt: -1 })
+      .exec();
+  count = async query => Withdrawals.countDocuments(query).exec();
+}
+
+

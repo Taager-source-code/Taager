@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- HTTP Requests and Responses -->
+    <logger name="org.zalando.logbook" level="trace" />
+    <!--    Json logging appender   -->
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+    <!-- Default logging format in dev for console  -->
+    <springProfile name="default">
+            <include resource="org/springframework/boot/logging/logback/base.xml"/>
+            <logger name="your.name" level="INFO" additivity="false">
+                <appender-ref ref="CONSOLE"/>
+                <appender-ref ref="FILE"/>
+            </logger>
+    </springProfile>
+    <!--  Json logging for production environment   -->
+    <springProfile name="prod | dev">
+    <root level="${logging.level.com.taager.allocation}">
+        <appender-ref ref="jsonConsoleAppender" />
+    </root>
+    </springProfile>
+    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter">
+        <level value="DEBUG" />
+    </logger>
+</configuration>

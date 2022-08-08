@@ -1,0 +1,60 @@
+import { NOT_FOUND, OK } from 'http-status';
+import { Container, Service } from 'typedi';
+import { AddToCartRequest } from '../../../application/models/cart/AddToCartRequest';
+import AddToCart from '../../../application/usecases/cart/AddToCart';
+import { NoProductMatchingIdFoundError } from '../../../../../content-management/queries/application/exceptions/product/NoProductMatchingIdFoundError';
+import { HttpError, HttpProcessor, HttpSuccess } from '../../../../../common/http/HttpProcessor';
+import joi from 'joi';
+import CartRepoImp from '../../repositories/cart/CartRepoImp';
+import { Request } from 'express';
+
+@Service({ global: true })
+export default class AddToCartController extends HttpProcessor {
+  constructor() {
+    super();
+  }
+
+  getValueToValidate(req: Request): any {
+    return req.params;
+  }
+
+  async execute(req, joiValidatedValue): Promise<HttpSuccess | HttpError> {
+    const addToCartRequest: AddToCartRequest = {
+      qty: joiValidatedValue.qty,
+      overwriteQuantity: joiValidatedValue.overwriteQuantity,
+      pid: joiValidatedValue.pid,
+      countryIsoCode3: req.country.countryIsoCode3,
+      userId: req.decodedToken.user._id,
+    };
+
+    try {
+      const addToCart = new AddToCart(Container.of().get(CartRepoImp));
+      await addToCart.execute(addToCartRequest);
+
+      return {
+        status: OK,
+        data: { msg: 'Product added to your cart' },
+      };
+    } catch (err) {
+      if (err instanceof NoProductMatchingIdFoundError)
+        return {
+          status: NOT_FOUND,
+          message: `Looks like this product doesn't exist anymore!`,
+        };
+      else throw err;
+    }
+  }
+
+  schema = joi
+    .object({
+      qty: joi
+        .number()
+        .integer()
+        .default(1),
+      overwriteQuantity: joi.boolean().default(false),
+      pid: joi.string(),
+    })
+    .options({ allowUnknown: true, stripUnknown: true });
+}
+
+

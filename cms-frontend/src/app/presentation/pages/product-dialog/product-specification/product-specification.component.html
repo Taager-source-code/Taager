@@ -1,0 +1,14 @@
+<nb-accordion [nbSpinner]="loadingVisibleToSellers" nbSpinnerSize="giant" nbSpinnerStatus="primary">
+    <nb-accordion-item expanded>
+      <nb-accordion-item-header class="accordion-header">
+        Specifications
+      </nb-accordion-item-header>
+      <nb-accordion-item-body>
+        <form [formGroup]="productsService.productForm.get('productSpecificationForm')">
+          <p>Visible to Merchants <span class="split-style">(Split by ,)</span></p>
+          <input [ngClass]="{'invalid-input': errorOccurred}"
+            formControlName="visibleToSellersTaagerIds" type="text" nbInput fullWidth (blur)="getVisibleToSellersObjectIds()">
+        </form>
+      </nb-accordion-item-body>
+    </nb-accordion-item>
+</nb-accordion>

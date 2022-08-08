@@ -1,0 +1,52 @@
+import { anything, deepEqual, instance, mock, verify } from 'ts-mockito';
+import WithdrawalDao from '../../../../../../src/merchant/common/infrastructure/db/access/WithdrawalDao';
+import WithdrawalPublisher from '../../../../../../src/merchant/commands/infrastructure/withdrawals/publishers/WithdrawalPublisher';
+import { WITHDRAWAL_REQUEST_PARAM_1 } from '../../../../../fixtures/WithdrawalRequestFixtures';
+
+import Withdrawal from '../../../../../../src/merchant/commands/domain/withdrawals/Withdrawal';
+import WithdrawalConverter from '../../../../../../src/merchant/commands/infrastructure/withdrawals/converteres/WithdrawalConverter';
+import WithdrawalRepo from '../../../../../../src/merchant/commands/infrastructure/withdrawals/repositories/WithdrawalRepo';
+
+function initializeWithdrawalRepo() {
+  const withdrawalDaoMocked = mock(WithdrawalDao);
+  const withdrawalPublisherMocked = mock(WithdrawalPublisher);
+
+  const withdrawalRepo = new WithdrawalRepo(instance(withdrawalDaoMocked), instance(withdrawalPublisherMocked));
+  return {
+    withdrawalRepo,
+    withdrawalDaoMocked,
+    withdrawalPublisherMocked,
+  };
+}
+
+describe('WithdrawalRepo', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('WithdrawalRepo.save', () => {
+    test('Check all dao objects and publisher are called with correct parameters', async () => {
+      //Arrange
+      const withdrawal = Withdrawal.createNewWithdrawal(
+        WITHDRAWAL_REQUEST_PARAM_1.amount,
+        WITHDRAWAL_REQUEST_PARAM_1.currency,
+        WITHDRAWAL_REQUEST_PARAM_1.paymentMethod,
+        WITHDRAWAL_REQUEST_PARAM_1.phoneNum,
+        WITHDRAWAL_REQUEST_PARAM_1.userId,
+        WITHDRAWAL_REQUEST_PARAM_1.taagerId,
+      );
+
+      withdrawal.reject('NOTHING');
+      const { withdrawalRepo, withdrawalDaoMocked, withdrawalPublisherMocked } = initializeWithdrawalRepo();
+
+      const withdrawalEntity = WithdrawalConverter.toDB(withdrawal);
+
+      //Act
+      await withdrawalRepo.save(withdrawal);
+
+      //Assert
+      verify(withdrawalDaoMocked.save(deepEqual(withdrawalEntity))).called();
+      verify(withdrawalPublisherMocked.publish(anything())).twice();
+    });
+  });
+});

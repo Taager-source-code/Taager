@@ -1,0 +1,82 @@
+import Milestone from './Milestone';
+import { IncentiveProgramType } from './IncentiveProgramType';
+
+export default class IncentiveProgram {
+  public _id: any;
+  public _programTarget: any;
+  public _isActive: any;
+  public _isDefault: any;
+  public _milestones: Milestone[];
+  public _incentiveProgramType: IncentiveProgramType;
+
+  /**
+   * @param {String} id
+   * @param {Number} programTarget
+   * @param {Boolean} isActive
+   * @param {Boolean} isDefault
+   * @param {Array<Milestone>} milestones
+   * @param {String} incentiveProgramType
+   */
+
+  constructor(id, programTarget, isActive, isDefault, incentiveProgramType, milestones) {
+    this._id = id;
+    this._programTarget = programTarget;
+    this._isActive = isActive;
+    this._isDefault = isDefault;
+    this._milestones = milestones;
+    this._incentiveProgramType = incentiveProgramType;
+  }
+
+  getCurrentReward(orders) {
+    if (!this._isActive) return 0;
+    const milestoneReward = this.getMilestoneReward(orders);
+
+    const extraReward = this.getLastMilestone().getExtraRewardForOverAchievement(orders, this.incentiveProgramType);
+    return milestoneReward + extraReward;
+  }
+
+  private getMilestoneReward(orders) {
+    return this.milestones.reduce((lastReward, milestone) => {
+      return Math.max(lastReward, milestone.getReward(orders));
+    }, 0);
+  }
+
+  /**
+   * last milestone is the highest milestone percentage
+   * @private
+   */
+  private getLastMilestone(): Milestone {
+    return this._milestones.reduce((lastMilestone, milestone) => {
+      return lastMilestone.percentage > milestone.percentage ? lastMilestone : milestone;
+    }, this._milestones[0]);
+  }
+
+  // region getters
+  get id() {
+    return this._id;
+  }
+
+  get programTarget() {
+    return this._programTarget;
+  }
+
+  get isActive() {
+    return this._isActive;
+  }
+
+  get isDefault() {
+    return this._isDefault;
+  }
+
+  get milestones() {
+    return this._milestones;
+  }
+
+  get incentiveProgramType(): any {
+    return this._incentiveProgramType;
+  }
+
+  // endregion
+}
+
+

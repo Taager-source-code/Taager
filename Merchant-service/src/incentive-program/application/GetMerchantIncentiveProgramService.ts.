@@ -1,0 +1,51 @@
+import { Service } from 'typedi';
+
+import * as _userFeaturesRepository from '../../../merchant/queries/infrastructure/repositories/userFeatures.repository';
+import IncentiveProgramRepositoryImp from '../../infrastructure/repositories/IncentiveProgramRepositoryImp';
+import GetMIPResponse from './GetMIPResponse';
+import IncentiveProgram from './../../domain/models/incentive-program/IncentiveProgram';
+import Env from '../../../Env';
+import MerchantNotEligibleForIncentiveProgram from './Exceptions';
+
+@Service()
+export default class GetMerchantIncentiveProgramService {
+  private _incentiveProgramRepo: IncentiveProgramRepositoryImp;
+
+  constructor(incentiveProgramRepository: IncentiveProgramRepositoryImp) {
+    this._incentiveProgramRepo = incentiveProgramRepository;
+  }
+
+  private async assertMerchantAllowedToUseThisFeature(tagerID: number): Promise<void> {
+    const isAllowed = await _userFeaturesRepository.isFeatureAllowed(tagerID, 'incentive_program');
+
+    if (!isAllowed) throw new MerchantNotEligibleForIncentiveProgram();
+  }
+
+  private async getMerchantIncentiveProgramOrDefault(tagerID: number): Promise<IncentiveProgram | null> {
+    const incentiveProgram = await this._incentiveProgramRepo.getByTagerId(tagerID);
+
+    return incentiveProgram == null ? this.getDefaultProgram() : incentiveProgram;
+  }
+  private async getDefaultProgram() {
+    const defaultIncentiveProgram = await this._incentiveProgramRepo.getDefaultIncentiveProgram();
+    if (defaultIncentiveProgram == null) throw new MerchantNotEligibleForIncentiveProgram();
+    return defaultIncentiveProgram;
+  }
+
+  private getConfirmedOrders(tagerID: number): Promise<number> {
+    return this._incentiveProgramRepo.getConfirmedOrdersCount(
+      tagerID,
+      new Date(Env.INCENTIVE_PROGRAM_START_DATE),
+      new Date(Env.INCENTIVE_PROGRAM_END_DATE),
+    );
+  }
+
+  async execute(tagerID: number): Promise<GetMIPResponse> {
+    await this.assertMerchantAllowedToUseThisFeature(tagerID);
+    const incentiveProgram = await this.getMerchantIncentiveProgramOrDefault(tagerID);
+    const confirmedOrders = await this.getConfirmedOrders(tagerID);
+    return new GetMIPResponse(incentiveProgram, confirmedOrders);
+  }
+}
+
+

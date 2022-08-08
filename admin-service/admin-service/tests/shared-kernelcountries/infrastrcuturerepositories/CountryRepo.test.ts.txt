@@ -1,0 +1,105 @@
+import { instance, mock, verify, when } from 'ts-mockito';
+import CountryDao from '../../../../../src/shared-kernel/infrastructure/db/access/CountryDao';
+import { CountryCache } from '../../../../../src/shared-kernel/infrastructure/cache/CountryCache';
+import CountryRepo from '../../../../../src/shared-kernel/infrastructure/repositories/CountryRepo';
+import { Country } from '../../../../../src/shared-kernel/infrastructure/db/models/Country';
+
+const countryIsoCode = 'EGY';
+const expectedCountry = {
+  countryIsoCode3: 'EGY',
+  countryIsoCode2: 'EG',
+  countryIsoNumber: 818,
+  currencyIsoCode: 'EGP',
+};
+
+const expectedCountries: Country[] = [
+  {
+    countryIsoCode3: 'EGY',
+    countryIsoCode2: 'EG',
+    countryIsoNumber: 818,
+    currencyIsoCode: 'EGP',
+  },
+  {
+    countryIsoCode3: 'ARE',
+    countryIsoCode2: 'AE',
+    countryIsoNumber: 784,
+    currencyIsoCode: 'AED',
+  },
+  {
+    countryIsoCode3: 'SAU',
+    countryIsoCode2: 'SA',
+    countryIsoNumber: 682,
+    currencyIsoCode: 'SAR',
+  },
+];
+
+describe('CountryRepo.getCountries', () => {
+  test('when cache has value do not call dao', async () => {
+    const mockedCountryDao = mock(CountryDao);
+    const mockedCountryCache = mock(CountryCache);
+    // Arrange
+    when(mockedCountryCache.getAll()).thenReturn(expectedCountries);
+    const countryRepo = new CountryRepo(instance(mockedCountryDao), instance(mockedCountryCache));
+
+    // Act
+    const countriesResult = await countryRepo.getCountries();
+
+    // Assert
+    verify(mockedCountryDao.getCountries()).never();
+    expect(countriesResult).toEqual(expectedCountries);
+  });
+
+  test(`when cache doesn't have value call dao and save into cache`, async () => {
+    const mockedCountryDao = mock(CountryDao);
+    const mockedCountryCache = mock(CountryCache);
+    // Arrange
+    when(mockedCountryCache.getAll()).thenReturn(null);
+    when(mockedCountryDao.getCountries()).thenResolve(expectedCountries);
+
+    const countryRepo = new CountryRepo(instance(mockedCountryDao), instance(mockedCountryCache));
+
+    // Act
+    const countriesResult = await countryRepo.getCountries();
+
+    // Assert
+    verify(mockedCountryDao.getCountries()).once();
+    verify(mockedCountryCache.setAll(expectedCountries)).once();
+    expect(countriesResult).toEqual(expectedCountries);
+  });
+});
+
+describe('CountryRepo.getByIsoCode3', () => {
+  test('when cache has value do not call dao', async () => {
+    const mockedCountryDao = mock(CountryDao);
+    const mockedCountryCache = mock(CountryCache);
+    // Arrange
+    when(mockedCountryCache.getByIsoCode3(countryIsoCode)).thenReturn(expectedCountry);
+    const countryRepo = new CountryRepo(instance(mockedCountryDao), instance(mockedCountryCache));
+
+    // Act
+    const countryResult = await countryRepo.getByIsoCode(countryIsoCode);
+
+    // Assert
+    verify(mockedCountryDao.getCountries()).never();
+    expect(countryResult).toEqual(expectedCountry);
+  });
+
+  test(`when cache doesn't have value call dao and save into cache`, async () => {
+    const mockedCountryDao = mock(CountryDao);
+    const mockedCountryCache = mock(CountryCache);
+    // Arrange
+
+    when(mockedCountryCache.getByIsoCode3(countryIsoCode)).thenReturn(null);
+    when(mockedCountryDao.getByIsoCode3(countryIsoCode)).thenResolve(expectedCountry);
+
+    const countryRepo = new CountryRepo(instance(mockedCountryDao), instance(mockedCountryCache));
+
+    // Act
+    const countryResult = await countryRepo.getByIsoCode(countryIsoCode);
+
+    // Assert
+    verify(mockedCountryDao.getByIsoCode3(countryIsoCode)).once();
+    verify(mockedCountryCache.set(expectedCountry)).once();
+    expect(countryResult).toEqual(expectedCountry);
+  });
+});

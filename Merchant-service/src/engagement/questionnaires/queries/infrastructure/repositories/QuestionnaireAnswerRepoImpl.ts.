@@ -1,0 +1,21 @@
+import { Service } from 'typedi';
+import QuestionnaireAnswerRepo from '../../application/contracts/QuestionnaireAnswerRepo';
+import { QuestionnaireAnswerModel } from '../../../common/infrastructure/db/models/QuestionnaireAnswerModel';
+import QuestionnaireAnswerQueryDao from '../db/access/QuestionnaireAnswerQueryDao';
+
+@Service({ global: true })
+export default class QuestionnaireAnswerRepoImpl implements QuestionnaireAnswerRepo {
+  private questionnaireAnswerDao: QuestionnaireAnswerQueryDao;
+  constructor(questionnaireAnswerDao: QuestionnaireAnswerQueryDao) {
+    this.questionnaireAnswerDao = questionnaireAnswerDao;
+  }
+
+  findByQuestionnaireNameAndTaagerId(
+    questionnaireName: string,
+    taagerId: string,
+  ): Promise<QuestionnaireAnswerModel | null> {
+    return this.questionnaireAnswerDao.findByQuestionnaireNameAndTaagerId(questionnaireName, taagerId);
+  }
+}
+
+

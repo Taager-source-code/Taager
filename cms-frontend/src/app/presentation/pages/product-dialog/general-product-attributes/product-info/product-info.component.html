@@ -1,0 +1,44 @@
+<form [formGroup]="productsService.productForm.get('productInfoForm')">
+  <div class="product-info-container">
+      <p>Product name</p>
+      <input type="text" nbInput fullWidth formControlName="productName">
+      <div class="grid-container">
+          <div class="grid-item" *ngFor="let productInput of productsInputs">
+              <p>{{productInput.name}}</p>
+              <input [type]="productInput.type" nbInput class='product-small-input' [formControlName]="productInput.formControlName">
+          </div>
+      </div>
+      <div class="availability-container">
+          <p>Product availability</p>
+            <nb-radio-group class="availability-buttons-group" formControlName="availability">
+              <nb-radio
+                class="availability-button"
+                *ngFor="let availabilityStatus of availabilityStatuses"
+                [ngClass]="{'availability-button__active': productsService.productForm.get('productInfoForm').get('availability').value === availabilityStatus.code}"
+                [value]="availabilityStatus.code">
+                  <img class="tick-icon" src="assets/images/tick-circle.svg" *ngIf="productsService.productForm.get('productInfoForm').get('availability').value === availabilityStatus.code">
+                  {{ availabilityStatus.name }}
+            </nb-radio>
+          </nb-radio-group>
+      </div>
+      <div class="big-input-container">
+          <p>Product Description</p>
+          <textarea type="text" nbInput class="product-big-input"
+            fullWidth formControlName="productDescription"></textarea>
+      </div>
+      <div class="big-input-container">
+          <p>Product Specification</p>
+          <textarea type="text" nbInput class="product-big-input" fullWidth
+            (keyup)="onProductSpecificationsChange()" formControlName="productSpecification"></textarea>
+      </div>
+      <div class="big-input-container">
+          <p>Product How to use</p>
+          <textarea type="text" nbInput class="product-big-input"
+            fullWidth formControlName="productHowToUse"></textarea>
+      </div>
+      <div class="toggle-container">
+          <p>Product is expired</p>
+          <nb-toggle formControlName="productIsExpired"></nb-toggle>
+      </div>
+  </div>
+</form>

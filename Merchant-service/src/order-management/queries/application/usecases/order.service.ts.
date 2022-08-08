@@ -1,0 +1,129 @@
+import Order from '../../../common/infrastructure/db/schemas/order.model';
+
+export const createOrder = body => Order.create(body);
+export const findAllOrders = (query, page = 0, pageSize = 100, lean = true) =>
+  Order.find(query)
+    .limit(pageSize)
+    .skip(pageSize * page)
+    .lean(lean)
+    .exec();
+export const findAllOrdersStatus = query => Order.aggregate(query);
+
+export const findAllOrdersWithMessages = (query, page = 0, pageSize = 100, lean = true) =>
+  Order.find(query)
+    .populate({
+      path: 'ConversationId',
+    })
+    .limit(pageSize)
+    .skip(pageSize * page)
+    .lean(lean)
+    .exec();
+export const findAllOrdersWithUnreadMessages = (query, page = 0, pageSize = 100, lean = true) =>
+  Order.find(query)
+    .populate({
+      path: 'ConversationId',
+    })
+    .limit(pageSize)
+    .skip(pageSize * page)
+    .lean(lean)
+    .exec();
+export const findAllOrdersWithPopulate = () =>
+  Order.find()
+    .populate('products')
+    .exec();
+export const findAllOrdersCustomer = (query, lean = true) =>
+  Order.find(query)
+    .sort({ updatedAt: -1 })
+    .lean(lean)
+    .exec();
+
+export const findAllOrdersByUsers = (query, lean = true) =>
+  Order.find(query)
+    .lean(lean)
+    .exec();
+
+export const findOrders = (query, page = 0, pageSize = 100, lean = true) =>
+  Order.find(query)
+    .limit(pageSize)
+    .skip(pageSize * page)
+    .lean(lean)
+    .exec();
+export const findOrderByIdAndUpdate = ({ id, update, options, lean = true }) =>
+  Order.findByIdAndUpdate(id, update, options)
+    .lean(lean)
+    .exec();
+
+export const countOrders = query => Order.countDocuments(query).exec();
+
+export const findOrdersAndUpdate = ({ query, update, options = {}, lean = true }) =>
+  Order.updateMany(query, update, options)
+    .lean(lean)
+    .exec();
+export const findOrderById = id => Order.findById(id).exec();
+
+export const findAllOrdersWithPopulateUsers = query =>
+  Order.find(query)
+    .populate('orderedBy')
+    .exec();
+
+export const findMyOrders = (query, page = 0, pageSize = 100, lean = true) =>
+  Order.find(query)
+    .sort({ createdAt: -1 })
+    .limit(pageSize)
+    .skip(pageSize * page)
+    .lean(lean)
+    .exec();
+
+export const findMyOrder = (orderId, taagerId, lean = true) =>
+  Order.findOne({ $and: [{ orderID: orderId }, { TagerID: taagerId }] })
+    .lean(lean)
+    .exec();
+
+export const findAllMyOrders = (query, lean = true) =>
+  Order.find(query)
+    .lean(lean)
+    .exec();
+
+export const findAllMyOrdersWithPagination = (query, page = 0, pageSize = 100, lean = true) =>
+  Order.find(query)
+    .lean(lean)
+    .limit(pageSize)
+    .skip(pageSize * page)
+    .exec();
+
+export const findOrdersExtract = (query, lean = true) =>
+  Order.find(query)
+    .select({
+      _id: 0,
+      orderID: 1,
+      status: 1,
+      orderProfit: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      productIds: 1,
+      productQuantities: 1,
+      productPrices: 1,
+      phoneNumber: 1,
+      receiverName: 1,
+      streetName: 1,
+      province: 1,
+      cashOnDelivery: 1,
+      productProfits: 1,
+      deliverySuspendedReason: 1,
+      failedAttemptNote: 1,
+      notes: 1,
+      customerRejectedReason: 1,
+      suspendedReason: 1,
+      delayedReason: 1,
+      country: 1,
+    })
+    .lean(lean)
+    .exec();
+
+export const findOrdersExtractAdmin = (query, lean = true) =>
+  Order.find(query)
+    // .select({ _id: 0, orderID: 1, orderStatus: 1, createdAt:1, updatedAt: 1, productQuantities:1, productPrices:1, phoneNumber:1, receiverName:1, streetName:1, province: 1 })
+    .lean(lean)
+    .exec();
+
+

@@ -1,0 +1,49 @@
+<div class="referred-account">
+
+    <div class="referred-account__main-header-with-button">
+
+        <div class="referred-account__main-header-with-button__main-header">
+
+            <app-profile-main-header [headerText]="' الحسابات المشار إليها'" [subHeaderText]="'يمكنك تعديل معلوماتك الشخصية و بعض الإعدادات'" [iconUrl]="assetsPath + '/img/referrals-i.png'" ></app-profile-main-header>
+
+        </div>
+
+        <ng-template [ngTemplateOutlet]="copyReferralLinkTemplate" [ngTemplateOutletContext]="{ cssClass: 'btn btn-referrals', buttonLabel: 'رابط الإحالة' }"></ng-template>
+
+    </div>
+
+    <div class="referred-account__main-data">
+
+        <ng-template [ngTemplateOutlet]="copyReferralLinkTemplate" [ngTemplateOutletContext]="{ cssClass: 'btn btn-referrals-mobile', buttonLabel: 'رابط الإحالة' }"></ng-template>
+
+        <div class="referred-account__main-data__referrals-main">
+
+            <ng-template [ngTemplateOutlet]="referralsMainSubdivContentTemplate" [ngTemplateOutletContext]="{ miniTitle: 'عدد الحسابات', referralsTitle: countUsers }"></ng-template>
+
+            <ng-template [ngTemplateOutlet]="referralsMainSubdivContentTemplate" [ngTemplateOutletContext]="{ miniTitle: 'عدد الطلبات', referralsTitle: countOrders }"></ng-template>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- shared templates -->
+
+<ng-template #copyReferralLinkTemplate let-cssClass="cssClass" let-buttonLabel="buttonLabel">
+
+    <button [class]="cssClass" (click)="copyReferralLink()">{{ buttonLabel }}</button>
+
+</ng-template>
+
+<ng-template #referralsMainSubdivContentTemplate let-miniTitle="miniTitle" let-referralsTitle="referralsTitle">
+
+    <div class="referred-account__main-data__referrals-main__subdiv">
+
+        <div class="referred-account__main-data__referrals-main__subdiv__mini-title">{{ miniTitle }}</div>
+
+        <div class="referred-account__main-data__referrals-main__subdiv__referrals-title">{{ referralsTitle }}</div>
+
+    </div>
+
+</ng-template>

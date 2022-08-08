@@ -1,0 +1,69 @@
+<div class="order-status-form">
+  <h4 mat-dialog-title>Update Order Status</h4>
+  <div mat-dialog-content>
+    <form [formGroup]="changeOrderStatusForm">
+      <mat-form-field>
+        <mat-label>Select Order Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option>Select Order Status</mat-option>
+          <mat-option [value]="'order_received'">Order Received</mat-option>
+          <mat-option
+            *ngIf="
+              currentStatus !== 'order_received' &&
+              currentStatus !== 'suspended' &&
+              currentStatus !== 'customer_rejected'
+            "
+            [value]="'confirmed'"
+            >Confirmed</mat-option
+          >
+          <mat-option
+            *ngIf="
+              currentStatus !== 'order_received' &&
+              currentStatus !== 'suspended' &&
+              currentStatus !== 'confirmed' &&
+              currentStatus !== 'customer_rejected'
+            "
+            [value]="'pending_shipping_company'"
+            >Pending Shipping Company</mat-option
+          >
+          <mat-option
+            *ngIf="
+              currentStatus !== 'order_received' &&
+              currentStatus !== 'suspended' &&
+              currentStatus !== 'confirmed' &&
+              currentStatus !== 'customer_rejected' &&
+              currentStatus !== 'pending_shipping_company' &&
+              currentStatus !== 'delivery_suspended'
+            "
+            [value]="'delivery_in_progress'"
+            >Delivery In Progress</mat-option
+          >
+          <mat-option
+            *ngIf="
+              currentStatus !== 'order_received' &&
+              currentStatus !== 'suspended' &&
+              currentStatus !== 'confirmed' &&
+              currentStatus !== 'customer_rejected' &&
+              currentStatus !== 'pending_shipping_company' &&
+              currentStatus !== 'delivery_in_progress' &&
+              currentStatus !== 'customer_refused' &&
+              currentStatus !== 'delivery_suspended'
+            "
+            [value]="'delivered'"
+            >Delivered</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </div>
+  <div mat-dialog-actions>
+    <button
+      mat-raised-button
+      [disabled]="changeOrderStatusForm.invalid || clicked"
+      color="primary"
+      (click)="updateStatus()"
+    >
+      Update Status
+    </button>
+  </div>
+</div>

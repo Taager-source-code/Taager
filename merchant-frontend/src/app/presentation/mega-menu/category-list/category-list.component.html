@@ -1,0 +1,19 @@
+<div class="category-list">
+
+  <app-category-list-item
+
+    class="category-list-item"
+
+    *ngFor="let categoryNode of categoriesNodes"
+
+    [categoryNode]="categoryNode"
+
+    [hoveredCategoryId]="hoveredCategoryId"
+
+    (mouseenter)="onCategoryHovered(categoryNode.key)"
+
+    ></app-category-list-item>
+
+</div>
+
+

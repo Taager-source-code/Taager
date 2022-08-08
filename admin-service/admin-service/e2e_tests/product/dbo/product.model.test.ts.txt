@@ -1,0 +1,133 @@
+process.env.ROLLBAR_ACCESS_TOKEN = 'yallahabibi2';
+
+import * as dockerMongo from '../../mongo/docker.mongo';
+import Product from '../../../src/models/product.model';
+import * as mongooseConnector from '../../mongo/mongoose.connector';
+import MigrationExecutor from '../../../src/migrations/migrationExecutor';
+
+const RED_COLOR = { type: 'color', value: 'red' };
+const BLUE_COLOR = { type: 'color', value: 'blue' };
+const XL_SIZE = { type: 'size', value: 'XL' };
+const L_SIZE = { type: 'size', value: 'L' };
+
+const aValidProductWithProdId = (prodId, attributes) => ({
+  productName: 'some product name',
+  productPrice: 100,
+  prodPurchasePrice: 200,
+  productProfit: 300,
+  productQuantity: 1,
+  productDescription: 'some description',
+  prodID: prodId,
+  Category: 'some category',
+  sellerName: 'some seller name',
+  productPicture: 'http://some-product-image.com',
+  featured: false,
+  productAvailability: 'available',
+  attributes,
+});
+
+const expectProductIds = (products, productIds) => {
+  expect(products).toHaveLength(productIds.length);
+  expect(products.map((prod) => prod.prodID)).toEqual(expect.arrayContaining(productIds));
+};
+
+const expectAttributes = (products, attributes) => {
+  expect(products).toHaveLength(attributes.length);
+  expect(products.map((prod) => prod.attributes)).toEqual(expect.arrayContaining(attributes));
+};
+
+describe('Product model operations', () => {
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+  });
+
+  test('single element should get inserted', async () => {
+    // Arrange
+    const initialProducts = await Product.find({});
+
+    // Act
+    await Product.create(aValidProductWithProdId('prodID/1000', []));
+
+    // Assert
+    const productsAfterInsert = await Product.find({}).lean();
+    expect(initialProducts).toHaveLength(0);
+    expect(productsAfterInsert).toHaveLength(1);
+  });
+
+  test('multiple elements should get inserted', async () => {
+    // Arrange
+    const initialProducts = await Product.find({});
+
+    // Act
+    await Product.create(aValidProductWithProdId('prodID/1000', [XL_SIZE, RED_COLOR]));
+    await Product.create(aValidProductWithProdId('prodID/2000', [L_SIZE, RED_COLOR]));
+    await Product.create(aValidProductWithProdId('prodID/3000', [XL_SIZE, BLUE_COLOR]));
+
+    // Assert
+    const productsAfterInsert = await Product.find({}).lean();
+    expect(initialProducts).toHaveLength(0);
+    expectProductIds(productsAfterInsert, ['prodID/1000', 'prodID/2000', 'prodID/3000']);
+    expectAttributes(productsAfterInsert, [
+      [XL_SIZE, RED_COLOR],
+      [L_SIZE, RED_COLOR],
+      [XL_SIZE, BLUE_COLOR],
+    ]);
+  });
+
+  test('products with duplicate ids should not get inserted', async () => {
+    // Arrange
+    await Product.create(aValidProductWithProdId('prodID/1000', []));
+
+    // Act & Assert
+    await expect(() => Product.create(aValidProductWithProdId('prodID/1000', []))).rejects.toThrow(
+      /E11000 duplicate key error collection:.*/,
+    );
+  });
+
+  test('empty product should not get inserted', async () => {
+    // Act & Assert
+    await expect(() => Product.create({})).rejects.toThrow(/Product validation failed:.*/);
+  });
+
+  test('product should get properly updated', async () => {
+    // Arrange
+    const createdProduct = await Product.create(aValidProductWithProdId('prodID/1000', []));
+
+    // Act
+    await Product.updateOne({ _id: createdProduct._id }, { $set: { prodID: 'updatedProdId' } });
+
+    // Assert
+    const productsAfterUpdate = await Product.find({});
+    expectProductIds(productsAfterUpdate, ['updatedProdId']);
+  });
+
+  test('migrate old products to have country should success', async () => {
+    // Arrange
+
+    await Product.create(aValidProductWithProdId('prodID/1000', []));
+    await Product.create(aValidProductWithProdId('prodID/2000', []));
+    await Product.create(aValidProductWithProdId('prodID/3000', []));
+
+    // Assert
+    const productsBeforeMigration = await Product.find({}).lean();
+    productsBeforeMigration.forEach((prod) => expect(prod.country).toEqual(undefined));
+
+    // migrate products
+    await new MigrationExecutor().migrate('productsCountryUpdate', './scripts/1638694155000-productsCountryUpdate');
+
+    // Assert
+    const productsAfterMigration = await Product.find({}).lean();
+    productsAfterMigration.forEach((prod) => expect(prod.country).toEqual('EGY'));
+  });
+
+  afterEach(async () => {
+    await Product.deleteMany({});
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+  });
+});

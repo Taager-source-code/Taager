@@ -1,0 +1,45 @@
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import User from '../../src/models/user.model';
+import request from 'supertest';
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+import * as expressServer from '../expressServer/expressServer';
+import MigrationExecutor from '../../src/migrations/migrationExecutor';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+
+describe('/api/countries', () => {
+  let app: any = null;
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    const mongoUrl = `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`;
+    await mongooseConnector.connectToMongoDB(mongoUrl);
+
+    await new MigrationExecutor().migrateAll();
+
+    app = expressServer.setupServer();
+  });
+
+  describe('/countries', () => {
+    test('get Countries array', async () => {
+      // Arrange
+      await User.create(ADMIN_1);
+
+      const accessToken = await expressServer.loginAndGetAccessToken(app);
+
+      // Act
+      const countryResponse = await request(app).get('/api/countries').set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data.length).toEqual(3);
+      expect(countryResponse.body.msg).toEqual('success');
+    });
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+  });
+});

@@ -1,0 +1,16 @@
+<mat-chip-list class="category-chip-list">
+  <mat-chip
+    *ngFor="let category of fourthLevelCategoriesList"
+    [selected]="category.value.name.arabicName === allCategoriesName.arabicName"
+    #chip="matChip"
+    (click)="chip.select()"
+  >
+    <a
+      [routerLink]="['/', 'products', 'category', category.key]"
+    >
+      <p>{{ category.value.name.arabicName }}</p>
+    </a>
+  </mat-chip>
+</mat-chip-list>
+
+

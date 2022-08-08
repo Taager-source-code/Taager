@@ -1,0 +1,23 @@
+<a class="category-card" 
+
+  (click)="goToCategory()" 
+
+  [routerLink]="navigationRoute" 
+
+  [queryParams]="navigationQueryParams"
+
+>
+
+    <div class="category-icon">
+
+      <i class="category-icon__icon icon {{category.iconPath}}"></i>
+
+    </div>
+
+    <div class="category-text">
+
+      <p>{{ category.text }}</p>
+
+    </div>
+
+</a>

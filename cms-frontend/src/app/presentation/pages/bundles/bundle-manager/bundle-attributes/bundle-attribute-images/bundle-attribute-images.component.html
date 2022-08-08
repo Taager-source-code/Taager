@@ -1,0 +1,7 @@
+<form [formGroup]="bundleAttributesImagesFromGroup">
+  <ngx-image-carousel
+    [imageUrlList]="getBundleImages()"
+    (uploadedImagesURL)="onUpdateImages($event)"
+    (deletedImageIndex)="onUpdateImages($event)"
+  ></ngx-image-carousel>
+</form>

@@ -1,0 +1,86 @@
+import { instance, mock, verify, when } from 'ts-mockito';
+import OrderDao from '../../../../../../src/after-sales/queries/infrastructure/db/access/OrderDao';
+import OrderRepoImpl from '../../../../../../src/after-sales/queries/infrastructure/repositories/OrderRepoImpl';
+import { OrderDbo } from '../../../../../../src/order-management/common/infrastructure/db/models/OrderDbo';
+import { OrdersQuery } from '../../../../../../src/after-sales/queries/OrdersQuery';
+import GetOrdersQueryConverter from '../../../../../../src/after-sales/queries/infrastructure/repositories/GetOrdersQueryConverter';
+import GetOrdersQueryResult from '../../../../../../src/after-sales/queries/application/models/GetOrdersQueryResult';
+
+function initializeOrdersRepo() {
+  const orderDaoMocked = mock(OrderDao);
+  const ordersRepo = new OrderRepoImpl(instance(orderDaoMocked));
+
+  return {
+    ordersRepo,
+    orderDaoMocked,
+  };
+}
+
+const orderId1 = '12454/1231';
+const orderId2 = '12554/1231';
+const afterSalesOrdersDboOne: OrderDbo = {
+  OrderPhoneNum: '9246487623',
+  TagerID: 0,
+  country: 'EGY',
+  message: '',
+  orderID: orderId1,
+  _id: '133121212',
+  orderProfit: 0,
+  orderedByName: 'TEST_NAME_1',
+  phoneNumber: '123144232',
+  pid: '',
+  productPrices: [],
+  productQuantities: [],
+  products: [],
+  province: 'QEQW',
+  receiverName: 'TEST_RECIEVER_1',
+  sellerName: 'TEST_SELLER_1',
+  streetName: 'TEST_STREET_1',
+  status: 'delivered',
+  cashOnDelivery: 75,
+};
+const afterSalesOrdersDboTwo: OrderDbo = {
+  OrderPhoneNum: '1334232111',
+  TagerID: 0,
+  country: 'EGY',
+  message: '',
+  orderID: orderId2,
+  _id: '133213423',
+  orderProfit: 0,
+  orderedByName: 'TEST_NAME_2',
+  phoneNumber: '123144232',
+  pid: '',
+  productPrices: [],
+  productQuantities: [],
+  products: [],
+  province: 'QEQW',
+  receiverName: 'TEST_RECIEVER_2',
+  sellerName: 'TEST_SELLER_2',
+  streetName: 'TEST_STREET_2',
+  status: 'delivered',
+  cashOnDelivery: 150,
+};
+
+describe('OrderRepoImpl', () => {
+  describe('OrderRepoImpl.getOrders', () => {
+    test('Should get all the orders', async () => {
+      const { ordersRepo, orderDaoMocked } = initializeOrdersRepo();
+      const ordersDbo = [afterSalesOrdersDboOne, afterSalesOrdersDboTwo];
+      const ordersQuery: OrdersQuery = {
+        country: 'EGY',
+        page: 1,
+        pageSize: 10,
+      };
+
+      const getOrdersQueryResult: GetOrdersQueryResult = GetOrdersQueryConverter.convert(
+        [afterSalesOrdersDboOne, afterSalesOrdersDboTwo],
+        2,
+      );
+      when(orderDaoMocked.getOrders(ordersQuery)).thenResolve({ orders: ordersDbo, count: 2 });
+
+      const ordersResponse = await ordersRepo.getOrders(ordersQuery);
+      verify(orderDaoMocked.getOrders(ordersQuery)).once();
+      expect(ordersResponse).toEqual(getOrdersQueryResult);
+    });
+  });
+});

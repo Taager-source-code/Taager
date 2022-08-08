@@ -1,0 +1,37 @@
+@import './colors';
+.text-align-center {
+  display: flex;
+  align-content: center;
+  flex-direction: column;
+}
+.capacity-title {
+  margin-left: 1rem;
+  display: inline;
+}
+.remaining-capacity {
+  display: flex;
+  padding: 0;
+  align-items: center;
+  .rc-container {
+    text-align: right;
+  }
+}
+.card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.card-button {
+  padding: 12px 40px;
+  height: 42px;
+  background: $grey-light;
+  border-radius: 10px;
+  font-size: 16px;
+  color: $text-dark-grey;
+  margin-right: 20px;
+  border: none;
+}
+.card-button-active {
+  background: $main-text;
+  color: $white;
+}

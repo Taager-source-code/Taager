@@ -1,0 +1,29 @@
+<nb-card
+  class="internal-category-container"
+  [nbSpinner]="isLoading$ | async"
+  nbSpinnerSize="giant"
+  nbSpinnerStatus="primary"
+>
+  <nb-card-body>
+    <div class="header-section">
+      <p class="header-section__header">
+        Internal Categories
+        <span class="header-section__sub-header">
+          ({{ (categoriesList$ | async).length | i18nPlural: mapping }})
+        </span>
+      </p>
+    </div>
+    <hr />
+    <ngx-add-category
+      #addCategoryComponent
+      (formSubmitted)="onAddCategoryClicked($event)"
+    ></ngx-add-category>
+    <p class="current-category-header">Current Categories</p>
+    <ngx-category-card
+      *ngFor="let category of categoriesList$ | async"
+      [category]="category"
+      (editCategoryClicked)="onEditCategoryClicked($event)"
+      (deleteCategoryClicked)="onDeleteCategory($event)"
+    ></ngx-category-card>
+  </nb-card-body>
+</nb-card>

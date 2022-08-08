@@ -1,0 +1,131 @@
+<div class="bundle-info-container">
+    <form class="bundle-info-container__meta" [formGroup]="bundleInfoFormGroup">
+        <div class="bundle-info-container__meta__availability">
+            <nb-select class="--capitalize bundle-info-container__meta__availability__filter-dropdown" placeholder="Select Availability" formControlName="productAvailability">
+                <nb-option class="--capitalize" value="">All</nb-option>
+                <nb-option
+                    class="--capitalize"
+                    *ngFor="let status of availabilityStatuses"
+                    [value]="status.code">{{status.code | ngxAvailabilityFilterFormatter: availabilityFilterFormatter }}</nb-option>
+            </nb-select>
+        </div>
+        
+        <nb-card
+            [nbSpinner]="isUploadingImage"
+            nbSpinnerSize="small"
+            nbSpinnerStatus="primary">
+                <div class="bundle-info-container__meta__default-image">
+                    <ng-container
+                        *ngTemplateOutlet="!bundleInfoFormGroup.get('defaultImage').valid ? noImageSelectedTemplate : imageSelectedTemplate"></ng-container>
+                    <ng-template #noImageSelectedTemplate>
+                        <div [ngClass]="{'error': (showFormErrors$ | async) }" class="bundle-info-container__meta__default-image__no-image-selected" (click)="defaultImageSelectorElement.click()">
+                            <svg width="84" height="84" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M31.502 35C35.3679 35 38.502 31.866 38.502 28C38.502 24.134 35.3679 21 31.502 21C27.636 21 24.502 24.134 24.502 28C24.502 31.866 27.636 35 31.502 35Z" stroke="#707685" stroke-width="3.9375" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M45.498 7.00098H31.498C13.998 7.00098 6.99805 14.001 6.99805 31.501V52.501C6.99805 70.001 13.998 77.001 31.498 77.001H52.498C69.998 77.001 76.998 70.001 76.998 52.501V35.001" stroke="#707685" stroke-width="3.9375" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M55.125 17.501H74.375" stroke="#707685" stroke-width="3.9375" stroke-linecap="round"/>
+                                <path d="M64.748 27.125V7.875" stroke="#707685" stroke-width="3.9375" stroke-linecap="round"/>
+                                <path d="M9.3457 66.3259L26.6007 54.7409C29.3657 52.8859 33.3557 53.0959 35.8407 55.2309L36.9957 56.2459C39.7257 58.5909 44.1357 58.5909 46.8657 56.2459L61.4257 43.7509C64.1557 41.4059 68.5657 41.4059 71.2957 43.7509L77.0007 48.6509" stroke="#707685" stroke-width="3.9375" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Upload the default Image</span>
+                        </div>
+                    </ng-template>
+                    <ng-template #imageSelectedTemplate>
+                        <div class="bundle-info-container__meta__default-image__image-selected" (click)="defaultImageSelectorElement.click()">
+                            <img [src]="mainImageUrl" alt="mainImageName">
+                        </div>
+                    </ng-template>
+                    <input
+                        type="file"
+                        #defaultImageSelectorElement
+                        class="bundle-info-container__meta__default-image__select-default-image"
+                        type="file"
+                        accept="image/*"
+                        (change)="handleImageUpload($event)">
+                </div>
+        </nb-card>
+        <div class="bundle-info-container__meta__details">
+            <div class="form-field bundle-info-container__meta__details__bundle-name">
+                <span class="form-field__label">Bundle Name</span>
+                <ng-template
+                    [ngTemplateOutlet]="formControlTemplate"
+                    [ngTemplateOutletContext]="{
+                        formControlName: 'productName',
+                        type: 'text'
+                    }"></ng-template>
+            </div>
+            <div class="form-field bundle-info-container__meta__details__bundle-id">
+                <span class="form-field__label">Bundle ID</span>
+                <ng-template
+                    [ngTemplateOutlet]="formControlTemplate"
+                    [ngTemplateOutletContext]="{
+                        formControlName: 'productId',
+                        type: 'text',
+                        disabled: initialData ? true : false
+                    }"></ng-template>
+            </div>
+            <div class="form-field bundle-info-container__meta__details__selling-price-and-profit">
+                <div class="bundle-info-container__meta__details__selling-price">
+                    <span class="form-field__label">Selling price</span>
+                    <label class="form-field__currency">{{selectedCountryPrice}}</label>
+                    <ng-template
+                        [ngTemplateOutlet]="formControlTemplate"
+                        [ngTemplateOutletContext]="{
+                            formControlName: 'price',
+                            type: 'number',
+                            disabled: initialData ? true : false
+                        }"></ng-template>
+                </div>
+                <div class="bundle-info-container__meta__details__profit">
+                    <span class="form-field__label">Profit</span>
+                    <label class="form-field__currency">{{selectedCountryPrice}}</label>
+                    <ng-template
+                        [ngTemplateOutlet]="formControlTemplate"
+                        [ngTemplateOutletContext]="{
+                            formControlName: 'profit',
+                            type: 'number',
+                            disabled: initialData ? true : false
+                        }"></ng-template>
+                </div>
+            </div>
+            <div class="form-field bundle-info-container__meta__details__visible-to-merchants">
+                <span class="form-field__label">Visible to merchants <span class="form-field__label__split-by">(Split by ,)</span></span>
+                <input
+                type="text"
+                nbInput
+                fullWidth
+                [value]="visibleToSellersValue"
+                (blur)="onVisibleToMerchantsBlur($event)"
+                [ngClass]="{'error': (showFormErrors$ | async) && bundleInfoFormGroup.get('visibleToSellers').errors}">
+            </div>
+            <div class="form-field bundle-info-container__meta__details__bundle-is-expired">
+                <span class="form-field__label">Bundle is expired</span>
+                <nb-toggle formControlName="isExpired"></nb-toggle>
+            </div>
+            <!-- shared templates -->
+            <ng-template
+                #formControlTemplate
+                let-formControlName="formControlName"
+                let-type="type"
+                let-disabled="disabled">
+                <ng-container
+                    *ngTemplateOutlet="disabled ? disabledInputTemplate : enabledInputTemplate"></ng-container>
+                <ng-template #disabledInputTemplate>
+                    <input
+                        [type]="type"
+                        nbInput
+                        fullWidth
+                        [formControlName]="formControlName"
+                        disabled>
+                </ng-template>
+                <ng-template #enabledInputTemplate>
+                    <input
+                        [type]="type"
+                        nbInput
+                        fullWidth
+                        [formControlName]="formControlName"
+                        [ngClass]="{'error': (showFormErrors$ | async) && bundleInfoFormGroup.get(formControlName).errors}">
+                </ng-template>
+            </ng-template>
+        </div>
+    </form>
+</div>

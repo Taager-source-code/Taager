@@ -1,0 +1,23 @@
+import mongoose, { SchemaDefinition, SchemaOptions } from 'mongoose';
+import { UserCountriesAccess } from '../models/UserCountriesAccess';
+
+const schema: SchemaDefinition<UserCountriesAccess> = {
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+  },
+  countries: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
+};
+const options: SchemaOptions = {
+  timestamps: true,
+};
+const UserCountriesAccessSchema = new mongoose.Schema(schema, options);
+
+export = mongoose.model<UserCountriesAccess>('UserCountriesAccess', UserCountriesAccessSchema, 'userCountriesAccesses');

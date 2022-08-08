@@ -1,0 +1,31 @@
+<div class="sub-categories-list-container" *ngIf="commercialSubCategoriesList?.length">
+
+  <a class="show-all-button" [routerLink]="['/','products','category', hoveredCategoryId]">
+
+    عرض الكل
+
+    <img src="assets/img/left-chevron.svg"></a>
+
+  <div class="sub-categories-list">
+
+    <div class="level-two-subcategory" *ngFor="let levelTwoSubCategoryNode of commercialSubCategoriesList">
+
+      <a class="level-two-subcategory__name" [routerLink]="['/','products','category',levelTwoSubCategoryNode.key]">
+
+        {{levelTwoSubCategoryNode.value.name.arabicName}} 
+
+      </a>
+
+      <a *ngFor="let levelThreeSubCategoryNode of levelTwoSubCategoryNode.children" 
+
+        class="level-three-subcategory__name" [routerLink]="['/','products','category',levelThreeSubCategoryNode.key]">
+
+        {{ levelThreeSubCategoryNode.value.name.arabicName }}
+
+      </a>
+
+    </div>
+
+  </div>
+
+</div>

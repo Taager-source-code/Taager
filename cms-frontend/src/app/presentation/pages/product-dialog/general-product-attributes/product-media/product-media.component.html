@@ -1,0 +1,22 @@
+<section class="product-media-wrapper" [formGroup]="productsService.productForm.get('productMediaForm')">
+  <section class="product-image-wrapper" *ngIf="!productsService.productForm.get('productMediaForm').get('imageUrls').disabled">
+    <p class="product-image-wrapper__title">
+      <span class="strong">Product Attachments</span>
+      <span>At least 4 attachments</span>
+    </p>
+    <ngx-image-carousel
+      [imageUrlList]="imageLinks"
+      (uploadedImagesURL)="onUpdateImages($event)"
+      (deletedImageIndex)="onUpdateImages($event)"></ngx-image-carousel>
+  </section>
+  <section class="product-video-links">
+    <p class="product-image-wrapper__title">Video Link</p>
+    <div class="product-video-links__input" *ngFor="let link of videoLinks; let i = index">
+      <input [id]="'video-link-'+i" type="text" (change)="onVideoLinkChange($event, i)" [value]="link.url">
+      <button (click)="removeLink(i)">
+        <img src="assets/images/remove-img.svg" alt="delete video">
+      </button>
+    </div>
+    <a class="add-video-link" href="#" (click)="addLink($event)">+ Add another video link</a>
+  </section>
+</section>

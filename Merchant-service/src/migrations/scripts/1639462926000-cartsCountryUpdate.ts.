@@ -1,0 +1,9 @@
+import CartModel from '../../order-management/common/infrastructure/db/schemas/cart.model';
+
+export const up = async () => {
+  const filter: any = { country: { $exists: false } };
+  const update = { $set: { country: 'EGY' } };
+  await CartModel.updateMany(filter, update, { timestamps: false });
+};
+
+

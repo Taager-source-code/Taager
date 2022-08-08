@@ -1,0 +1,170 @@
+import Cache from '../cache';
+import { CacheType, DefaultInMemoryCacheParameters } from '../domain/cacheModel';
+
+const cacheParameters = {
+  options: DefaultInMemoryCacheParameters,
+  type: CacheType.Memory,
+};
+
+const cache = Cache.resolve(cacheParameters);
+const reqObj = {
+  pageSize: 10,
+  page: 1,
+  sortBy: 'orderCount',
+  category: 'category',
+  countable: false,
+};
+
+const results = [
+  {
+    _id: '60fa85a2a7a6c0eb75e95c95',
+    variants: [
+      {
+        _id: '5e679054fa28230329eff05f',
+        prodID: '123',
+      },
+    ],
+    attributeSets: [],
+  },
+];
+function setupCache() {
+  // Arrange and Act
+  cache.set(reqObj, results);
+}
+function wait(ms) {
+  const start = Date.now();
+  let now = start;
+  while (now - start < ms) {
+    now = Date.now();
+  }
+}
+function pruneCache() {
+  cache.clear();
+}
+
+describe('Get values from cache', () => {
+  beforeEach(() => {
+    setupCache();
+  });
+
+  afterEach(() => {
+    pruneCache();
+  });
+  test('Get values from cache using correct key', () => {
+    // Assert
+    expect(cache.get(reqObj)).toBe(results);
+  });
+  test('Get null when called with key not present in cache', () => {
+    // Arrange
+    const reqObj1 = {
+      pageSize: 10,
+      page: 1,
+      sortBy: 'Date',
+      category: 'category',
+      countable: false,
+    };
+    // Assert
+    expect(cache.get(reqObj1)).toBe(null);
+  });
+});
+
+describe('Set values in cache', () => {
+  afterEach(() => {
+    pruneCache();
+  });
+  test('Set value when there is space', () => {
+    // Arrange and Act
+    cache.set(reqObj, results);
+
+    // Assert
+    expect(cache.get(reqObj)).toBe(results);
+  });
+  test('Adding cache value in cache when the cache is full will remove older value', () => {
+    // Arrange
+    const cacheParameters1 = {
+      options: {
+        ttl: 60, // in seconds
+        max: 1, // max elements in cache
+      },
+      type: CacheType.Memory,
+    };
+
+    const cache1 = Cache.resolve(cacheParameters1);
+    const reqObj1 = {
+      pageSize: 10,
+      page: 1,
+      sortBy: 'Date',
+      category: 'category',
+      countable: false,
+    };
+
+    // Act
+    cache1.set(reqObj, results);
+    cache1.set(reqObj1, results);
+
+    // Assert
+    expect(cache1.get(reqObj)).toBe(null);
+    expect(cache1.get(reqObj1)).toBe(results);
+
+    // clear
+    cache1.clear();
+  });
+});
+
+describe('time out in cache value', () => {
+  afterEach(() => {
+    pruneCache();
+  });
+  test('Get cache value before ttl expires', () => {
+    // Arrange
+    const cacheParameters1 = {
+      options: {
+        ttl: 2, // in seconds
+        max: 10, // max elements in cache
+      },
+      type: CacheType.Memory,
+    };
+
+    const cache1 = Cache.resolve(cacheParameters1);
+    const reqObj1 = {
+      pageSize: 10,
+      page: 1,
+      sortBy: 'Date',
+      category: 'category',
+      countable: false,
+    };
+
+    // Act
+    cache1.set(reqObj1, results);
+
+    // Assert
+    wait(1000);
+    expect(cache1.get(reqObj1)).toBe(results);
+  });
+  test('Get null value after ttl expires', () => {
+    // Arrange
+    const cacheParameters1 = {
+      options: {
+        ttl: 2, // in seconds
+        max: 10, // max elements in cache
+      },
+      type: CacheType.Memory,
+    };
+
+    const cache1 = Cache.resolve(cacheParameters1);
+    const reqObj1 = {
+      pageSize: 10,
+      page: 1,
+      sortBy: 'Date',
+      category: 'category',
+      countable: false,
+    };
+
+    // Act
+    cache1.set(reqObj1, results);
+
+    // Assert
+    wait(3000);
+    expect(cache1.get(reqObj1)).toBe(null);
+  });
+});

@@ -1,0 +1,48 @@
+@import "src/assets/css/colors.scss";
+:host {
+  .picklist-form {
+    flex-basis: 70%;
+    .form-field {
+      flex-basis: 47%;
+    }
+  }
+  .request-status-wrapper {
+    flex-basis: 25%;
+    background-color: $fill-medium-gray;
+    height: 145px;
+    border-radius: 7px;
+    .request-status {
+      text-align: center;
+      margin: 0;
+    }
+    .request-status + .request-status {
+      margin-top: 5px;
+    }
+  }
+  .request-success {
+    background-color: $fill-success;
+    .request-status {
+      color: $text-white;
+    }
+  }
+  .request-processing {
+    background-color: $fill-warn;
+  }
+  .request-failed {
+    background-color: $fill-danger;
+    .request-status {
+      color: $text-white;
+    }
+  }
+  .generate-btn {
+    margin: 0 auto;
+    background-color: $primary-color;
+    color: $text-white;
+  }
+  .generate-btn:focus {
+    outline-color: $primary-color;
+  }
+  .generate-btn:disabled {
+    background-color: $fill-medium-gray;
+  }
+}

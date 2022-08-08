@@ -1,0 +1,53 @@
+import { IncentiveProgramType } from './IncentiveProgramType';
+
+export default class Milestone {
+  public _programTarget: any;
+  public _percentage: any;
+  public _rewardPerOrder: any;
+  public _milestoneReward: any;
+
+  constructor(programTarget, percentage, rewardPerOrder) {
+    this._programTarget = programTarget;
+    this._percentage = percentage;
+    this._rewardPerOrder = rewardPerOrder;
+    this._milestoneReward = this.getTarget() * this._rewardPerOrder;
+  }
+
+  getTarget() {
+    return Math.floor((this._programTarget * this._percentage) / 100);
+  }
+
+  getReward(orders) {
+    const target = this.getTarget();
+    if (orders >= target) {
+      return this._milestoneReward;
+    }
+    return 0;
+  }
+
+  public getExtraRewardForOverAchievement(orders, incentiveProgramType) {
+    if (incentiveProgramType == IncentiveProgramType.UNLIMITED) {
+      const target = this.getTarget();
+      if (orders > target) {
+        const extraOrders = orders - target;
+        return extraOrders * this._rewardPerOrder;
+      }
+    }
+    return 0;
+  }
+
+  get percentage() {
+    return this._percentage;
+  }
+
+  get rewardPerOrder() {
+    return this._rewardPerOrder;
+  }
+
+  get milestoneReward() {
+    return this._milestoneReward;
+  }
+  // endregion
+}
+
+

@@ -1,0 +1,249 @@
+import dotenv from 'dotenv';
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import { BAD_REQUEST, CONFLICT, CREATED, OK } from 'http-status';
+import { CreateChildCommercialCategoryRequest } from '../../src/content-management/commercial-categories/commands/application/models/CreateChildCommercialCategoryRequest';
+import { UpdateRootCommercialCategoryRequest } from '../../src/content-management/commercial-categories/commands/application/models/UpdateRootCommercialCategoryRequest';
+import { UpdateChildCommercialCategoryRequest } from '../../src/content-management/commercial-categories/commands/application/models/UpdateChildCommercialCategoryRequest';
+
+dotenv.config();
+
+describe('/api/commercial-categories', () => {
+  let app: any = null;
+  let accessToken: string;
+
+  const createClothesRootCommercialCategory = async () => {
+    await request(app)
+      .post('/api/commercial-categories/root')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        englishName: 'Clothes',
+        arabicName: 'Ù…Ù„Ø§Ø¨Ø³',
+        country: 'EGY',
+        featured: true,
+        sorting: 1,
+      })
+      .expect(CREATED);
+  };
+
+  const createElectronicsRootCommercialCategory = async () => {
+    await request(app)
+      .post('/api/commercial-categories/root')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        englishName: 'Electronics',
+        arabicName: 'Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ§Øª',
+        country: 'UAE',
+        featured: false,
+        sorting: 2,
+      })
+      .expect(CREATED);
+  };
+
+  const failToCreateSportRootCommercialCategory = async () => {
+    await request(app)
+      .post('/api/commercial-categories/root')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        englishName: 'Sport',
+        arabicName: 'Ø±ÙŠØ§Ø¶Ø©',
+        country: 'UAE',
+      })
+      .expect(BAD_REQUEST);
+  };
+
+  const createChildCommercialCategory = async (category: CreateChildCommercialCategoryRequest) => {
+    await request(app)
+      .post('/api/commercial-categories/child')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(category)
+      .expect(CREATED);
+  };
+
+  const failToCreateAChildCommercialCategoryWithNonexistentParent = async () => {
+    await request(app)
+      .post('/api/commercial-categories/child')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        englishName: 'Clothes',
+        arabicName: 'Ù…Ù„Ø§Ø¨Ø³',
+        parentId: 'non-sense',
+      })
+      .expect(CONFLICT)
+      .then((createChildResponse) => {
+        expect(createChildResponse.body.errorCode).toEqual('commercial-category-0001');
+        expect(createChildResponse.body.description).toEqual('Parent category not found.');
+        expect(createChildResponse.body.message).toEqual('Parent category with id non-sense not found.');
+      });
+  };
+
+  const getEgyptRootCommercialCategories = async () => {
+    return request(app)
+      .get(`/api/commercial-categories/roots?country=EGY`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK)
+      .then((rootCommercialCategoryResponse) => {
+        expect(rootCommercialCategoryResponse.body.data).toMatchObject([
+          {
+            englishName: 'Clothes',
+            arabicName: 'Ù…Ù„Ø§Ø¨Ø³',
+            country: 'EGY',
+            featured: true,
+            icon: 'default.svg',
+          },
+        ]);
+        return rootCommercialCategoryResponse.body.data;
+      });
+  };
+
+  const getChildrenCommercialCategories = async (id: string) => {
+    return request(app)
+      .get(`/api/commercial-categories/${id}/children`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK)
+      .then((childrenCommercialCategoriesResponse) => {
+        expect(childrenCommercialCategoriesResponse.body.data).toMatchObject([
+          {
+            englishName: 'Shoes',
+            arabicName: 'Ø£Ø­Ø°ÙŠØ©',
+            country: 'EGY',
+          },
+          {
+            englishName: 'Hats',
+            arabicName: 'Ø§Ù„Ù‚Ø¨Ø¹Ø§Øª',
+            country: 'EGY',
+          },
+          {
+            englishName: 'Jackets',
+            arabicName: 'Ø¬Ø§ÙƒÙŠØªØ§Øª',
+            country: 'EGY',
+          },
+        ]);
+        return childrenCommercialCategoriesResponse.body.data;
+      });
+  };
+
+  const getCommercialCategoryWithAncestors = async (id: string) => {
+    return request(app)
+      .get(`/api/commercial-categories/${id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK)
+      .then((commercialCategoryResponse) => {
+        expect(commercialCategoryResponse.body.data).toMatchObject({
+          englishName: 'Sport Shoes',
+          arabicName: 'Ø£Ø­Ø°ÙŠØ© Ø±ÙŠØ§Ø¶ÙŠØ©',
+          country: 'EGY',
+          ancestors: [
+            {
+              englishName: 'Men Clothes',
+              arabicName: 'Ù…Ù„Ø§Ø¨Ø³ Ø±Ø¬Ø§Ù„ÙŠÙ‡',
+              country: 'EGY',
+            },
+          ],
+        });
+        return commercialCategoryResponse.body.data;
+      });
+  };
+
+  const updateRootCommercialCategory = async (category: UpdateRootCommercialCategoryRequest) => {
+    const { categoryId, ...rest } = category;
+    return request(app)
+      .patch(`/api/commercial-categories/root/${categoryId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(rest)
+      .expect(OK);
+  };
+
+  const updateChildCommercialCategory = async (category: UpdateChildCommercialCategoryRequest) => {
+    const { categoryId, ...rest } = category;
+    return request(app)
+      .patch(`/api/commercial-categories/child/${categoryId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(rest)
+      .expect(OK);
+  };
+
+  const deleteCommercialCategory = async (id: string) => {
+    return request(app)
+      .delete(`/api/commercial-categories/${id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(OK);
+  };
+
+  const failToDeleteCommercialCategoryWithSubcategories = async (id: string) => {
+    return request(app)
+      .delete(`/api/commercial-categories/${id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(CONFLICT)
+      .then((deleteCommercialCategoryResponse) => {
+        expect(deleteCommercialCategoryResponse.body).toMatchObject({
+          errorCode: 'commercial-category-0002',
+          description: 'Commercial category has subcategories.',
+          message: `Commercial category with id ${id} has children, no categories should be orphaned`,
+        });
+      });
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+    await expressServer.createUser();
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  });
+
+  test('Commercial Category Flows', async () => {
+    // Act + Assert
+    await createClothesRootCommercialCategory();
+    await createElectronicsRootCommercialCategory();
+    await failToCreateSportRootCommercialCategory();
+
+    const rootCommercialCategoriesResult = await getEgyptRootCommercialCategories();
+    const clothesCommercialCategoryId = rootCommercialCategoriesResult[0].categoryId;
+
+    await failToCreateAChildCommercialCategoryWithNonexistentParent();
+    await createChildCommercialCategory({
+      parentId: clothesCommercialCategoryId,
+      englishName: 'Shoes',
+      arabicName: 'Ø£Ø­Ø°ÙŠØ©',
+    });
+    await createChildCommercialCategory({
+      parentId: clothesCommercialCategoryId,
+      englishName: 'Hats',
+      arabicName: 'Ø§Ù„Ù‚Ø¨Ø¹Ø§Øª',
+    });
+    await createChildCommercialCategory({
+      parentId: clothesCommercialCategoryId,
+      englishName: 'Jackets',
+      arabicName: 'Ø¬Ø§ÙƒÙŠØªØ§Øª',
+    });
+    await updateRootCommercialCategory({
+      categoryId: clothesCommercialCategoryId,
+      englishName: 'Men Clothes',
+      arabicName: 'Ù…Ù„Ø§Ø¨Ø³ Ø±Ø¬Ø§Ù„ÙŠÙ‡',
+      featured: false,
+    });
+
+    const childrenCommercialCategoriesResult = await getChildrenCommercialCategories(clothesCommercialCategoryId);
+    const shoesCommercialCategoryId = childrenCommercialCategoriesResult[0].categoryId;
+
+    await updateChildCommercialCategory({
+      categoryId: shoesCommercialCategoryId,
+      englishName: 'Sport Shoes',
+      arabicName: 'Ø£Ø­Ø°ÙŠØ© Ø±ÙŠØ§Ø¶ÙŠØ©',
+    });
+
+    await getCommercialCategoryWithAncestors(shoesCommercialCategoryId);
+    await deleteCommercialCategory(shoesCommercialCategoryId);
+    await failToDeleteCommercialCategoryWithSubcategories(clothesCommercialCategoryId);
+  });
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

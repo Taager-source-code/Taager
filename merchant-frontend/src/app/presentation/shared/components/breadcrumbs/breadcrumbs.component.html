@@ -1,0 +1,29 @@
+<div class="d-flex align-items-center breadcrumbs-container">
+
+  <a class="breadcrumb-category" [routerLink]="['/products']"> المنتجات </a>
+
+  <div
+
+    *ngFor="let category of navigationHeirarchyArray; index as index"
+
+    class="d-flex align-items-center"
+
+  >
+
+    <b class="fa fa-chevron-left" aria-hidden="true"></b>
+
+    <a
+
+      class="breadcrumb-category"
+
+      [ngClass]="{ 'last-category': index === navigationHeirarchyArray.length - 1 }"
+
+      [routerLink]="['/', 'products', 'category', category.key]"
+
+      >{{ category.value.name.arabicName }}
+
+    </a>
+
+  </div>
+
+</div>

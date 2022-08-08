@@ -1,0 +1,32 @@
+@import "common.scss";
+
+mat-chip-list::ng-deep {
+  .mat-chip-list-wrapper {
+    background: $lighter-gray;
+    margin-bottom: 24px;
+    padding: 12px;
+    border-radius: 20px;
+  }
+  .mat-chip.mat-standard-chip {
+    background-color: $white;
+    border: 1px solid $medium-gray;
+    border-radius: 4px;
+    p {
+      margin: 0;
+    }
+    a, a:hover {
+      text-decoration: none;
+    }
+    &.mat-chip-selected.mat-primary {
+      p {
+        color: $white;
+      }
+      a, a:hover {
+        text-decoration: none;
+      }
+      background-color: $primary-color;
+    }
+  }
+}
+
+

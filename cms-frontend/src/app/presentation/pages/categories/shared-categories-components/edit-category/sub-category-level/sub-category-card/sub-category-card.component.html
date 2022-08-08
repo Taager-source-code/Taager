@@ -1,0 +1,22 @@
+<div class="sub-category-container" *ngIf="!deleteSubCategory"> 
+    <p class="card-index" *ngIf="!editSubCategoryEnabled">{{cardIndex+1}}</p>
+    <button *ngIf="!editSubCategoryEnabled" 
+    class="sub-category-card" 
+    [ngClass]="{'sub-category-card--selected': subCategory.id === selectedCategoryId}" 
+    (click)="onSelectSubCategory()">
+        <div class="card-text"> {{subCategory.name.englishName}}</div>
+        <div class="card-text">{{subCategory.name.arabicName}}</div>
+    </button>
+    <form *ngIf="editSubCategoryEnabled" class="edit-container" [formGroup]="editInputFields">
+        <input #englishNameSubCategory class="edit-input-field" type="text" formControlName="englishName" (keyup)="handleKeyUp($event)" placeholder="English Name">
+        <input #arabicNameSubCategory class="edit-input-field" type="text" formControlName="arabicName"  (keyup)="handleKeyUp($event)" placeholder="Arabic Name">
+    </form>
+    <div #subCategoryEditButton class="sub-category-buttons">
+        <button nbButton ghost *ngIf="!editSubCategoryEnabled" (click)="onEditSubCategory()">
+            <nb-icon class="sub-category__button-icon" icon="sub-category-edit-icon" pack="taager-icons"></nb-icon>
+        </button>
+        <button nbButton ghost (click)="onDelete()">
+            <nb-icon class="sub-category__button-icon" icon="sub-category-delete-icon" pack="taager-icons"></nb-icon>
+        </button>
+    </div>
+</div>

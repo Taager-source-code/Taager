@@ -1,0 +1,20 @@
+import { Service } from 'typedi';
+import UserCountriesAccessModel from '../schemas/UsersCountriesAccessSchema';
+import { UserCountriesAccess } from '../models/UserCountriesAccess';
+import mongoose from 'mongoose';
+
+@Service({ global: true })
+export default class UserCountriesAccessDao {
+  getUserCountriesAccessByUserId(userId: string): Promise<UserCountriesAccess | null> {
+    return UserCountriesAccessModel.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+    })
+      .lean()
+      .exec();
+  }
+  async saveUserCountriesAccess(userCountriesAccess: UserCountriesAccess) {
+    await UserCountriesAccessModel.updateOne({ userId: userCountriesAccess.userId }, userCountriesAccess, {
+      upsert: true,
+    }).exec();
+  }
+}

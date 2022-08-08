@@ -1,0 +1,127 @@
+@import "../shared/styles/styles.scss";
+
+.personal-info {
+    direction: rtl;
+    border-radius: em-calc(6px);
+    border: em-calc(1px) solid #ddd;
+    display: flex;
+    flex-direction: column;
+    @media (max-width: 767px) {
+      margin-top: 20px;
+    }
+}
+
+.personal-info__main-header {
+    display: flex;
+    width: 100%;
+    height: 25%;
+    min-height: em-calc(70px);
+    border-radius: em-calc(6px);
+    margin-left: em-calc(10px);
+    border-bottom: solid em-calc(1px) $border-color-medium-gray;
+}
+
+.personal-info__main-header__text-container {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    text-align: start;
+}
+
+.personal-info__main-header__text-container__sub-header {
+    opacity: 0.5;
+    font-size: 1.3rem;
+    text-align: right;
+    color: $text-primary;
+    padding-top: em-calc(5px);
+}
+
+.personal-info__user-available__upload-picture__change-file {
+    display: none;
+}
+
+.personal-info__user-available__upload-picture__action {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.personal-info__user-available__upload-picture {
+    width: 40%;
+    border-radius: 35.5px;
+    background-color: #eff0f4;
+    direction: rtl;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 10px;
+    display: flex;
+    margin: auto 24px 0;
+    @media (max-width: 767px) {
+      display: none;
+    }
+}
+
+.personal-info__user-available__upload-picture__upload-instructions__upload-title {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    color: $text-primary;
+}
+
+.personal-info__user-available__upload-picture__upload-instructions__upload-text {
+    font-size: 16px;
+    color: $text-primary;
+    padding: 0;
+    @media (max-width: 767px) {
+      padding: em-calc(0 12px);
+    }
+}
+
+.personal-info__user-available__upload-picture__profile-picture {
+    width: 28px;
+    height: 28px;
+    background-color: $secondary-color;
+    float: right;
+    border-radius: 10px;
+}
+
+.icon-1 {
+    width: 30px;
+    height: 30px;
+}
+
+.personal-info__user-available__upload-picture {
+    width: 40%;
+    border-radius: 35.5px;
+    background-color: #eff0f4;
+    direction: rtl;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 10px;
+    display: flex;
+    margin: auto 24px 0;
+    @media (max-width: 767px) {
+      display: none;
+    }
+}
+
+.personal-info__user-available__upload-picture-mobile {
+    border-radius: 35.5px;
+    background-color: #eff0f4;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+    display: none;
+    margin: 20px auto;
+    padding: 11px 20px;
+    @media (max-width: 767px) {
+      display: flex;
+    }
+}
+
+/* TODO: Maybe discuss how to use grid so that there is not duplication of content where possible? e.g upload-picture and upload-picture-mobile */
+
+

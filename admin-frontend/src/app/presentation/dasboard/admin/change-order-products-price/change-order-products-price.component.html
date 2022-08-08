@@ -1,0 +1,76 @@
+<div class="order-status-form">
+  <h4 mat-dialog-title>Update Order products prices</h4>
+  <div mat-dialog-content>
+    <form [formGroup]="changeOrderProductsPriceForm">
+      <mat-form-field>
+        <mat-label>Cash On Delivery</mat-label>
+        <input matInput formControlName="cashOnDelivery" disabled />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Total profit</mat-label>
+        <input matInput formControlName="profit" disabled />
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Province</mat-label>
+        <input matInput formControlName="province" disabled />
+      </mat-form-field>
+
+      <div>
+        <input value="product name" style="width: 350px" disabled />
+        <input value="qty" style="width: 100px" disabled />
+        <input value="Price per item" style="width: 130px" disabled />
+        <input value="Total price per item" style="width: 150px" disabled />
+        <input value="Profit per item" style="width: 130px" disabled />
+        <input value="Total profit per item" style="width: 150px" disabled />
+        <div
+          formArrayName="productList"
+          *ngFor="
+            let product of changeOrderProductsPriceForm.get('productList')[
+              'controls'
+            ];
+            let i = index
+          "
+          class="table-element row no-gutters"
+        >
+          <div [formGroupName]="i">
+            <input formControlName="name" style="width: 350px" disabled />
+            <input formControlName="qty" style="width: 100px" disabled />
+            <input
+              formControlName="priceForOne"
+              style="width: 130px"
+              type="number"
+              (change)="onPriceChange($event)"
+              [attr.data-index]="i"
+            />
+            <input
+              formControlName="priceForQty"
+              style="width: 150px"
+              disabled
+            />
+            <input
+              formControlName="profitForOne"
+              style="width: 130px"
+              disabled
+            />
+            <input
+              formControlName="profitForQty"
+              style="width: 150px"
+              disabled
+            />
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div mat-dialog-actions>
+    <button
+      mat-raised-button
+      [disabled]="changeOrderProductsPriceForm.invalid || clicked"
+      color="primary"
+      (click)="updateProductsPrice()"
+    >
+      Update prices
+    </button>
+  </div>
+</div>

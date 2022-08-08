@@ -1,0 +1,177 @@
+<div class="order-status-form">
+  <h4 mat-dialog-title>Province Data</h4>
+  <div mat-dialog-content>
+    <mat-form-field class="full-width">
+      <mat-label>Select a Country</mat-label>
+      <mat-select
+        [disabled]="edit"
+        (selectionChange)="selectCountry($event)"
+        [(value)]="edit ? selectedCountry : sharedService.selectedCountryIso3"
+        [placeholder]="selectedCountry"
+      >
+        <mat-option *ngFor="let item of userCountries" [value]="item">
+          {{ getCountryEnglishName(item) }}</mat-option
+        >
+      </mat-select>
+    </mat-form-field>
+    <form></form>
+    <mat-form-field>
+      <input
+        matInput
+        type="text"
+        placeholder="Location"
+        [(ngModel)]="location"
+        required
+        text
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        matInput
+        type="text"
+        placeholder="Branch"
+        [(ngModel)]="branch"
+        required
+        text
+      />
+    </mat-form-field>
+    <form [formGroup]="zonesForm">
+      <mat-form-field>
+        <input
+          matInput
+          type="text"
+          placeholder="Add Red Zone"
+          text
+          formControlName="redZone"
+        />
+        <button
+          style="margin-left: -37px; margin-bottom: -5px"
+          type="button"
+          class="btn btn-info"
+          (click)="addRedZone($event)"
+        >
+          Add
+        </button>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Red Zones Added</mat-label>
+        <mat-select>
+          <mat-option>
+            <ngx-mat-select-search
+              noEntriesFoundLabel="'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ù…Ù†Ø·Ù‚Ø© Ù…Ø·Ø§Ø¨Ù‚Ø©'"
+              placeholderLabel="---Search Red Zone---"
+              [formControl]="redZonesFilterCtrl"
+            ></ngx-mat-select-search
+          ></mat-option>
+          <mat-option *ngIf="!redZones.length" disabled
+            >There are no Red Zones Added</mat-option
+          >
+          <mat-option *ngFor="let redZone of redZones" [value]="redZone"
+            ><div style="display: flex; justify-content: space-between">
+              <span>{{ redZone }}</span>
+              <span></span>
+              <span
+                style="font: bolder; color: red"
+                (click)="deleteRedZone($event, redZone)"
+                >X</span
+              >
+            </div></mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <input
+          matInput
+          type="text"
+          placeholder="Add Green Zone"
+          text
+          formControlName="greenZone"
+        />
+        <button
+          style="margin-left: -37px; margin-bottom: -5px"
+          type="button"
+          class="btn btn-info"
+          (click)="addGreenZone($event)"
+        >
+          Add
+        </button>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Green Zones Added</mat-label>
+        <mat-select>
+          <mat-option>
+            <ngx-mat-select-search
+              noEntriesFoundLabel="'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ù…Ù†Ø·Ù‚Ø© Ù…Ø·Ø§Ø¨Ù‚Ø©'"
+              placeholderLabel="---Search Green Zone---"
+              [formControl]="greenZonesFilterCtrl"
+            ></ngx-mat-select-search
+          ></mat-option>
+          <mat-option *ngIf="!greenZones.length" disabled
+            >There are no Green Zones Added</mat-option
+          >
+          <mat-option *ngFor="let greenZone of greenZones" [value]="greenZone">
+            <div style="display: flex; justify-content: space-between">
+              <span>{{ greenZone }}</span>
+              <span></span>
+              <span
+                style="font: bolder; color: red"
+                (click)="deleteGreenZone($event, greenZone)"
+                >X</span
+              >
+            </div>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+    <mat-form-field>
+      <input
+        matInput
+        type="text"
+        placeholder="Shipping Revenue"
+        [(ngModel)]="shippingRevenue"
+        required
+      />
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        matInput
+        type="text"
+        placeholder="Shipping Cost"
+        [(ngModel)]="shippingCost"
+        required
+      />
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        matInput
+        type="number"
+        placeholder="Minimum ETA"
+        [(ngModel)]="minETA"
+        required
+      />
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        matInput
+        type="number"
+        placeholder="Maximum ETA"
+        [(ngModel)]="maxETA"
+        required
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-select [(ngModel)]="isActive" placeholder="Province Activation">
+        <mat-option value="true">Activated</mat-option>
+        <mat-option value="false">Disabled</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div mat-dialog-actions>
+    <button type="button" class="btn btn-success" (click)="onRegister()">
+      Submit
+    </button>
+  </div>
+</div>

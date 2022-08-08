@@ -1,0 +1,59 @@
+<div class="profile-card">
+
+  <div class="profile-card__multitenancy-tooltip" *ngIf="shouldShowMultitenancyTooltip">
+
+    <img class="profile-card__multitenancy-tooltip-icon" src="assets/img/globe.svg" alt="">
+
+    <p class="profile-card__multitenancy-tooltip-text"> فئتك بناءً على جميع طلباتك </p>
+
+  </div>
+
+  <section class="profile-picture-loyalty-program-wrapper">
+
+    <img
+
+      [src]="user.profilePicture || 'assets/img/default_avatar.png'"
+
+      class="profile-card__profile-picture"
+
+    />
+
+    <label
+
+      class="profile-card__loyalty-status"
+
+      [ngClass]="{
+
+        'profile-card__loyalty-status--silver': accountTypeName === accountTypes.SILVER,
+
+        'profile-card__loyalty-status--gold': accountTypeName === accountTypes.GOLD,
+
+        'profile-card__loyalty-status--platinum': accountTypeName === accountTypes.PLATINUM,
+
+        'profile-card__loyalty-status--blue': accountTypeName === accountTypes.BLUE
+
+      }"
+
+    >
+
+      {{ accountTypeName }}
+
+    </label>
+
+  </section>
+
+  <p class="profile-card__user-name">{{ userFullName }}</p>
+
+  <section class="profile-card__referral-code-wrapper">
+
+    <p class="profile-card__referral-code">
+
+      {{ 'كود الإحالة ' + user.referralCode }}
+
+    </p>
+
+    <b class="fa fa-copy profile-card__referral-code-icon" appHoverStyle [cdkCopyToClipboard]="user.referralCode" (click)="onNotifyReferralCodeCopied()"></b>
+
+  </section>
+
+</div>

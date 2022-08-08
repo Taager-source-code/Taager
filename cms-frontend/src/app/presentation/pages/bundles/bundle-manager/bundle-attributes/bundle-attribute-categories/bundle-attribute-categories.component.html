@@ -1,0 +1,19 @@
+<div class="categories-container">
+  <div class="categories">
+    <ngx-bundle-attribute-internal-categories
+      [showFormErrors$]="showFormErrors$"
+      [initialData]="initialData?.internalCategoryId"
+      (emitBundleAttributesInternalCategoriesForm)="resolveBundleAttributesInternalCategoriesForm($event)"
+    ></ngx-bundle-attribute-internal-categories>
+  </div>
+  <div class="categories">
+    <ngx-bundle-attribute-commercial-categories
+      [showFormErrors$]="showFormErrors$"
+      [initialData]="{
+        categoryId: initialData?.categoryId,
+        commercialCategoryIds: initialData?.commercialCategoryIds
+      }"
+      (emitBundleAttributesCommercialCategoriesForm)="resolveBundleAttributesCommercialCategoriesForm($event)">
+    </ngx-bundle-attribute-commercial-categories>
+  </div>
+</div>

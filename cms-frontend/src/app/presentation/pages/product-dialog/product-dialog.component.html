@@ -1,0 +1,30 @@
+<div *ngIf="!isLoading" class="product-dialog-container">
+    <div class="product-dialog-header">
+        <button nbButton ghost class="product-dialog-header__back-button" (click)="onCloseDialog()">
+            <nb-icon class="product-dialog-header__icon" icon="arrow-ios-back-outline"></nb-icon>
+        </button>
+        <h5 class="product-dialog-header__title">{{variantGroupId? 'Edit' : 'Add'}} Item</h5>
+    </div>
+    <hr>
+    <div class="product-dialog-body">
+        <div class="part-container separator">
+            <ngx-general-product-attributes></ngx-general-product-attributes>
+        </div>
+        <div class="part-container">
+          <ngx-product-categories></ngx-product-categories>
+          <ngx-product-specification #productSpecification></ngx-product-specification>
+        </div>
+    </div>
+    <ngx-product-variants></ngx-product-variants>
+    <div class="product-dialog-buttons">
+        <button nbButton class="dialog-buttons dialog-buttons__cancel" (click)="onCloseDialog()">Cancel</button>
+        <button nbButton [nbSpinner]="isSubmittingForm" 
+            status="primary" class="dialog-buttons dialog-buttons__add"
+            (click)="onAddProduct()" *ngIf="!variantGroupId"
+            [disabled]="productSpecification.loadingVisibleToSellers || productSpecification.errorOccurred">Add</button>
+        <button nbButton [nbSpinner]="isSubmittingForm" 
+            status="primary" class="dialog-buttons dialog-buttons__add" 
+            (click)="onEditProduct()" *ngIf="variantGroupId"
+            [disabled]="productSpecification.loadingVisibleToSellers || productSpecification.errorOccurred">Confirm</button>
+    </div>
+</div>

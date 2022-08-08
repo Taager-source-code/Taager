@@ -1,0 +1,1013 @@
+<div class="order-status-form">
+  <h4 mat-dialog-title>Update Order Status</h4>
+  <div mat-dialog-content>
+    <form [formGroup]="changeOrderStatusForm">
+      <mat-form-field>
+        <mat-label>Select Order Status</mat-label>
+        <mat-select
+          formControlName="status"
+          [disabled]="
+            data.userRole === 'ksaConfirmationsMember' &&
+            data.orderStatus !== 'order_received'
+          "
+        >
+          <mat-option>Select Order Status</mat-option>
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin ||
+                data.userprivileges.confirmOrders ||
+                data.userprivileges.assignOrders) &&
+              (currentStatus === 'order_received' ||
+                currentStatus === 'suspended')
+            "
+            [value]="'confirmed'"
+            >Confirmed</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin ||
+                data.userprivileges.confirmOrders ||
+                data.userprivileges.assignOrders) &&
+              currentStatus === 'suspended'
+            "
+            [value]="'customer_rejected'"
+            >Rejected</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'confirmed'
+            "
+            [value]="'pending_shipping_company'"
+            >Pending Shipping Company</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              (currentStatus === 'pending_shipping_company' ||
+                currentStatus === 'delivery_suspended' ||
+                currentStatus === 'delayed')
+            "
+            [value]="'delivery_in_progress'"
+            >Delivery In Progress</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'pending_shipping_company'
+            "
+            [value]="'delayed'"
+            >Delayed</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'delivery_in_progress'
+            "
+            [value]="'customer_refused'"
+            >Customer Refused</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'delivery_in_progress'
+            "
+            [value]="'delivered'"
+            >Delivered</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'delivery_in_progress'
+            "
+            [value]="'delivery_suspended'"
+            >Delivery Suspended</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'delivery_suspended'
+            "
+            [value]="'return_in_progress'"
+            >Return In Progress</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'return_in_progress'
+            "
+            [value]="'return_verified'"
+            >Return Verified</mat-option
+          >
+          <mat-option
+            *ngIf="
+              ((data.userprivileges.admin || data.userprivileges.editOrders) &&
+                currentStatus === 'return_verified') ||
+              currentStatus === 'delivered'
+            "
+            [value]="'refund_in_progress'"
+            >Refund In Progress</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'refund_in_progress'
+            "
+            [value]="'refund_verified'"
+            >Refund Verified</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'return_verified'
+            "
+            [value]="'replacement_in_progress'"
+            >Replacement In Progress</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'replacement_in_progress'
+            "
+            [value]="'replacement_verified'"
+            >Replacement Verified</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin ||
+                data.userprivileges.confirmOrders ||
+                data.userprivileges.assignOrders) &&
+              currentStatus === 'order_received'
+            "
+            [value]="'suspended'"
+            >Suspended</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin ||
+                data.userprivileges.confirmOrders ||
+                data.userprivileges.assignOrders) &&
+              currentStatus === 'order_received'
+            "
+            [value]="'customer_rejected'"
+            >Rejected</mat-option
+          >
+          <mat-option
+            *ngIf="
+              ((data.userprivileges.admin || data.userprivileges.editOrders) &&
+                currentStatus === 'return_verified') ||
+              currentStatus === 'delivered'
+            "
+            [value]="'order_addition_inprogress'"
+            >Order Addition In Progress</mat-option
+          >
+          <mat-option
+            *ngIf="
+              (data.userprivileges.admin || data.userprivileges.editOrders) &&
+              currentStatus === 'order_addition_inprogress'
+            "
+            [value]="'order_addition'"
+            >Order Addition Verified</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'pending_shipping_company'
+        "
+      >
+        <mat-label>Select Shipping Company</mat-label>
+        <mat-select formControlName="shippingCompany">
+          <mat-option>Select Shipping Company</mat-option>
+          <mat-option *ngIf="!data.batchUpdate" [value]="'bosta'"
+            >Bosta</mat-option
+          >
+          <mat-option *ngIf="!data.batchUpdate" [value]="'aramex'"
+            >Aramex</mat-option
+          >
+          <mat-option *ngIf="!data.batchUpdate" [value]="'vhubs'"
+            >VHubs</mat-option
+          >
+          <mat-option [value]="'other'">Other</mat-option>
+          <!-- <mat-option [value]="'mylerz'">Mylerz</mat-option> -->
+        </mat-select>
+      </mat-form-field>
+
+      <ng-container
+        [formGroup]="changeOrderStatusForm"
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <label id="radio-group-label-confirmed">Via:</label>
+        <mat-radio-group
+          formControlName="confirmedVia"
+          aria-labelledby="radio-group-label-confirmed"
+          class="radio-group"
+        >
+          <mat-radio-button value="1" class="radio-button"
+            >Call</mat-radio-button
+          >
+          <mat-radio-button value="2" class="radio-button"
+            >WhatsApp</mat-radio-button
+          >
+          <mat-radio-button value="3" class="radio-button"
+            >Without a call</mat-radio-button
+          >
+        </mat-radio-group>
+      </ng-container>
+
+      <ng-container
+        [formGroup]="changeOrderStatusForm"
+        *ngIf="
+          changeOrderStatusForm.value.status === 'suspended' &&
+          !data.batchUpdate
+        "
+      >
+        <label id="radio-group-label-suspended">Reason:</label>
+        <mat-radio-group
+          formControlName="suspendedReason"
+          aria-labelledby="radio-group-label-suspended"
+          class="radio-group-suspended-customer-rejected"
+        >
+          <mat-radio-button
+            value="1"
+            class="radio-button-suspended-customer-rejected"
+            >Ø¥Ø®ØªÙ„Ø§Ù Ø³Ø¹Ø± Ù…Ø¹ Ø§Ù„Ø¹Ù…ÙŠÙ„</mat-radio-button
+          >
+          <mat-radio-button
+            value="2"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø±ÙØ¶ Ø¥Ø¹Ø·Ø§Ø¡ Ø¹Ù†ÙˆØ§Ù†</mat-radio-button
+          >
+          <mat-radio-button
+            value="3"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø±ÙØ¶ Ø¨Ø³Ø¨Ø¨ Ø§Ù„ØªØ¬Ø±Ø¨Ø©</mat-radio-button
+          >
+          <mat-radio-button
+            value="4"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙŠØ±ÙŠØ¯ Ø®ØµÙ… Ø¹Ù„Ù‰ Ø§Ù„Ù…Ù†ØªØ¬</mat-radio-button
+          >
+          <mat-radio-button
+            value="5"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ø®ØªÙ„Ø§Ù ÙÙŠ Ø¬Ø¯Ø§ÙˆÙ„ Ø§Ù„ØªÙˆØµÙŠÙ„</mat-radio-button
+          >
+          <mat-radio-button
+            value="6"
+            class="radio-button-suspended-customer-rejected"
+            >Ù„Ø§ ÙŠØ±Ø¯ Ùˆ ØªÙ… Ø¥Ù†Ù‡Ø§Ø¡ Ù…Ø­Ø§ÙˆÙ„Ø§Øª Ø§Ù„Ø£ØªØµØ§Ù„</mat-radio-button
+          >
+          <mat-radio-button
+            value="7"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø±Ù‚Ù… Ù„Ø§ ÙŠØ®Øµ Ø§Ù„Ø¹Ù…ÙŠÙ„</mat-radio-button
+          >
+          <mat-radio-button
+            value="8"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø±Ù‚Ù… Ø®Ø·Ø£</mat-radio-button
+          >
+          <mat-radio-button
+            value="9"
+            class="radio-button-suspended-customer-rejected"
+            >ØªØ£Ø¬ÙŠÙ„ Ø§Ù„Ø£ÙˆØ±Ø¯Ø± Ù…Ø¹ Ù‚Ø³Ù… Ø§Ù„ØªØ§ÙƒÙŠØ¯</mat-radio-button
+          >
+        </mat-radio-group>
+      </ng-container>
+
+      <ng-container
+        [formGroup]="changeOrderStatusForm"
+        *ngIf="
+          changeOrderStatusForm.value.status === 'delayed' && !data.batchUpdate
+        "
+      >
+        <label id="radio-group-label-delayed">Reason:</label>
+        <mat-radio-group
+          formControlName="delayedReason"
+          aria-labelledby="radio-group-label-delayed"
+          class="radio-group-suspended-customer-rejected"
+        >
+          <mat-radio-button
+            value="1"
+            class="radio-button-suspended-customer-rejected"
+            >out of stock</mat-radio-button
+          >
+          <mat-radio-button
+            value="2"
+            class="radio-button-suspended-customer-rejected"
+            >warehouse delay</mat-radio-button
+          >
+        </mat-radio-group>
+      </ng-container>
+
+      <ng-container
+        [formGroup]="changeOrderStatusForm"
+        *ngIf="
+          changeOrderStatusForm.value.status === 'customer_rejected' &&
+          !data.batchUpdate
+        "
+      >
+        <label id="radio-group-label-customer-rejected">Reason:</label>
+        <mat-radio-group
+          formControlName="customerRejectedReason"
+          aria-labelledby="radio-group-label-customer-rejected"
+          class="radio-group-suspended-customer-rejected"
+        >
+          <mat-radio-button
+            value="1"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§ÙˆØ±Ø¯Ø± Ù…ÙƒØ±Ø±</mat-radio-button
+          >
+          <mat-radio-button
+            value="2"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨ÙŠÙ‚ÙˆÙ„ Ù…Ø·Ù„Ø¨ØªØ´ Ø­Ø§Ø¬Ù‡</mat-radio-button
+          >
+          <mat-radio-button
+            value="3"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙŠØ±ÙŠØ¯ Ù…Ù†ØªØ¬ Ù…Ø®ØªÙ„Ù</mat-radio-button
+          >
+          <mat-radio-button
+            value="4"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù…Ø³Ø§ÙØ±</mat-radio-button
+          >
+          <mat-radio-button
+            value="5"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙŠØ±ÙŠØ¯ Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬Ø§Øª</mat-radio-button
+          >
+          <mat-radio-button
+            value="6"
+            class="radio-button-suspended-customer-rejected"
+            >Ù„Ø§ ÙŠÙˆØ¬Ø¯ ØªÙˆØµÙŠÙ„ Ù„Ù‡Ø°Ù‡ Ø§Ù„Ù…Ù†Ø·Ù‚Ø©</mat-radio-button
+          >
+          <mat-radio-button
+            value="7"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§ÙˆØ±Ø¯Ø± Ø®Ø·Ø£ØŒ Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙŠØ±ÙŠØ¯ Ø¥Ø³ØªØ¨Ø¯Ø§Ù„ Ø§Ù„Ù…Ù†ØªØ¬</mat-radio-button
+          >
+          <mat-radio-button
+            value="8"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø§Ø³ØªÙ„Ù… Ù…Ù† Ù…ÙƒØ§Ù† Ø¢Ø®Ø±</mat-radio-button
+          >
+          <mat-radio-button
+            value="9"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø§Ø´ØªØ±Ù‰ Ù…Ù† Ù…ÙƒØ§Ù† Ø¢Ø®Ø± Ø§Ø³ØªÙ„Ù… Ù…Ù† Ù…ÙƒØ§Ù† Ø¢Ø®Ø±</mat-radio-button
+          >
+          <mat-radio-button
+            value="10"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù„Ø§ ÙŠØ­ØªØ§Ø¬ Ø§Ù„Ù…Ù†ØªØ¬</mat-radio-button
+          >
+          <mat-radio-button
+            value="11"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø±ÙØ¶ ÙŠÙ‚ÙˆÙ„ Ø£Ø³Ø¨Ø§Ø¨ Ø§Ù„Ø¥Ù„ØºØ§Ø¡</mat-radio-button
+          >
+          <mat-radio-button
+            value="12"
+            class="radio-button-suspended-customer-rejected"
+            >ØªØ£Ø¬ÙŠÙ„ Ù„Ø£ÙƒØ«Ø± Ù…Ù† Ø£Ø³Ø¨ÙˆØ¹ØŒ Ø¨Ø±Ø¬Ø§Ø¡ Ø§Ù„Ø·Ù„Ø¨ Ù…Ø±Ù‡ Ø§Ø®Ø±Ù‰ Ø§Ø«Ù†Ø§Ø¡ Ø§Ø­ØªÙŠØ§Ø¬ Ø§Ù„Ø¹Ù…ÙŠÙ„ØŒ
+            Ù‚Ø¨Ù„Ù‡Ø§ Ø¨ÙŠÙˆÙ…ÙŠÙ†</mat-radio-button
+          >
+          <mat-radio-button
+            value="13"
+            class="radio-button-suspended-customer-rejected"
+            >Ø±ÙØ¶ Ø¨Ø§Ø³Ø¨Ø§Ø¨ Ø´Ø®ØµÙŠÙ‡</mat-radio-button
+          >
+          <mat-radio-button
+            value="14"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„ÙƒÙ…ÙŠØ§Øª ÙƒØ¨ÙŠØ±Ù‡</mat-radio-button
+          >
+          <mat-radio-button
+            value="15"
+            class="radio-button-suspended-customer-rejected"
+            >Ø§Ù„Ø±Ù‚Ù… Ø®Ø·Ø§</mat-radio-button
+          >
+        </mat-radio-group>
+      </ng-container>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Order Id</mat-label>
+        <input matInput formControlName="orderID" disabled />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Client Name</mat-label>
+        <input
+          matInput
+          formControlName="receiverName"
+          placeholder="Enter client name"
+        />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          data.orderSource?.pageName &&
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>FB Page Name</mat-label>
+        <input matInput formControlName="fbPageName" disabled />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          data.orderSource?.pageUrl &&
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>FB Page Url</mat-label>
+        <input matInput formControlName="fbPageUrl" disabled />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Phone Number</mat-label>
+        <input
+          matInput
+          formControlName="phoneNumber"
+          placeholder="Enter phone number"
+        />
+        <button (click)="copyWhatsAppNumber1()" class="copy-button-input">
+          <svg viewBox="0 0 32 32" class="whatsapp-ico">
+            <path
+              d=" M19.11 17.205c-.372 0-1.088 1.39-1.518 1.39a.63.63 0 0 1-.315-.1c-.802-.402-1.504-.817-2.163-1.447-.545-.516-1.146-1.29-1.46-1.963a.426.426 0 0 1-.073-.215c0-.33.99-.945.99-1.49 0-.143-.73-2.09-.832-2.335-.143-.372-.214-.487-.6-.487-.187 0-.36-.043-.53-.043-.302 0-.53.115-.746.315-.688.645-1.032 1.318-1.06 2.264v.114c-.015.99.472 1.977 1.017 2.78 1.23 1.82 2.506 3.41 4.554 4.34.616.287 2.035.888 2.722.888.817 0 2.15-.515 2.478-1.318.13-.33.244-.73.244-1.088 0-.058 0-.144-.03-.215-.1-.172-2.434-1.39-2.678-1.39zm-2.908 7.593c-1.747 0-3.48-.53-4.942-1.49L7.793 24.41l1.132-3.337a8.955 8.955 0 0 1-1.72-5.272c0-4.955 4.04-8.995 8.997-8.995S25.2 10.845 25.2 15.8c0 4.958-4.04 8.998-8.998 8.998zm0-19.798c-5.96 0-10.8 4.842-10.8 10.8 0 1.964.53 3.898 1.546 5.574L5 27.176l5.974-1.92a10.807 10.807 0 0 0 16.03-9.455c0-5.958-4.842-10.8-10.802-10.8z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+          <span class="tooltiptext">Copy and go to Whatsapp</span>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Phone Number 2</mat-label>
+        <input
+          matInput
+          formControlName="phoneNumber2"
+          placeholder="Enter phone number 2"
+        />
+        <button
+          *ngIf="phoneNumber2 !== ''"
+          (click)="copyWhatsAppNumber2()"
+          class="copy-button-input"
+        >
+          <svg viewBox="0 0 32 32" class="whatsapp-ico">
+            <path
+              d=" M19.11 17.205c-.372 0-1.088 1.39-1.518 1.39a.63.63 0 0 1-.315-.1c-.802-.402-1.504-.817-2.163-1.447-.545-.516-1.146-1.29-1.46-1.963a.426.426 0 0 1-.073-.215c0-.33.99-.945.99-1.49 0-.143-.73-2.09-.832-2.335-.143-.372-.214-.487-.6-.487-.187 0-.36-.043-.53-.043-.302 0-.53.115-.746.315-.688.645-1.032 1.318-1.06 2.264v.114c-.015.99.472 1.977 1.017 2.78 1.23 1.82 2.506 3.41 4.554 4.34.616.287 2.035.888 2.722.888.817 0 2.15-.515 2.478-1.318.13-.33.244-.73.244-1.088 0-.058 0-.144-.03-.215-.1-.172-2.434-1.39-2.678-1.39zm-2.908 7.593c-1.747 0-3.48-.53-4.942-1.49L7.793 24.41l1.132-3.337a8.955 8.955 0 0 1-1.72-5.272c0-4.955 4.04-8.995 8.997-8.995S25.2 10.845 25.2 15.8c0 4.958-4.04 8.998-8.998 8.998zm0-19.798c-5.96 0-10.8 4.842-10.8 10.8 0 1.964.53 3.898 1.546 5.574L5 27.176l5.974-1.92a10.807 10.807 0 0 0 16.03-9.455c0-5.958-4.842-10.8-10.802-10.8z"
+              fill-rule="evenodd"
+            ></path>
+          </svg>
+          <span class="tooltiptext">Copy and go to Whatsapp</span>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Whatsapp Template Message</mat-label>
+        <div class="textarea-container">
+          <textarea
+            rows="3"
+            matInput
+            formControlName="whatsappTemplateMessage"
+            placeholder="Whatsapp Template Message"
+            type="text"
+            [(ngModel)]="whatsappTemplateMessage"
+          >
+          </textarea>
+        </div>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Notes</mat-label>
+        <textarea
+          matInput
+          formControlName="notes"
+          placeholder="Update notes"
+        ></textarea>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Preferred Delivery Date</mat-label>
+        <input
+          matInput
+          formControlName="preferredDeliveryDate"
+          [matDatepicker]="preferredDeliveryDatePicker"
+          [matDatepickerFilter]="preferredDeliveryDatePickerFilter"
+          placeholder="Preferred Delivery Date"
+        />
+        <mat-datepicker-toggle
+          matSuffix
+          [for]="preferredDeliveryDatePicker"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #preferredDeliveryDatePicker></mat-datepicker>
+      </mat-form-field>
+
+      <div
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <label>Products</label>
+        <div
+          formArrayName="productList"
+          *ngFor="
+            let product of changeOrderStatusForm.get('productList')['controls'];
+            let i = index
+          "
+          class="table-element row no-gutters"
+        >
+          <div [formGroupName]="i">
+            <input formControlName="name" style="width: 350px" disabled />
+            <input
+              formControlName="qty"
+              style="width: 100px"
+              (change)="onQtyChange($event)"
+              [attr.data-index]="i"
+            />
+          </div>
+        </div>
+      </div>
+      <br />
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Cash On Delivery</mat-label>
+        <input matInput formControlName="cashOnDelivery" disabled />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Profit</mat-label>
+        <input matInput formControlName="profit" disabled />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Ø§Ù„Ù…Ø­Ø§ÙØ¸Ø©</mat-label>
+        <mat-select
+          class="form-control select"
+          name="province"
+          (selectionChange)="onProvinceChange($event)"
+          formControlName="province"
+        >
+          <mat-option [attr.data-shippingRevenue]="'0'"
+            >---Ø£Ø®ØªØ± Ø§Ù„Ù…Ø­Ø§ÙØ¸Ø©---</mat-option
+          >
+          <ng-container *ngFor="let province of provinces">
+            <mat-option
+              *ngIf="province.isActive"
+              [attr.data-shippingRevenue]="province.shippingRevenue"
+              [value]="province.location"
+            >
+              {{ province.location }}
+            </mat-option>
+          </ng-container>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Ø§Ù„Ù…Ù†Ø·Ù‚Ø©</mat-label>
+        <mat-select
+          class="form-control select"
+          name="zone"
+          formControlName="zone"
+        >
+          <mat-option>
+            <ngx-mat-select-search
+              noEntriesFoundLabel="'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ù…Ù†Ø·Ù‚Ø© Ù…Ø·Ø§Ø¨Ù‚Ø©'"
+              placeholderLabel="---Ø£Ø®ØªØ± Ø§Ù„Ù…Ù†Ø·Ù‚Ø©---"
+              [formControl]="zonesFilterCtrl"
+            ></ngx-mat-select-search>
+          </mat-option>
+          <mat-option *ngFor="let zone of zones" [value]="zone">
+            {{ zone }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Street Name</mat-label>
+        <textarea
+          matInput
+          formControlName="streetName"
+          placeholder="Enter street name"
+        ></textarea>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Building</mat-label>
+        <input
+          matInput
+          formControlName="building"
+          placeholder="Ø±Ù‚Ù… Ø§Ù„Ù…Ù†Ø²Ù„ØŒ Ù…Ù†Ø²Ù„ Ù…Ø´Ù‡ÙˆØ± Ø¨Ø§Ø³Ù… Ù…ÙŠÙ†"
+        />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Floor</mat-label>
+        <input matInput formControlName="floor" placeholder="Ø§Ù„Ø¯ÙˆØ±" />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Apartment</mat-label>
+        <input matInput formControlName="apartment" placeholder="Ø§Ù„Ø´Ù‚Ø©" />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Landmark</mat-label>
+        <input
+          matInput
+          formControlName="landmark"
+          placeholder="Ø¹Ù„Ø§Ù…Ø© Ù…Ù…ÙŠØ²Ø© Ø¨Ø¬Ø§Ù†Ø¨ Ø§Ù„Ø¹Ù‚Ø§Ø±"
+        />
+      </mat-form-field>
+
+      <div
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <br />
+        <mat-form-field>
+          <mat-label>Failed Attempts Count</mat-label>
+          <input matInput formControlName="failedAttemptsCount" disabled />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Failed Attempt Note</mat-label>
+          <!-- <input matInput formControlName="failedAttemptNote" /> -->
+          <mat-select formControlName="failedAttemptNote">
+            <mat-option [value]="'Ù„Ø§ÙŠØ±Ø¯ ÙˆØªÙ… Ø§Ø±Ø³Ø§Ù„ ÙˆØ§ØªØ³'"
+              >Ù„Ø§ÙŠØ±Ø¯ ÙˆØªÙ… Ø§Ø±Ø³Ø§Ù„ ÙˆØ§ØªØ³</mat-option
+            >
+            <mat-option [value]="'Ù„Ø§ÙŠØ±Ø¯ ÙˆÙ„Ø§ÙŠÙˆØ¬Ø¯ ÙˆØ§ØªØ³ Ø¨Ø±Ø¬Ø§Ø¡ ØªÙˆÙÙŠØ±Ù‡'"
+              >Ù„Ø§ÙŠØ±Ø¯ ÙˆÙ„Ø§ÙŠÙˆØ¬Ø¯ ÙˆØ§ØªØ³ Ø¨Ø±Ø¬Ø§Ø¡ ØªÙˆÙÙŠØ±Ù‡</mat-option
+            >
+            <mat-option [value]="'Ø§Ù„Ø±Ù‚Ù… Ø®Ø§Ø±Ø¬ Ø§Ù„ØªØºØ·ÙŠÙ‡'"
+              >Ø§Ù„Ø±Ù‚Ù… Ø®Ø§Ø±Ø¬ Ø§Ù„ØªØºØ·ÙŠÙ‡</mat-option
+            >
+            <mat-option [value]="'Ø§Ù„Ø±Ù‚Ù… Ù…ØºÙ„Ù‚ ÙˆØªÙ… Ø§Ø±Ø³Ø§Ù„ ÙˆØ§ØªØ³'"
+              >Ø§Ù„Ø±Ù‚Ù… Ù…ØºÙ„Ù‚ ÙˆØªÙ… Ø§Ø±Ø³Ø§Ù„ ÙˆØ§ØªØ³</mat-option
+            >
+            <mat-option [value]="'Ø§Ù„Ø±Ù‚Ù… Ù…ØºÙ„Ù‚ ÙˆÙ„Ø§ÙŠÙˆØ¬Ø¯ ÙˆØ§ØªØ³ Ø¨Ø±Ø¬Ø§Ø¡ ØªÙˆÙÙŠØ± Ø±Ù‚Ù… Ø§Ø®Ø±'"
+              >Ø§Ù„Ø±Ù‚Ù… Ù…ØºÙ„Ù‚ ÙˆÙ„Ø§ÙŠÙˆØ¬Ø¯ ÙˆØ§ØªØ³ Ø¨Ø±Ø¬Ø§Ø¡ ØªÙˆÙÙŠØ± Ø±Ù‚Ù… Ø§Ø®Ø±</mat-option
+            >
+            <mat-option [value]="'Ø§Ù„Ø±Ù‚Ù… Ø¨Ù‡ Ø¨Ø±ÙŠØ¯ ØµÙˆØªÙ‰'"
+              >Ø§Ù„Ø±Ù‚Ù… Ø¨Ù‡ Ø¨Ø±ÙŠØ¯ ØµÙˆØªÙ‰</mat-option
+            >
+            <mat-option [value]="'Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ù…Ø·Ù„ÙˆØ¨ ØºÙŠØ± ØµØ­ÙŠØ­'"
+              >Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ù…Ø·Ù„ÙˆØ¨ ØºÙŠØ± ØµØ­ÙŠØ­</mat-option
+            >
+            <mat-option [value]="'Ø§Ù„Ø±Ù‚Ù… ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯ Ø¨Ø§Ù„Ø®Ø¯Ù…Ù‡'"
+              >Ø§Ù„Ø±Ù‚Ù… ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯ Ø¨Ø§Ù„Ø®Ø¯Ù…Ù‡</mat-option
+            >
+            <mat-option [value]="'Ø§Ù„Ø±Ù‚Ù… Ù…Ø´ØºÙˆÙ„ Ø¯Ø§Ø¦Ù…Ø§'"
+              >Ø§Ù„Ø±Ù‚Ù… Ù…Ø´ØºÙˆÙ„ Ø¯Ø§Ø¦Ù…Ø§</mat-option
+            >
+            <mat-option [value]="'Ù„Ø§ÙŠØ±Ø¯'">Ù„Ø§ÙŠØ±Ø¯</mat-option>
+            <mat-option [value]="'Ù…ØºÙ„Ù‚'">Ù…ØºÙ„Ù‚</mat-option>
+            <mat-option [value]="'Ù‡Ù†Ø¹Ø§ÙˆØ¯ Ø§Ù„Ø§ØªØµØ§Ù„ Ù…Ø±Ù‡ Ø§Ø®Ø±Ù‰ Ù…Ø´ØºÙˆÙ„ Ø­Ø§Ù„ÙŠØ§'"
+              >Ù‡Ù†Ø¹Ø§ÙˆØ¯ Ø§Ù„Ø§ØªØµØ§Ù„ Ù…Ø±Ù‡ Ø§Ø®Ø±Ù‰ Ù…Ø´ØºÙˆÙ„ Ø­Ø§Ù„ÙŠØ§</mat-option
+            >
+            <mat-option [value]="'ØºÙŠØ± Ù…ØªØ§Ø­ ÙˆØªÙ… Ø§Ø±Ø³Ø§Ù„ ÙˆØ§ØªØ³'"
+              >ØºÙŠØ± Ù…ØªØ§Ø­ ÙˆØªÙ… Ø§Ø±Ø³Ø§Ù„ ÙˆØ§ØªØ³</mat-option
+            >
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Shipping Notes</mat-label>
+        <textarea
+          matInput
+          formControlName="shippingNotes"
+          placeholder="Add Shipping notes"
+        ></textarea>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'confirmed' &&
+          !data.batchUpdate
+        "
+      >
+        <mat-label>Created At</mat-label>
+        <input matInput formControlName="createdAt" disabled />
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="changeOrderStatusForm.value.status === 'delivered'"
+      >
+        <mat-label>Delivery Date</mat-label>
+        <input
+          matInput
+          formControlName="deliveryDate"
+          (focus)="picker.open()"
+          [matDatepicker]="picker"
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="changeOrderStatusForm.value.status === 'replacement_verified'"
+      >
+        <mat-label>Replacement Date</mat-label>
+        <input
+          matInput
+          formControlName="replacementDate"
+          (focus)="picker.open()"
+          [matDatepicker]="picker"
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <app-add-delivery-package
+        (submitted)="updateStatus($event)"
+        [selectedOrders]="data.selectedOrders"
+        [shippingCompany]="changeOrderStatusForm.value.shippingCompany"
+        [order]="data"
+        [products]="products"
+        [provinces]="provinces"
+        *ngIf="
+          changeOrderStatusForm.value.status === 'pending_shipping_company' &&
+          changeOrderStatusForm.value.shippingCompany != 'other' &&
+          changeOrderStatusForm.value.shippingCompany != ''
+        "
+      >
+      </app-add-delivery-package>
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'pending_shipping_company' &&
+          changeOrderStatusForm.value.shippingCompany == 'other'
+        "
+      >
+        <mat-label>Tracking Id</mat-label>
+        <input
+          matInput
+          formControlName="trackingId"
+          placeholder="Enter tracking Id"
+        />
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'pending_shipping_company' &&
+          changeOrderStatusForm.value.shippingCompany == 'other'
+        "
+      >
+        <mat-label>Company Name</mat-label>
+        <input
+          matInput
+          formControlName="shippingCompanyName"
+          placeholder="Enter Company Name"
+        />
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="
+          changeOrderStatusForm.value.status === 'pending_shipping_company' &&
+          changeOrderStatusForm.value.shippingCompany == 'other'
+        "
+      >
+        <mat-label>Delivery Notes</mat-label>
+        <textarea
+          matInput
+          formControlName="deliveryNotes"
+          placeholder="Update delivery notes"
+        ></textarea>
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="changeOrderStatusForm.value.status === 'delivery_in_progress'"
+      >
+        <mat-label>Pickup Date</mat-label>
+        <input
+          matInput
+          formControlName="pickupDate"
+          (focus)="picker.open()"
+          [matDatepicker]="picker"
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field
+        *ngIf="changeOrderStatusForm.value.status === 'delivery_suspended'"
+      >
+        <mat-label>Select delivery suspended reason</mat-label>
+        <mat-select formControlName="deliverySuspendedReason">
+          <mat-option>Select delivery suspended reason</mat-option>
+          <mat-option [value]="'customer_refused'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø±ÙØ¶ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù…</mat-option
+          >
+          <mat-option [value]="'customer_didnot_order'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨ÙŠÙ‚ÙˆÙ„ Ù…Ø·Ù„Ø¨ØªØ´ Ø­Ø§Ø¬Ø©</mat-option
+          >
+          <mat-option [value]="'customer_postponed_more_than_once'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø§Ø¬Ù„ Ø§ÙƒØªØ± Ù…Ù† Ù…Ø±Ø©</mat-option
+          >
+          <mat-option [value]="'customer_getting_away'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨ÙŠØªÙ‡Ø±Ø¨</mat-option
+          >
+          <mat-option [value]="'customer_refused_to_pay_fully'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø±ÙØ¶ Ø¯ÙØ¹ Ø§Ù„Ù…Ø¨Ù„Øº ÙƒØ§Ù…Ù„</mat-option
+          >
+          <mat-option [value]="'customer_unreachable'"
+            >Ø§Ù„Ù…Ù†Ø¯ÙˆØ¨ Ù„Ù… ÙŠØªÙ…ÙƒÙ† Ù…Ù† Ø§Ù„ÙˆØµÙˆÙ„ Ù„Ù„Ø¹Ù…ÙŠÙ„</mat-option
+          >
+          <mat-option [value]="'ordered_from_another_place'"
+            >Ø·Ù„Ø¨ Ù…Ù† Ù…ÙƒØ§Ù† Ø§Ø®Ø±</mat-option
+          >
+          <mat-option [value]="'customer_cancelled'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù„Ø§ØºÙŠ Ø§Ù„Ø§ÙˆØ±Ø¯Ø±</mat-option
+          >
+          <mat-option [value]="'taager_cancelled'">Ø§Ù„ØºØ§Ø¡ Ù…Ù† Ø§Ù„ØªØ§Ø¬Ø±</mat-option>
+          <mat-option [value]="'wrong_address'">Ø§Ù„Ø¹Ù†ÙˆØ§Ù† ØºÙ„Ø·</mat-option>
+          <mat-option [value]="'outside_working_hours'"
+            >Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù… Ø®Ø±Ø¬ Ù…ÙˆØ¹ÙŠØ¯ Ø§Ù„Ø¹Ù…Ù„ (Ù…Ù† Ø§Ù„Ø­Ø¯ Ø§Ù„Ù‰ Ø§Ù„Ø®Ù…ÙŠØ³ Ù…Ù† 11 Ù„ 5)
+          </mat-option>
+          <mat-option [value]="'trap'">ÙƒÙ…ÙŠÙ† Ù„Ù„Ù…Ù†Ø¯ÙˆØ¨</mat-option>
+          <mat-option [value]="'customer_doesnot_answer'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù„Ø§ ÙŠØ±Ø¯ Ø¹Ù„Ù‰ Ø§Ù„Ù…Ù†Ø¯ÙˆØ¨</mat-option
+          >
+          <mat-option [value]="'customer_mobile_switched_off'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù…ÙˆØ¨Ø§ÙŠÙ„Ù‡ Ù…ØºÙ„Ù‚ Ø¯Ø§Ø¦Ù…Ø§</mat-option
+          >
+          <mat-option [value]="'wrong_mobile_number'"
+            >Ø±Ù‚Ù… Ø§Ù„Ù…ÙˆØ¨Ø§ÙŠÙ„ Ø®Ø·Ø£</mat-option
+          >
+          <mat-option [value]="'customer_refused_due_to_not_test'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø±ÙØ¶ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù… Ø¨Ø³Ø¨Ø¨ Ø¹Ø¯Ù… Ø§Ù„ØªØ¬Ø±Ø¨Ø©</mat-option
+          >
+          <mat-option [value]="'customer_cancelled_due_to_later_order'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù„ØºÙ‰ Ù„Ù„ØªØ£Ø®ÙŠØ±
+          </mat-option>
+          <mat-option [value]="'customer_refused_due_to_product'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø±ÙØ¶ Ø¨Ø³Ø¨Ø¨ Ø§Ù„Ù…Ù†ØªØ¬
+          </mat-option>
+          <mat-option [value]="'customer_purchased_from_another_place'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø§Ø´ØªØ±Ù‰ Ù…Ù† Ù…ÙƒØ§Ù† Ø§Ø®Ø±
+          </mat-option>
+          <mat-option [value]="'customer_getting_away_after_agreement'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨ÙŠØªÙ‡Ø±Ø¨ Ø¨Ø¹Ø¯ Ø§Ù„Ø§ØªÙØ§Ù‚</mat-option
+          >
+          <mat-option [value]="'customer_cancelled_due_to_travel'"
+            >Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù„ØºÙ‰ Ù„Ù„Ø³ÙØ±</mat-option
+          >
+          <mat-option [value]="'other'">other</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="changeOrderStatusForm.value.deliverySuspendedReason === 'other'"
+      >
+        <mat-label>other reason</mat-label>
+        <textarea
+          matInput
+          formControlName="otherReasonText"
+          placeholder="Enter other reason text"
+        ></textarea>
+      </mat-form-field>
+
+      <div
+        *ngIf="
+          (changeOrderStatusForm.value.status === 'return_in_progress' ||
+            changeOrderStatusForm.value.status === 'replacement_in_progress') &&
+          !data.batchUpdate
+        "
+      >
+        <label>Products</label>
+        <div
+          formArrayName="productReturnReplaceQuantities"
+          *ngFor="
+            let product of changeOrderStatusForm.get(
+              'productReturnReplaceQuantities'
+            )['controls'];
+            let i = index
+          "
+          class="table-element row no-gutters"
+        >
+          <div [formGroupName]="i">
+            <input formControlName="name" style="width: 350px" disabled />
+            <input formControlName="qty" style="width: 100px" />
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div mat-dialog-actions>
+    <button
+      mat-raised-button
+      [disabled]="isSubmitEnabled() || clicked"
+      color="primary"
+      (click)="submit()"
+    >
+      Update Status
+    </button>
+    <button
+      mat-raised-button
+      *ngIf="
+        changeOrderStatusForm.value.status === 'confirmed' && !data.batchUpdate
+      "
+      color="primary"
+      [disabled]="clicked"
+      (click)="failAttempt()"
+    >
+      Fail Attempt
+    </button>
+    <button
+      *ngIf="data.shippingInfo"
+      mat-raised-button
+      [disabled]="clicked"
+      color="primary"
+      (click)="reloadShipmentStatus()"
+    >
+      Reload Shipment Status
+    </button>
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<div class="questionnaire">
+
+    <ng-container
+
+        *ngTemplateOutlet="userIsReadyToStart ? showUserStepperTemplate : showUserStartPromptTemplate"></ng-container>
+
+    <ng-template #showUserStepperTemplate>
+
+        <ng-container
+
+            *ngTemplateOutlet="userHasBeenEvaluated ? showEvaluationVerdictTemplate : showEvaluationQuestionnaireTemplate"></ng-container>
+
+        <ng-template #showEvaluationQuestionnaireTemplate>
+
+            <!-- multistep form goes here -->
+
+            <app-stepper-component
+
+                [steps]="steps"
+
+                (questionnaireEvaluationVerdict$)="resolveQuestionnaireEvaluationVerdict($event)"></app-stepper-component>
+
+        </ng-template>
+
+        <ng-template #showEvaluationVerdictTemplate>
+
+            <!-- common outlet based on the verdict from the form - we inject the right component here -->
+
+            <ng-template #evaluationVerdictTemplate></ng-template>
+
+        </ng-template>
+
+    </ng-template>
+
+    <ng-template #showUserStartPromptTemplate>
+
+        <div class="questionnaire__show-prompt">
+
+            <div class="questionnaire__show-prompt__prompt">
+
+                <p class="questionnaire__show-prompt__prompt__text">يرجى الإجابة على بعض الأسئلة لكي تبدأ البيع في السعودية، جاهز للبدء؟</p>
+
+            </div>
+
+            <div class="questionnaire__show-prompt__action-button">
+
+                <button (click)="confirmStartFillingQuestionnaire()">بدء الأسئلة</button>
+
+            </div>
+
+        </div>
+
+    </ng-template>
+
+</div>

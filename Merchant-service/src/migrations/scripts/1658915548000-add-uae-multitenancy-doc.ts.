@@ -1,0 +1,9 @@
+import userFeaturesModel from '../../merchant/common/infrastructure/db/schemas/userFeatures.model';
+
+export const up = async () => {
+  const filter = { feature: 'multitenancy_uae' };
+  const update = { $setOnInsert: { tagerIds: '', feature: 'multitenancy_uae' } };
+  await userFeaturesModel.updateOne(filter, update, { upsert: true });
+};
+
+

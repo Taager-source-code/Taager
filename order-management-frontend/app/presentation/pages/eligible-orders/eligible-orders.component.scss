@@ -1,0 +1,48 @@
+@import './colors';
+.body-container {
+  margin-left: 0.3rem;
+  .table-filters {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    &__statuses {
+      display: flex;
+    }
+    &__radio-button {
+      &::ng-deep {
+        label {
+          padding-right: 0;
+          .text {
+            margin-left: 0;
+            margin-right: 1rem;
+            color: $text-dark-grey;
+            font-size: 16px;
+            font-weight: 400;
+            &:hover {
+              cursor: pointer;
+            }
+          }
+          .outer-circle,
+          .inner-circle {
+            display: none;
+          }
+        }
+      }
+      &--active {
+        &::ng-deep {
+          label {
+            .text {
+              color: $primary;
+              font-weight: bold;
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+    }
+  }
+  .data-table {
+    margin-top: 0.5rem;
+  }
+}

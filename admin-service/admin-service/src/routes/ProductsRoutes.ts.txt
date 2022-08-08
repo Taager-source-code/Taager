@@ -1,0 +1,32 @@
+// region requires
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+import * as productCtrl from '../controllers/product.controller';
+import * as variantGroupCtrl from '../controllers/variant/variantGroup.controller';
+
+const router = express.Router();
+
+router.post('/product/viewProducts', isAuthenticated, errorHandler(productCtrl.viewProducts));
+
+router.post('/product/getProductsByIds', isAuthenticated, errorHandler(productCtrl.getProductsByIds));
+
+router.post('/product/addProdImage', isAuthenticated, errorHandler(productCtrl.addProdImage));
+
+router.post('/variantGroup', CountryMiddleware, isAuthenticated, errorHandler(variantGroupCtrl.create));
+
+router.get('/variantGroup/:id', isAuthenticated, errorHandler(variantGroupCtrl.getById));
+
+router.put('/variantGroup/:id', isAuthenticated, errorHandler(variantGroupCtrl.update));
+
+router.post(
+  '/variantGroup/list',
+  CountryMiddleware,
+  isAuthenticated,
+  errorHandler(variantGroupCtrl.getVariantGroupList),
+);
+
+router.post('/variant/getByProdIds', isAuthenticated, errorHandler(productCtrl.getProductsByProdIds));
+
+export = router;

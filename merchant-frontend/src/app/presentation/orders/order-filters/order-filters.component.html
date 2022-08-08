@@ -1,0 +1,217 @@
+<div class="order-filters">
+
+  <form [formGroup]="orderSearchFilterForm" (ngSubmit)="onClickSearchButton()">
+
+    <div class="order-filters__row">
+
+      <mat-form-field appearance="outline" class="order-filters__long-input">
+
+        <input
+
+          matInput
+
+          formControlName="searchKey"
+
+          placeholder="قم بالبحث باستخدام اسم العميل، رقم الاوردر، أو رقم تليفون العميل"
+
+        >
+
+        <mat-icon matPrefix>search</mat-icon>
+
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="order-filters__input">
+
+        <input 
+
+          matInput 
+
+          formControlName="orderId"
+
+          placeholder="البحث بكود الطلب"
+
+        >
+
+        <mat-icon matPrefix>search</mat-icon>
+
+      </mat-form-field>
+
+    </div>
+
+    <div class="order-filters__row">
+
+      <mat-form-field appearance="outline" class="order-filters__date-picker">
+
+        <input
+
+          matInput
+
+          formControlName="fromDate"
+
+          [matDatepicker]="fromPicker"
+
+          placeholder="من تاريخ"
+
+        >
+
+        <mat-datepicker-toggle
+
+          matSuffix
+
+          [for]="fromPicker"
+
+        ></mat-datepicker-toggle>
+
+        <mat-datepicker
+
+          #fromPicker
+
+        ></mat-datepicker>
+
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="order-filters__date-picker">
+
+        <input
+
+          matInput
+
+          formControlName="toDate"
+
+          [matDatepicker]="toPicker"
+
+          placeholder="إلى تاريخ"
+
+        >
+
+        <mat-datepicker-toggle
+
+          matSuffix
+
+          [for]="toPicker"
+
+        ></mat-datepicker-toggle>
+
+        <mat-datepicker
+
+          #toPicker
+
+        ></mat-datepicker>
+
+      </mat-form-field>
+
+      
+
+      <mat-form-field
+
+        appearance="outline"
+
+        class="order-filters__select"
+
+        *ngIf="isMultitenancyEnabled"
+
+      >
+
+        <mat-select formControlName="country" placeholder="الدولة">
+
+          <mat-option
+
+            *ngFor="let country of countries"
+
+            [value]="country.isoCode3"
+
+            >{{ country.arabicName }}</mat-option
+
+          >
+
+        </mat-select>
+
+      </mat-form-field>
+
+      <mat-form-field
+
+        appearance="outline"
+
+        class="order-filters__select"
+
+      >
+
+        <mat-select formControlName="status" placeholder="حالة الطلب">
+
+          <mat-option
+
+            *ngFor="let status of orderStatuses"
+
+            [value]="status.statusInEnglish"
+
+            [ngStyle]="{ display : isChildOrderTabActive ? 'none' : 'flex' }"
+
+            >{{ status.statusInArabic }}</mat-option
+
+            >
+
+            <mat-option
+
+            *ngFor="let status of childOrderStatuses"
+
+            [value]="status.statusInEnglish"
+
+            [ngStyle]="{ display : isChildOrderTabActive ? 'flex' : 'none' }"
+
+            >{{ status.statusInArabic }}</mat-option
+
+          >
+
+        </mat-select>
+
+      </mat-form-field>
+
+      <button 
+
+        class="order-filters__button order-filters__button--solid"
+
+        (click)="onClickSearchButton()"
+
+        [disabled]="
+
+          !orderSearchFilterForm.value.searchKey && !orderSearchFilterForm.value.status &&
+
+          !orderSearchFilterForm.value.orderId && !orderSearchFilterForm.value.fromDate &&
+
+          !orderSearchFilterForm.value.toDate && !orderSearchFilterForm.value.country
+
+        "
+
+      >
+
+        بحث
+
+      </button>
+
+      <button 
+
+        class="order-filters__button order-filters__button--stroked"
+
+        (click)="onClearFilters()"
+
+        [disabled]="
+
+          !orderSearchFilterForm.value.searchKey && !orderSearchFilterForm.value.status &&
+
+          !orderSearchFilterForm.value.orderId && !orderSearchFilterForm.value.fromDate &&
+
+          !orderSearchFilterForm.value.toDate && !orderSearchFilterForm.value.country
+
+        "
+
+      >
+
+        جديد
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>

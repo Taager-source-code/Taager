@@ -1,0 +1,10 @@
+import express from 'express';
+import isAuthenticated from '../middlewares/auth';
+import { registerGet } from '../common/http/HttpHandler';
+import { GetMerchantsWithOrderBalanceChangedController } from '../merchant/order-balance/queries/infrastructure/controllers/GetMerchantsWithOrderBalanceChangedController';
+
+const router = express.Router();
+
+registerGet('/order-balance-changed', GetMerchantsWithOrderBalanceChangedController, router, isAuthenticated);
+
+export = router;

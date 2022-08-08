@@ -1,0 +1,17 @@
+@import 'common.scss';
+
+.category-list {
+
+  max-height: 66vh;
+
+  overflow-y: auto;
+
+  .category-list-item {
+
+    display: block;
+
+    width: 300px;
+
+  }
+
+}

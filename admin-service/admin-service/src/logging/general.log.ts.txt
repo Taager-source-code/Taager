@@ -1,0 +1,15 @@
+import { createLogger, format, transports } from 'winston';
+
+const Logger = createLogger({
+  defaultMeta: { service: 'admin-backend' },
+  format: format.combine(format.json()),
+  transports: [
+    new transports.Console(),
+    // new RollbarTransport({
+    //   rollbarConfig,
+    //   level: rollbarLogLevel,
+    // }),
+  ],
+});
+
+export default Logger;

@@ -1,0 +1,28 @@
+import express from 'express';
+import { registerDelete, registerGet, registerPatch, registerPost } from '../common/http/HttpHandler';
+import CreateRootInternalCategoryController from '../content-management/internal-categories/commands/infrastructure/controllers/CreateRootInternalCategoryController';
+import isAuthenticated from '../middlewares/auth';
+import CreateChildInternalCategoryController from '../content-management/internal-categories/commands/infrastructure/controllers/CreateChildInternalCategoryController';
+import GetRootInternalCategoriesController from '../content-management/internal-categories/queries/infrastructure/controllers/GetRootInternalCategoriesController';
+import GetChildrenInternalCategoriesController from '../content-management/internal-categories/queries/infrastructure/controllers/GetChildrenInternalCategoriesController';
+import UpdateInternalCategoryController from '../content-management/internal-categories/commands/infrastructure/controllers/UpdateInternalCategoryController';
+import DeleteInternalCategoryController from '../content-management/internal-categories/commands/infrastructure/controllers/DeleteInternalCategoryController';
+import GetInternalCategoryController from '../content-management/internal-categories/queries/infrastructure/controllers/GetInternalCategoryController';
+
+const router = express.Router();
+
+registerPost('/root', CreateRootInternalCategoryController, router, isAuthenticated);
+
+registerPost('/child', CreateChildInternalCategoryController, router, isAuthenticated);
+
+registerGet('/roots', GetRootInternalCategoriesController, router, isAuthenticated);
+
+registerGet('/:id/children', GetChildrenInternalCategoriesController, router, isAuthenticated);
+
+registerGet('/:id', GetInternalCategoryController, router, isAuthenticated);
+
+registerPatch('/:id', UpdateInternalCategoryController, router, isAuthenticated);
+
+registerDelete('/:id', DeleteInternalCategoryController, router, isAuthenticated);
+
+export = router;

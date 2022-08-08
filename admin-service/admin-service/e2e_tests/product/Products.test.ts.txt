@@ -1,0 +1,651 @@
+import dotenv from 'dotenv';
+import request from 'supertest';
+import * as expressServer from '../expressServer/expressServer';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as productFixture from '../fixtures/product.fixture';
+import {
+  clothesCommercialCategory,
+  clothesInternalCategoryId,
+  electronicsCommercialCategory,
+  electronicsCommercialCategoryId,
+  electronicsInternalCategoryId,
+  ProductBuilder,
+  shoesCommercialCategory,
+} from '../fixtures/product.fixture';
+import * as transactionManager from '../../src/infra/transaction.manager';
+import User from '../../src/models/user.model';
+import Product from '../../src/models/product.model';
+import { mocked } from 'ts-jest/utils';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import axios from 'axios';
+import CountryModel from '../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import { countryFixture } from '../fixtures/countryFixture';
+import CategoryModel from '../../src/content-management/categories/common/infrastructure/db/schemas/CategorySchema';
+import { leatherEGY, selfCareSAU } from '../fixtures/categoryFixture';
+import CommercialCategorySchema from '../../src/content-management/commercial-categories/common/infrastructure/db/schemas/CommercialCategorySchema';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import VariantGroupModel from '../../src/models/variantGroup.model';
+
+dotenv.config();
+process.env.SECRET = 'yallahabibi';
+process.env.ROLLBAR_ACCESS_TOKEN = 'yallahabibi2';
+
+jest.mock('../../src/infra/transaction.manager');
+jest.mock('axios');
+jest.mock('../../src/utils/file-upload');
+
+const createCountries = async () => {
+  await CountryModel.insertMany(countryFixture);
+};
+
+const login = async (app: any) => {
+  return await expressServer.loginAndGetAccessToken(app);
+};
+
+describe('products and variant group APIs', () => {
+  let app: any = null;
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testing`,
+    );
+    app = expressServer.setupServer();
+    await User.create(ADMIN_1);
+    await createCountries();
+  });
+  beforeEach(async () => {
+    const transactionManagerMocked = mocked(transactionManager, true);
+    transactionManagerMocked.runTransactionally.mockImplementation((func) => func());
+  });
+
+  describe('products APIs', () => {
+    describe('api/product/viewProducts', () => {
+      test(`without specify country should return all available products`, async () => {
+        const queryBody = {
+          page: 1,
+          pageSize: 100,
+          filter: { productAvailability: 'available' },
+        };
+        // Arrange
+        const availableProduct = new ProductBuilder().available().build();
+        const unAvailableProduct = new ProductBuilder().unAvailable().build();
+        const sauProduct = new ProductBuilder().setCountry('SAU').build();
+        await Product.insertMany([availableProduct, unAvailableProduct, sauProduct]);
+
+        const accessToken = await login(app);
+
+        // Act
+        const productsResponse = await request(app)
+          .post('/api/product/viewProducts')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(queryBody);
+
+        expect(productsResponse.statusCode).toEqual(200);
+        expect(productsResponse.body.data).toMatchObject([availableProduct, sauProduct]);
+
+        // Arrange
+        const sauFilter = {
+          page: 1,
+          pageSize: 100,
+          filter: { country: 'SAU' },
+        };
+        // Act
+        const sauResponse = await request(app)
+          .post('/api/product/viewProducts')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(sauFilter);
+
+        expect(sauResponse.statusCode).toEqual(200);
+        expect(sauResponse.body.data.length).toEqual(1);
+        expect(sauResponse.body.data).toMatchObject([sauProduct]);
+      });
+
+      test(`return SAU products`, async () => {
+        const queryBody = {
+          page: 1,
+          pageSize: 100,
+          filter: {
+            country: 'SAU',
+          },
+        };
+        // Arrange
+        const availableProduct = new ProductBuilder().available().build();
+        const sauProduct = new ProductBuilder().setCountry('SAU').build();
+        await Product.insertMany([availableProduct, sauProduct]);
+
+        const accessToken = await login(app);
+
+        // Act
+        const productsResponse = await request(app)
+          .post('/api/product/viewProducts')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(queryBody);
+
+        expect(productsResponse.statusCode).toEqual(200);
+        expect(productsResponse.body.data.length).toEqual(1);
+        expect(productsResponse.body.data).toMatchObject([sauProduct]);
+      });
+
+      test(`200 - with empty list`, async () => {
+        const queryBody = {
+          page: 1,
+          pageSize: 100,
+          filter: {
+            prodID: 'Not_Found_ID',
+            productAvailability: 'available',
+          },
+        };
+        // Arrange
+        const availableProduct = new ProductBuilder().available().build();
+        await Product.insertMany([availableProduct]);
+
+        const accessToken = await login(app);
+
+        // Act
+        const productsResponse = await request(app)
+          .post('/api/product/viewProducts')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(queryBody);
+
+        expect(productsResponse.statusCode).toEqual(200);
+        expect(productsResponse.body.data).toMatchObject([]);
+      });
+    });
+
+    describe('/product/getProductsByIds', () => {
+      test(`200`, async () => {
+        // Arrange
+        const product1 = new ProductBuilder().setId('61a606505fa139c71fe5cda5').build();
+        const product2 = new ProductBuilder().setId('61a606505fa139c71fe5cbe3').build();
+        await Product.insertMany([product1, product2]);
+
+        const accessToken = await login(app);
+
+        // Act
+        const productsResponse = await request(app)
+          .post('/api/product/getProductsByIds')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(['61a606505fa139c71fe5cda5', '61a606505fa139c71fe5cbe3']);
+        // Assert
+        expect(productsResponse.statusCode).toEqual(200);
+        expect(productsResponse.body.data).toMatchObject([product1, product2]);
+      });
+
+      test(`404 - when not found`, async () => {
+        // Arrange
+        const product1 = new ProductBuilder().setId('61a60728294121cd60e3e0c3').build();
+        await Product.insertMany([product1]);
+
+        const accessToken = await login(app);
+
+        // Act
+        const productsResponse = await request(app)
+          .post('/api/product/getProductsByIds')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(['61a606505fa139c71fe5cbe3', '61a606505fa139c71fe5cbe3']);
+        // Assert
+        expect(productsResponse.statusCode).toEqual(404);
+        expect(productsResponse.body.msg).toEqual("Products can't be retrieved");
+      });
+    });
+  });
+
+  describe('Variant apis', () => {
+    let categoryIds;
+    const createUpdateRequest = (fetchResponseAfterCreate) => {
+      const updateRequest = {
+        ...fetchResponseAfterCreate.body,
+        variants: [...fetchResponseAfterCreate.body.variants],
+        country: 'EGY',
+      };
+      updateRequest.variants[0] = {
+        ...fetchResponseAfterCreate.body.variants[0],
+        productAvailability: 'not_available',
+      };
+      updateRequest.variants.forEach((variant) => {
+        variant.isPrimary = true;
+      });
+      return updateRequest;
+    };
+
+    const createUpdateCountryAndCategoriesRequest = (fetchResponseAfterCreate) => {
+      const updateRequest = {
+        ...fetchResponseAfterCreate.body,
+        variants: [...fetchResponseAfterCreate.body.variants],
+        country: 'EGY',
+        internalCategoryId: electronicsInternalCategoryId,
+        commercialCategoryIds: [electronicsCommercialCategoryId],
+      };
+      updateRequest.variants.forEach((variant) => {
+        variant.isPrimary = true;
+      });
+      return updateRequest;
+    };
+
+    const variantGroup = productFixture.aVariantGroup(
+      [
+        productFixture.aVariant('1D', true, [productFixture.XL_SIZE]),
+        productFixture.aVariant('2D', false, [productFixture.L_SIZE]),
+      ],
+      [productFixture.XL_L_SIZE_SET],
+      'SAU',
+    );
+
+    const bundleVariantGroup = productFixture.aBundleVariantGroup(
+      [productFixture.aBundleVariant('BUNDLE1', true)],
+      'SAU',
+    );
+
+    const variantGroupWithNewCategories = productFixture.aVariantGroup(
+      [
+        productFixture.aVariant('1D', true, [productFixture.XL_SIZE]),
+        productFixture.aVariant('2D', false, [productFixture.L_SIZE]),
+      ],
+      [productFixture.XL_L_SIZE_SET],
+      'SAU',
+      clothesInternalCategoryId,
+      [clothesCommercialCategory.categoryId, shoesCommercialCategory.categoryId],
+    );
+
+    const createCategories = async () => {
+      const categories = await CategoryModel.insertMany([leatherEGY, selfCareSAU]);
+      categoryIds = categories.map((category) => category._id);
+    };
+
+    const createCommercialCategories = async () => {
+      await CommercialCategorySchema.insertMany([
+        clothesCommercialCategory,
+        shoesCommercialCategory,
+        electronicsCommercialCategory,
+      ]);
+    };
+
+    beforeAll(async () => {
+      await createCategories();
+      await createCommercialCategories();
+      variantGroup.categoryId = categoryIds[1];
+      bundleVariantGroup.categoryId = categoryIds[1];
+      variantGroupWithNewCategories.categoryId = categoryIds[1];
+    });
+
+    test('POST GET PUT /api/variantGroup for bundles', async () => {
+      const accessToken = await login(app);
+
+      // Act
+      // Create a bundle in Saudi Arabia
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(bundleVariantGroup);
+
+      // Assert
+      expect(createResponse.statusCode).toEqual(201);
+      expect(createResponse.body._id).toBeTruthy();
+    });
+
+    test('POST GET PUT /api/variantGroup', async () => {
+      const accessToken = await login(app);
+
+      // Act
+      // create Variant in Saudi Arabia
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroup);
+
+      // Assert
+      expect(createResponse.statusCode).toEqual(201);
+      expect(createResponse.body._id).toBeTruthy();
+
+      // GET
+      // Fetch the created variant group
+      const fetchResponseAfterCreate = await request(app)
+        .get(`/api/variantGroup/${createResponse.body._id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert created in Saudi Arabia
+      expect(fetchResponseAfterCreate.statusCode).toEqual(200);
+      expect(fetchResponseAfterCreate.body._id).toEqual(createResponse.body._id);
+      expect(fetchResponseAfterCreate.body.country).toEqual('SAU');
+
+      // Assert all products also created in Saudi Arabia
+      expect(fetchResponseAfterCreate.body.variants.map((v) => v.country)).toEqual(['SAU', 'SAU']);
+      expect(fetchResponseAfterCreate.body.variants.map((v) => v.productAvailability)).toEqual([
+        'available',
+        'available',
+      ]);
+
+      // PUT
+      // Update the created variant group and change products availability and country
+      const updateRequest = createUpdateRequest(fetchResponseAfterCreate);
+      const updateResponse = await request(app)
+        .put(`/api/variantGroup/${createResponse.body._id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updateRequest);
+
+      // Assert
+      expect(updateResponse.statusCode).toEqual(200);
+
+      const fetchResponseAfterUpdate = await request(app)
+        .get(`/api/variantGroup/${createResponse.body._id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // make sure the update succeeded, product first product should be not_available, and variant group and products should be for EGY instead of SAU
+      expect(fetchResponseAfterUpdate.statusCode).toEqual(200);
+      expect(fetchResponseAfterUpdate.body._id).toEqual(createResponse.body._id);
+      expect(fetchResponseAfterUpdate.body.country).toEqual('EGY');
+      expect(fetchResponseAfterUpdate.body.variants.map((v) => v.country)).toEqual(['EGY', 'EGY']);
+      expect(fetchResponseAfterUpdate.body.variants.map((v) => v.productAvailability)).toEqual([
+        'not_available',
+        'available',
+      ]);
+    });
+
+    test('POST GET /api/variantGroup with new commercial/internal categories', async () => {
+      const accessToken = await login(app);
+
+      // Act
+      // create variant group in Saudi with new commercial/internal categories
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroupWithNewCategories);
+
+      // Assert
+      expect(createResponse.statusCode).toEqual(201);
+      expect(createResponse.body._id).toBeTruthy();
+
+      // GET
+      // Fetch the created variant group
+      const fetchResponseAfterCreate = await request(app)
+        .get(`/api/variantGroup/${createResponse.body._id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(fetchResponseAfterCreate.statusCode).toEqual(200);
+      expect(fetchResponseAfterCreate.body.internalCategoryId).toEqual(clothesInternalCategoryId);
+      expect(fetchResponseAfterCreate.body.commercialCategoryIds).toEqual([
+        clothesCommercialCategory.categoryId,
+        shoesCommercialCategory.categoryId,
+      ]);
+    });
+
+    test('POST GET PUT /api/variantGroup with new commercial/internal categories', async () => {
+      const accessToken = await login(app);
+
+      // Act
+      // create Variant in Saudi Arabia
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroupWithNewCategories);
+
+      // Assert
+      expect(createResponse.statusCode).toEqual(201);
+      expect(createResponse.body._id).toBeTruthy();
+
+      // GET
+      // Fetch the created variant group
+      const fetchResponseAfterCreate = await request(app)
+        .get(`/api/variantGroup/${createResponse.body._id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(fetchResponseAfterCreate.statusCode).toEqual(200);
+      expect(fetchResponseAfterCreate.body.internalCategoryId).toEqual(clothesInternalCategoryId);
+      expect(fetchResponseAfterCreate.body.commercialCategoryIds).toEqual([
+        clothesCommercialCategory.categoryId,
+        shoesCommercialCategory.categoryId,
+      ]);
+
+      // PUT
+      // Update the created variant group:
+      // Change products availability, country and update the commercial and internal categories
+      const updateRequest = createUpdateCountryAndCategoriesRequest(fetchResponseAfterCreate);
+      const updateResponse = await request(app)
+        .put(`/api/variantGroup/${createResponse.body._id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updateRequest);
+
+      // Assert
+      expect(updateResponse.statusCode).toEqual(200);
+
+      const fetchResponseAfterUpdate = await request(app)
+        .get(`/api/variantGroup/${createResponse.body._id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      // Check if country, internal category and commercial category have been updated
+      expect(fetchResponseAfterUpdate.statusCode).toEqual(200);
+      expect(fetchResponseAfterUpdate.body.country).toEqual('EGY');
+      expect(fetchResponseAfterUpdate.body.internalCategoryId).toEqual(electronicsInternalCategoryId);
+      expect(fetchResponseAfterUpdate.body.commercialCategoryIds).toEqual([electronicsCommercialCategoryId]);
+    });
+
+    test('/api/variantGroup/list', async () => {
+      const accessToken = await login(app);
+
+      // Arrange
+      const variantGroup = productFixture.aVariantGroup(
+        [
+          productFixture.aVariant('11D', true, [productFixture.XL_SIZE]),
+          productFixture.aVariant('22D', false, [productFixture.L_SIZE]),
+        ],
+        [productFixture.XL_L_SIZE_SET],
+      );
+      const variantGroupFilter = {
+        page: 1,
+        pageSize: 10,
+        filter: {},
+      };
+
+      variantGroup.categoryId = categoryIds[0];
+
+      // Act
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroup);
+
+      expect(createResponse.statusCode).toEqual(201);
+      expect(createResponse.body._id).toBeTruthy();
+
+      const fetchResponse = await request(app)
+        .post('/api/variantGroup/list')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroupFilter);
+
+      // Assert
+      expect(fetchResponse.statusCode).toEqual(200);
+      expect(fetchResponse.body.variantGroups).toBeTruthy();
+      expect(fetchResponse.body.counted).toBeTruthy();
+      expect(fetchResponse.body.variantGroups.some((e) => e._id === createResponse.body._id)).toEqual(true);
+    });
+
+    test('/api/variantGroup/list [with filters]', async () => {
+      // Arrange
+      const accessToken = await login(app);
+
+      const variantGroup = productFixture.aVariantGroup(
+        [
+          productFixture.aVariant('10D', true, [productFixture.XL_SIZE]),
+          productFixture.aVariant('21D', false, [productFixture.L_SIZE]),
+        ],
+        [productFixture.XL_L_SIZE_SET],
+        'EGY',
+      );
+      variantGroup.categoryId = categoryIds[0];
+
+      const sauVariantGroup = productFixture.aVariantGroup(
+        [
+          productFixture.aVariant('15D', true, [productFixture.XL_SIZE]),
+          productFixture.aVariant('22D', false, [productFixture.L_SIZE]),
+        ],
+        [productFixture.XL_L_SIZE_SET],
+        'SAU',
+      );
+      const variantGroupFilter = {
+        page: 1,
+        pageSize: 10,
+        filter: {
+          prodID: '10D',
+          category: '',
+          country: 'EGY',
+          productAvailability: 'available',
+        },
+      };
+
+      sauVariantGroup.categoryId = categoryIds[1];
+
+      // Act
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroup);
+
+      const createSAUResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(sauVariantGroup);
+
+      expect(createResponse.statusCode).toEqual(201);
+      expect(createResponse.body._id).toBeTruthy();
+
+      expect(createSAUResponse.statusCode).toEqual(201);
+      expect(createSAUResponse.body._id).toBeTruthy();
+
+      const fetchResponse = await request(app)
+        .post('/api/variantGroup/list')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroupFilter);
+
+      // Assert
+      expect(fetchResponse.statusCode).toEqual(200);
+      expect(fetchResponse.body.variantGroups.length).toEqual(1);
+      expect(fetchResponse.body.variantGroups.some((e) => e._id === createResponse.body._id)).toEqual(true);
+    });
+
+    test('/api/variantGroup/list [with bundle (type) filters]', async () => {
+      // Arrange
+      const accessToken = await login(app);
+
+      const bundleVariantGroup = productFixture.aBundleVariantGroup(
+        [productFixture.aBundleVariant('BUNDLE1', true)],
+        'EGY',
+      );
+      bundleVariantGroup.categoryId = categoryIds[0];
+
+      const regularVariantGroup = productFixture.aVariantGroup(
+        [
+          productFixture.aVariant('15D', true, [productFixture.XL_SIZE]),
+          productFixture.aVariant('22D', false, [productFixture.L_SIZE]),
+        ],
+        [productFixture.XL_L_SIZE_SET],
+        'EGY',
+      );
+      regularVariantGroup.categoryId = categoryIds[0];
+
+      const variantGroupFilter = {
+        page: 1,
+        pageSize: 10,
+        filter: {
+          type: 'bundle',
+        },
+      };
+
+      // Act
+      const createBundleVariantGroupResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(bundleVariantGroup);
+
+      const createRegularVariantGroupResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(regularVariantGroup);
+
+      expect(createBundleVariantGroupResponse.statusCode).toEqual(201);
+      expect(createBundleVariantGroupResponse.body._id).toBeTruthy();
+
+      expect(createRegularVariantGroupResponse.statusCode).toEqual(201);
+      expect(createRegularVariantGroupResponse.body._id).toBeTruthy();
+
+      const fetchResponse = await request(app)
+        .post('/api/variantGroup/list')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroupFilter);
+
+      // Assert
+      expect(fetchResponse.statusCode).toEqual(200);
+      expect(fetchResponse.body.variantGroups.length).toEqual(1);
+      expect(fetchResponse.body.variantGroups.some((e) => e._id === createBundleVariantGroupResponse.body._id)).toEqual(
+        true,
+      );
+      expect(
+        fetchResponse.body.variantGroups.some((e) => e._id === createRegularVariantGroupResponse.body._id),
+      ).toEqual(false);
+    });
+
+    test('POST/api/variantGroup, with unavailable categoryId', async () => {
+      const accessToken = await login(app);
+      // Arrange
+      const variantGroup = productFixture.aVariantGroup(
+        [
+          productFixture.aVariant('11D', true, [productFixture.XL_SIZE]),
+          productFixture.aVariant('22D', false, [productFixture.L_SIZE]),
+        ],
+        [productFixture.XL_L_SIZE_SET],
+      );
+      variantGroup.categoryId = categoryIds[1];
+      // Act
+      // create Variant in Saudi Arabia
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroup);
+
+      // Assert
+      expect(createResponse.statusCode).toEqual(409);
+    });
+
+    test('GET /api/variants/{prodID}', async () => {
+      const accessToken = await login(app);
+
+      // Act
+      // Create a bundle in Saudi Arabia
+      const createResponse = await request(app)
+        .post('/api/variantGroup')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(variantGroup);
+
+      // Assert
+      expect(createResponse.statusCode).toEqual(201);
+      expect(createResponse.body._id).toBeTruthy();
+
+      // Arrange
+      const variant = variantGroup.variants[0];
+      const prodID = variant.prodID;
+      delete variant.isPrimary;
+
+      // Act
+      const fetchResponse = await request(app)
+        .get(`/api/variants/${prodID}?country=SAU`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(fetchResponse.statusCode).toEqual(200);
+      expect(fetchResponse.body.data).toMatchObject(variant);
+    });
+  });
+
+  afterEach(async () => {
+    await Product.deleteMany({});
+    await VariantGroupModel.deleteMany({});
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

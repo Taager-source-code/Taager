@@ -1,0 +1,220 @@
+import { Component, OnInit } from '@angular/core';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
+import { OrderService } from 'src/app/presentation/shared/services/order.service';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/presentation/auth/services/auth.service';
+import { UserService } from 'src/app/presentation/shared/services/user.service';
+import { PROFILE_URL, REGISTER_URL, WALLET_FEATURE } from 'src/app/presentation/shared/constants/index';
+import { LocalStorageService } from 'src/app/presentation/shared/services/local-storage.service';
+import { User } from 'src/app/presentation/shared/interfaces/user.interface';
+import { Clipboard } from '@angular/cdk/clipboard';
+import { ACCOUNT_TABS } from 'src/app/presentation/shared/constants/tabs';
+
+@Component({
+  selector: 'app-account',
+  templateUrl: './account.component.html',
+  styleUrls: ['./account.component.scss'],
+})
+export class AccountComponent implements OnInit {
+  public changePasswordForm: FormGroup;
+  public changeWalletPasswordForm: FormGroup;
+  public file: any;
+  public username: string;
+  private editPicURL =
+    'https://tager-images.s3.eu-central-1.amazonaws.com/Webp.net-resizeimage.jpg';
+  public user: User;
+  public canChangeWalletPassword = false;
+  public countOrders = 0;
+  public countUsers = 0;
+  public submitted = false;
+  public ACCOUNT_TABS = ACCOUNT_TABS;
+
+  constructor(
+    public orderService: OrderService,
+    private toast: ToastrService,
+    private authService: AuthService,
+    private userService: UserService,
+    public router: Router,
+    private localStorageService: LocalStorageService,
+    private clipboard: Clipboard,
+  ) { }
+
+  ngOnInit() {
+    this.getProfileData();
+    this.initForm();
+    this.initWalletPasswordForm();
+  }
+
+  private initForm(): void {
+    this.changePasswordForm = new FormGroup(
+      {
+        currentPassword: new FormControl('', [Validators.required]),
+        newPassword: new FormControl('', [
+          Validators.required,
+          Validators.minLength(9),
+        ]),
+        confirmPassword: new FormControl('', [Validators.required]),
+      },
+      { validators: this.passwordMatchCheck.bind(this) }
+    );
+  }
+  private initWalletPasswordForm(): void {
+    this.changeWalletPasswordForm = new FormGroup(
+      {
+        currentWalletPassword: new FormControl('', [Validators.required]),
+        newWalletPassword: new FormControl('', [
+          Validators.required,
+          Validators.minLength(9),
+        ]),
+        confirmWalletPassword: new FormControl('', [Validators.required]),
+      },
+      { validators: this.walletPasswordMatchCheck.bind(this) }
+    );
+  }
+
+  copyReferralLink() {
+    const baseHref = window.location.href.replace(PROFILE_URL, '');
+    const referralLink = baseHref + this.router.serializeUrl(this.router.createUrlTree([REGISTER_URL, this.user.referralCode]));
+    this.clipboard.copy(referralLink);
+    this.toast.info('Copied to clipboard');
+  }
+
+  private getProfileData() {
+    this.user = this.localStorageService.getUser();
+    this.canChangeWalletPassword = this.user?.features?.includes(WALLET_FEATURE);
+  }
+
+  passwordMatchCheck(formGroup: FormGroup) {
+    const { value: newPassword } = formGroup.get('newPassword');
+    const { value: confirmPassword } = formGroup.get('confirmPassword');
+    return newPassword === confirmPassword ? null : { passwordNotMatch: true };
+  }
+
+  walletPasswordMatchCheck(formGroup: FormGroup) {
+    const { value: newWalletPassword } = formGroup.get('newWalletPassword');
+    const { value: confirmWalletPassword } = formGroup.get(
+      'confirmWalletPassword'
+    );
+    return newWalletPassword === confirmWalletPassword
+      ? null
+      : { walletPasswordNotMatch: true };
+  }
+
+  get newPassword(): AbstractControl {
+    return this.changePasswordForm.get('newPassword');
+  }
+  get newWalletPassword(): AbstractControl {
+    return this.changeWalletPasswordForm.get('newWalletPassword');
+  }
+
+  public onConfirm() {
+    this.submitted = true;
+    if (this.changePasswordForm.errors || this.changePasswordForm.invalid) {
+      return;
+    } else {
+      this.authService.changePassword(
+        this.changePasswordForm.value
+      )
+        .subscribe(
+          (res: any) => {
+            this.toast.success('ØªÙ… ØªØ¹Ø¯ÙŠÙ„  ÙƒÙ„Ù…Ø© Ø§Ù„Ø³Ø±');
+          },
+          (err) => {
+            if (err.status === 403) {
+              this.toast.error('ÙƒÙ„Ù…Ø© Ø§Ù„Ø³Ø± Ø®Ø§Ø·Ø¦Ø©');
+            } else {
+              this.toast.error('ÙŠÙˆØ¬Ø¯ Ù…Ø´ÙƒÙ„Ø© ÙÙŠ Ø§Ù„Ø³ÙŠØ±ÙØ±ØŒ Ù…Ù† ÙØ¶Ù„Ùƒ Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰');
+            }
+          }
+        );
+    }
+  }
+
+  public onConfirmWalletPassword() {
+    this.submitted = true;
+    if (
+      this.changeWalletPasswordForm.errors ||
+      this.changeWalletPasswordForm.invalid
+    ) {
+      return;
+    } else {
+      this.authService.changeWalletPassword(
+        this.changeWalletPasswordForm.value
+      )
+        .subscribe(
+          (res: any) => {
+            this.toast.success('ØªÙ… ØªØ¹Ø¯ÙŠÙ„  ÙƒÙ„Ù…Ø© Ø§Ù„Ø³Ø±');
+          },
+          (err) => {
+            if (err.status === 403) {
+              this.toast.error('ÙƒÙ„Ù…Ø© Ø§Ù„Ø³Ø± Ø®Ø§Ø·Ø¦Ø©');
+            } else if (err.status === 404) {
+              this.toast.error(
+                'Ù„Ø§Ø¨Ø¯ Ù…Ù† ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø¬ÙˆÙ„ Ù„Ù„Ù…Ø­ÙØ¸Ø© Ù„Ù„Ù…Ø±Ø© Ø§Ù„Ø§ÙˆÙ„Ù‰',
+                '',
+                {
+                  timeOut: 25000,
+                }
+              );
+            } else {
+              this.toast.error('ÙŠÙˆØ¬Ø¯ Ù…Ø´ÙƒÙ„Ø© ÙÙŠ Ø§Ù„Ø³ÙŠØ±ÙØ±ØŒ Ù…Ù† ÙØ¶Ù„Ùƒ Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰');
+            }
+          }
+        );
+    }
+  }
+
+  public onEditAccountConfirm() {
+    const userData = {
+      firstName: this.user.firstName,
+      lastName: this.user.lastName,
+      phoneNum: this.user.phoneNum,
+      email: this.user.email,
+    };
+    this.userService.updateUserProfile(userData).subscribe(
+      (response: any) => {
+        const storedUser = this.localStorageService.getUser();
+        this.localStorageService.setUser({
+          ...storedUser,
+          ...response.data
+        });
+        this.toast.success(' ØªÙ… ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª');
+      },
+      (err) => {
+        this.toast.error(err.error.msg);
+      }
+    );
+  }
+
+  public getReferrals() {
+    this.orderService.getReferralsOrders().subscribe((res) => {
+      this.countOrders = res.countOrders;
+      this.countUsers = res.countUsers;
+    });
+  }
+
+  public onSendFile(event) {
+    const sendFile: HTMLInputElement = document.querySelector(
+      'input#formControlFile'
+    );
+    this.file = event.srcElement.files[0];
+
+    const formData = new FormData();
+    this.username = this.user.username;
+    formData.append('image', this.file, this.username);
+    this.toast.info('Upload in Progress');
+    this.authService.updatePicture(formData)
+      .subscribe((resp: any) => {
+        this.editPicURL = resp.msg;
+        this.toast.success('Upload Complete');
+      });
+  }
+}
+
+

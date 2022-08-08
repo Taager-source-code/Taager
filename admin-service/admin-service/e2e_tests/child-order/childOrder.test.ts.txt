@@ -1,0 +1,853 @@
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import User from '../../src/models/user.model';
+import request from 'supertest';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import * as expressServer from '../expressServer/expressServer';
+import MigrationExecutor from '../../src/migrations/migrationExecutor';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import Order from '../../src/models/order.model';
+import { ORDER_1, ORDER_2 } from '../fixtures/orderFixture';
+import { ProductBuilder } from '../fixtures/product.fixture';
+import Product from '../../src/models/product.model';
+import { MERCHANT_1 } from '../fixtures/users/merchantFixtures';
+import { CREATED, OK } from 'http-status';
+import AfterSaleOrder from '../../src/models/afterSaleOrder.model';
+import {
+  ADDITION_ORDER_1,
+  ADDITION_ORDER_2,
+  REFUND_ORDER_1,
+  REFUND_ORDER_2,
+  REPLACEMENT_ORDER_1,
+  REPLACEMENT_ORDER_2,
+} from '../fixtures/afterSaleOrdersFixtures';
+import OrderIssues from '../../src/models/orderIssues.model';
+import { REFUND_VERIFIED } from '../../src/order-management/common/domain/models/OrderStatuses';
+const time = new Date();
+
+const assertParentOrder = async (orderObjectID, status, orderProfit, refundAmount) => {
+  const refundOrderVerified = await Order.findById(orderObjectID).lean(true).exec();
+  expect(refundOrderVerified).toMatchObject({
+    orderProfit,
+    refundAmount,
+    status,
+  });
+};
+
+describe('/api/child-order', () => {
+  let app: any = null;
+  let accessToken: string;
+  let adminUserId: string;
+  let merchantUserId: string;
+
+  const orderIssueType = Object.freeze({
+    REFUND: 1,
+    REPLACEMENT: 2,
+    COMPLETION: 3,
+  });
+
+  async function createUsers() {
+    const user = await User.create(ADMIN_1);
+    const merchant = await User.create(MERCHANT_1);
+    adminUserId = user._id;
+    merchantUserId = merchant._id;
+    await UserRoles.create({ role: 'admin' });
+  }
+
+  async function login(app: any) {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  }
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    const mongoUrl = `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`;
+    await mongooseConnector.connectToMongoDB(mongoUrl);
+
+    await new MigrationExecutor().migrateAll();
+    app = expressServer.setupServer();
+  });
+
+  beforeEach(async () => {
+    await createUsers();
+  });
+
+  afterEach(async () => {
+    await User.remove({});
+    await AfterSaleOrder.remove({});
+    await OrderIssues.remove({});
+  });
+
+  describe('POST /viewOrdersWithIDs, view child orders using IDs', () => {
+    async function createChildOrders() {
+      await AfterSaleOrder.insertMany([REPLACEMENT_ORDER_1, REPLACEMENT_ORDER_2, REFUND_ORDER_1, REFUND_ORDER_2]);
+    }
+    beforeEach(async () => {
+      await createChildOrders();
+    });
+    test('Viewing child orders using IDs should return child orders, irrespective of country', async () => {
+      // Arrange
+      const viewChildOrdersRequest = {
+        orderIdsArray: [REFUND_ORDER_1.orderID, REPLACEMENT_ORDER_2.orderID],
+      };
+      await login(app);
+
+      // Act
+      await request(app)
+        .post('/api/child-order/viewOrdersWithIDs')
+        .send(viewChildOrdersRequest)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.msg).toEqual('Orders list found');
+          expect(childOrderResponse.body.data).toMatchObject([REPLACEMENT_ORDER_2, REFUND_ORDER_1]);
+        });
+    });
+
+    afterEach(async () => {
+      await AfterSaleOrder.remove({});
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe('GET /, view all child Orders', () => {
+    async function createChildOrders() {
+      await AfterSaleOrder.insertMany([
+        REPLACEMENT_ORDER_1,
+        REPLACEMENT_ORDER_2,
+        REFUND_ORDER_1,
+        REFUND_ORDER_2,
+        ADDITION_ORDER_1,
+        ADDITION_ORDER_2,
+      ]);
+    }
+
+    beforeEach(async () => {
+      await createChildOrders();
+    });
+
+    test('Viewing child orders should return orders allowed for user, no country in query params', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      await request(app)
+        .get('/api/child-order?page=1&&pageSize=10')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.data).toMatchObject([REPLACEMENT_ORDER_1, REFUND_ORDER_1, ADDITION_ORDER_1]);
+        });
+    });
+
+    test('Viewing child orders should return EGY, EGY in query params', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      await request(app)
+        .get('/api/child-order?page=1&&pageSize=10&&country=EGY')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.data.length).toEqual(3);
+          expect(childOrderResponse.body.data).toMatchObject([REPLACEMENT_ORDER_1, REFUND_ORDER_1, ADDITION_ORDER_1]);
+        });
+    });
+
+    test('Viewing child orders should return 403, user does not have access to country in query', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+      // Act
+      await request(app)
+        .get('/api/child-order?page=1&&pageSize=10&&country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(403);
+    });
+
+    afterEach(async () => {
+      await AfterSaleOrder.remove({});
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe('POST /, api to create child order', () => {
+    let orderObjectID1: any;
+    let insertedProducts: any;
+    let orderIssueId: any;
+
+    async function createOrdersProductsAndIssues() {
+      insertedProducts = await Product.insertMany([new ProductBuilder().available().build()]);
+      ORDER_1.TagerID = MERCHANT_1.TagerID;
+      const insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+      orderObjectID1 = insertedOrders[0]._id;
+      const insertedOrderIssue = await OrderIssues.insertMany([
+        {
+          issueType: 1,
+          order: {
+            orderObjectId: orderObjectID1,
+            OrderId: ORDER_1.orderID,
+          },
+          product: {
+            productObjectId: insertedProducts[0]._id,
+            productQty: 1,
+            productProfit: insertedProducts[0].productProfit,
+            productId: insertedProducts[0].prodID,
+          },
+          notes: 'This order has issues - 1',
+          user: {
+            userObjectId: '507f191e810c19729de81009',
+            TagerId: '123',
+          },
+          resolved: false,
+          country: ORDER_1.country,
+        },
+      ]);
+      orderIssueId = insertedOrderIssue[0]._id;
+    }
+
+    beforeEach(async () => {
+      await createOrdersProductsAndIssues();
+    });
+
+    test('Creating a child order should succeed, child order created in country of parent order', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+      const createChildOrderRequest = {
+        _id: orderIssueId,
+        issueType: orderIssueType.REFUND,
+        order: {
+          orderObjectId: orderObjectID1,
+          OrderId: ORDER_1.orderID,
+        },
+        product: {
+          productObjectId: insertedProducts[0]._id,
+          productQty: 1,
+          productProfit: insertedProducts[0].productProfit,
+          productId: insertedProducts[0].prodID,
+          name: insertedProducts[0].productName,
+        },
+      };
+
+      // Act
+      await request(app)
+        .post('/api/child-order')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(createChildOrderRequest)
+        .expect(201)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.msg).toEqual('Child Order Created Successfully');
+        });
+
+      // Act and Assert
+      await request(app)
+        .get('/api/child-order?page=1&&pageSize=10')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.data.length).toEqual(1);
+          expect(childOrderResponse.body.data).toMatchObject([
+            {
+              parentOrderObjectId: orderObjectID1.toString(),
+              parentOrderId: ORDER_1.orderID.toString(),
+              orderIssueID: orderIssueId.toString(),
+              status: 'refund_request_accepted',
+              product: {
+                productObjectId: insertedProducts[0]._id.toString(),
+                productQty: 1,
+                productProfit: insertedProducts[0].productProfit,
+                productId: insertedProducts[0].prodID,
+                name: insertedProducts[0].productName,
+              },
+              orderProfit: 0 - ORDER_1.orderProfit,
+            },
+          ]);
+        });
+    });
+
+    afterEach(async () => {
+      await Order.remove({});
+      await Product.remove({});
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe('POST /direct, create child orders directly', () => {
+    let orderObjectID1: any;
+    let insertedProducts: any;
+
+    async function createOrders() {
+      insertedProducts = await Product.insertMany([new ProductBuilder().available().build()]);
+      ORDER_1.status = 'delivered';
+      ORDER_1.TagerID = MERCHANT_1.TagerID;
+      const insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+      orderObjectID1 = insertedOrders[0]._id;
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test(
+      'Creating child order directly with refund should succeed, country is ' + ' the parent order country',
+      async () => {
+        // Arrange
+        await login(app);
+        await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+        const createChildOrderRequest = {
+          issueType: orderIssueType.REFUND,
+          order: {
+            orderObjectId: orderObjectID1,
+            OrderId: ORDER_1.orderID,
+            orderedBy: merchantUserId,
+            ...ORDER_1,
+          },
+          product: {
+            productObjectId: insertedProducts[0]._id,
+            productQty: 1,
+            productProfit: insertedProducts[0].productProfit,
+            productId: insertedProducts[0].prodID,
+          },
+          issueReason: 1,
+          notes: 'this order was returned',
+          phoneNum: '01234567891',
+          sameProductReplacement: true,
+          issueImage: 'testImage1',
+          issueVideo: 'testVideo1',
+        };
+
+        // Act
+        await request(app)
+          .post('/api/child-order/direct')
+          .send(createChildOrderRequest)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(CREATED)
+          .then((childOrderResponse) => {
+            expect(childOrderResponse.body.msg).toEqual('Order issue and child order created.');
+          });
+
+        // Act and Assert
+        await request(app)
+          .get('/api/child-order?page=1&&pageSize=10')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200)
+          .then((childOrderResponse) => {
+            expect(childOrderResponse.body.data.length).toEqual(1);
+            expect(childOrderResponse.body.data).toMatchObject([
+              {
+                parentOrderObjectId: orderObjectID1.toString(),
+                parentOrderId: ORDER_1.orderID.toString(),
+                status: 'refund_request_accepted',
+                product: {
+                  productObjectId: insertedProducts[0]._id.toString(),
+                  productQty: 1,
+                  productProfit: insertedProducts[0].productProfit,
+                  productId: insertedProducts[0].prodID,
+                  name: insertedProducts[0].productName,
+                },
+                orderProfit: 0 - ORDER_1.orderProfit,
+              },
+            ]);
+          });
+      },
+    );
+
+    test(
+      'Creating child order directly with replacement should succeed, country is ' + ' the parent order country',
+      async () => {
+        // Arrange
+        await login(app);
+        await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+        const createChildOrderRequest = {
+          issueType: orderIssueType.REPLACEMENT,
+          order: {
+            orderObjectId: orderObjectID1,
+            OrderId: ORDER_1.orderID,
+            orderedBy: merchantUserId,
+            ...ORDER_1,
+          },
+          product: {
+            productObjectId: insertedProducts[0]._id,
+            productQty: 1,
+            productProfit: insertedProducts[0].productProfit,
+            productId: insertedProducts[0].prodID,
+          },
+          issueReason: 1,
+          notes: 'this order needs replacement',
+          phoneNum: '01234567891',
+          sameProductReplacement: true,
+          issueImage: 'testImage1',
+          issueVideo: 'testVideo1',
+        };
+
+        // Act
+        await request(app)
+          .post('/api/child-order/direct')
+          .send(createChildOrderRequest)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(CREATED)
+          .then((childOrderResponse) => {
+            expect(childOrderResponse.body.msg).toEqual('Order issue and child order created.');
+          });
+
+        // Act and Assert
+        await request(app)
+          .get('/api/child-order?page=1&&pageSize=10')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200)
+          .then((childOrderResponse) => {
+            expect(childOrderResponse.body.data.length).toEqual(1);
+            expect(childOrderResponse.body.data).toMatchObject([
+              {
+                parentOrderObjectId: orderObjectID1.toString(),
+                parentOrderId: ORDER_1.orderID.toString(),
+                status: 'replacement_request_accepted',
+                product: {
+                  productObjectId: insertedProducts[0]._id.toString(),
+                  productQty: 1,
+                  productProfit: insertedProducts[0].productProfit,
+                  productId: insertedProducts[0].prodID,
+                  name: insertedProducts[0].productName,
+                },
+                orderProfit: 0,
+              },
+            ]);
+          });
+      },
+    );
+
+    afterEach(async () => {
+      await Order.remove({});
+      await Product.remove({});
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe('PATCH /, update child order', () => {
+    let orderObjectID1: any;
+    let insertedProducts: any;
+
+    async function createOrders() {
+      insertedProducts = await Product.insertMany([new ProductBuilder().available().build()]);
+      ORDER_1.status = 'delivered';
+      ORDER_1.TagerID = MERCHANT_1.TagerID;
+      const insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+      orderObjectID1 = insertedOrders[0]._id;
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('Updating child order should succeed, irrespective of country in body', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+      const createChildOrderRequest = {
+        issueType: orderIssueType.REFUND,
+        order: {
+          orderObjectId: orderObjectID1,
+          OrderId: ORDER_1.orderID,
+          orderedBy: merchantUserId,
+          ...ORDER_1,
+        },
+        product: {
+          productObjectId: insertedProducts[0]._id,
+          productQty: 1,
+          productProfit: insertedProducts[0].productProfit,
+          productId: insertedProducts[0].prodID,
+        },
+        issueReason: 1,
+        notes: 'this order was returned',
+        phoneNum: '01234567891',
+        sameProductReplacement: true,
+        issueImage: 'testImage1',
+        issueVideo: 'testVideo1',
+      };
+
+      // Act and Assert
+      await request(app)
+        .post('/api/child-order/direct')
+        .send(createChildOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(CREATED)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.msg).toEqual('Order issue and child order created.');
+        });
+
+      // Act and Assert
+      const retrievedChildOrders = await request(app)
+        .get('/api/child-order?page=1&&pageSize=10')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Arrange
+      const updateChildOrderRequest = {
+        orders: [
+          {
+            _id: retrievedChildOrders.body.data[0]._id,
+            childOrderID: retrievedChildOrders.body.data[0].orderID,
+            parentOrderObjectId: orderObjectID1.toString(),
+            parentOrderId: ORDER_1.orderID.toString(),
+          },
+        ],
+        status: 'new_status',
+        shippingInfo: {
+          company: 'Bosta-2',
+        },
+        deliverySuspendedReason: 'some reason',
+      };
+
+      // Act and Assert
+      await request(app)
+        .patch('/api/child-order')
+        .send(updateChildOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(OK)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.msg).toEqual('Child Order Updated Successfully');
+        });
+
+      // Act and Assert
+      await request(app)
+        .get('/api/child-order?page=1&&pageSize=10')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.data.length).toEqual(1);
+          expect(childOrderResponse.body.data).toMatchObject([
+            {
+              parentOrderObjectId: orderObjectID1.toString(),
+              parentOrderId: ORDER_1.orderID.toString(),
+              product: {
+                productObjectId: insertedProducts[0]._id.toString(),
+                productQty: 1,
+                productProfit: insertedProducts[0].productProfit,
+                productId: insertedProducts[0].prodID,
+                name: insertedProducts[0].productName,
+              },
+              orderProfit: 0 - ORDER_1.orderProfit,
+              status: 'new_status',
+              shippingInfo: {
+                company: 'Bosta-2',
+              },
+              deliverySuspendedReason: 'some reason',
+            },
+          ]);
+        });
+    });
+
+    afterEach(async () => {
+      ORDER_1.status = 'order_received';
+      await Order.remove({});
+      await Product.remove({});
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe('PATCH /, update child order, parent order should be updated to refund and take the refund amount', () => {
+    let orderObjectID1: any;
+    let insertedProducts: any;
+
+    async function createOrders() {
+      insertedProducts = await Product.insertMany([new ProductBuilder().available().build()]);
+      ORDER_1.status = 'delivered';
+      ORDER_1.TagerID = MERCHANT_1.TagerID;
+      const insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+      orderObjectID1 = insertedOrders[0]._id;
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('Updating child order should succeed, parent order should be updated to refund and take the refund amount', async () => {
+      // Arrange
+      await login(app);
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+      const createChildOrderRequest = {
+        issueType: orderIssueType.REFUND,
+        order: {
+          orderObjectId: orderObjectID1,
+          OrderId: ORDER_1.orderID,
+          orderedBy: merchantUserId,
+          ...ORDER_1,
+        },
+        product: {
+          productObjectId: insertedProducts[0]._id,
+          productQty: 1,
+          productProfit: insertedProducts[0].productProfit,
+          productId: insertedProducts[0].prodID,
+        },
+        issueReason: 1,
+        notes: 'this order was returned',
+        phoneNum: '01234567891',
+        sameProductReplacement: true,
+        issueImage: 'testImage1',
+        issueVideo: 'testVideo1',
+      };
+
+      // Act and Assert
+      await request(app)
+        .post('/api/child-order/direct')
+        .send(createChildOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(CREATED)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.msg).toEqual('Order issue and child order created.');
+        });
+
+      // Act and Assert
+      const retrievedChildOrders = await request(app)
+        .get('/api/child-order?page=1&&pageSize=10')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+      const refundOrderInProgress = await Order.findById(orderObjectID1).lean(true).exec();
+      expect(refundOrderInProgress?.status).toEqual('refund_in_progress');
+      expect(refundOrderInProgress?.refundAmount).toEqual(0);
+
+      // Arrange
+      const updateChildOrderRequest = {
+        orders: [
+          {
+            _id: retrievedChildOrders.body.data[0]._id,
+            childOrderID: retrievedChildOrders.body.data[0].orderID,
+            parentOrderObjectId: orderObjectID1.toString(),
+            parentOrderId: ORDER_1.orderID.toString(),
+          },
+        ],
+        status: 'item_received_in_inventory',
+        itemReceivedDate: '2021-09-22T23:45:47.810+00:00',
+      };
+
+      // Act and Assert
+      await request(app)
+        .patch('/api/child-order')
+        .send(updateChildOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(OK)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.msg).toEqual('Child Order Updated Successfully');
+        });
+
+      // Act and Assert
+      await request(app)
+        .get('/api/child-order?page=1&&pageSize=10')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.data.length).toEqual(1);
+          expect(childOrderResponse.body.data).toMatchObject([
+            {
+              parentOrderObjectId: orderObjectID1.toString(),
+              parentOrderId: ORDER_1.orderID.toString(),
+              product: {
+                productObjectId: insertedProducts[0]._id.toString(),
+                productQty: 1,
+                productProfit: insertedProducts[0].productProfit,
+                productId: insertedProducts[0].prodID,
+                name: insertedProducts[0].productName,
+              },
+              orderProfit: 0 - ORDER_1.orderProfit,
+              status: 'item_received_in_inventory',
+              deliverySuspendedReason: '',
+            },
+          ]);
+        });
+
+      // Act and Assert
+      await request(app)
+        .patch('/api/child-order/completeTransfer')
+        .send({ childOrderID: retrievedChildOrders.body.data[0].orderID })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(OK)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.msg).toEqual('Child order and its parent updated successfully.');
+        });
+
+      await assertParentOrder(orderObjectID1, REFUND_VERIFIED, 300, 300);
+    });
+
+    afterEach(async () => {
+      ORDER_1.status = 'order_received';
+      await Order.remove({});
+      await Product.remove({});
+      await OrderIssues.remove({});
+    });
+  });
+
+  describe(
+    'GET /shipping-statuses, view all distinct shipping company status that are in the ' + 'child orders',
+    () => {
+      async function createChildOrders() {
+        await AfterSaleOrder.insertMany([
+          REPLACEMENT_ORDER_1,
+          REPLACEMENT_ORDER_2,
+          REFUND_ORDER_1,
+          REFUND_ORDER_2,
+          ADDITION_ORDER_1,
+          ADDITION_ORDER_2,
+        ]);
+      }
+      beforeEach(async () => {
+        await createChildOrders();
+      });
+      test('Viewing child orders should return orders allowed for user, no country in query params', async () => {
+        // Arrange
+        await login(app);
+        await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+        // Act
+        await request(app)
+          .get('/api/child-order/shipping-statuses')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200)
+          .then((childOrderResponse) => {
+            expect(childOrderResponse.body.data.length).toEqual(3);
+            expect(childOrderResponse.body.data).toContain(ADDITION_ORDER_1.shippingCompanyStatus);
+            expect(childOrderResponse.body.data).toContain(REFUND_ORDER_1.shippingCompanyStatus);
+            expect(childOrderResponse.body.data).toContain(REPLACEMENT_ORDER_1.shippingCompanyStatus);
+          });
+      });
+
+      test('Viewing child orders should return EGY statuses, EGY in query params', async () => {
+        // Arrange
+        await login(app);
+        await expressServer.setUserAreRole(app, accessToken, adminUserId);
+
+        // Act
+        await request(app)
+          .get('/api/child-order/shipping-statuses?country=ARE')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200)
+          .then((childOrderResponse) => {
+            expect(childOrderResponse.body.data.length).toEqual(3);
+            expect(childOrderResponse.body.data).toContain(ADDITION_ORDER_2.shippingCompanyStatus);
+            expect(childOrderResponse.body.data).toContain(REFUND_ORDER_2.shippingCompanyStatus);
+            expect(childOrderResponse.body.data).toContain(REPLACEMENT_ORDER_2.shippingCompanyStatus);
+          });
+      });
+
+      test('Viewing child orders should return 403, user does not have access to country in query', async () => {
+        // Arrange
+        await login(app);
+        await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+
+        // Act
+        await request(app)
+          .get('/api/child-order/shipping-statuses?country=ARE')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(403);
+      });
+
+      afterEach(() => {
+        AfterSaleOrder.remove({});
+      });
+    },
+  );
+
+  describe('POST /getAllChildOrdersWithStatus, view child orders using IDs', () => {
+    async function createChildOrders() {
+      await AfterSaleOrder.insertMany([
+        REPLACEMENT_ORDER_1,
+        REPLACEMENT_ORDER_2,
+        REFUND_ORDER_1,
+        REFUND_ORDER_2,
+        ADDITION_ORDER_1,
+        ADDITION_ORDER_2,
+      ]);
+    }
+    beforeEach(async () => {
+      await createChildOrders();
+    });
+    test(
+      'getAllChildOrdersWithStatus should return childOrderWithStatus for allowed countries,' +
+        ' if no country in body',
+      async () => {
+        // Arrange
+        await login(app);
+        await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+        const getChildOrdersRequest = {
+          filterObj: {
+            fromDate: new Date(time.setDate(time.getDate() - 3)),
+            toDate: '2100-12-12',
+            status: 'refund_request_accepted',
+          },
+        };
+
+        // Act
+        await request(app)
+          .post('/api/child-order/getAllChildOrdersWithStatus')
+          .send(getChildOrdersRequest)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200)
+          .then((childOrderResponse) => {
+            expect(childOrderResponse.body.data.length).toEqual(1);
+            expect(childOrderResponse.body.data).toMatchObject([REFUND_ORDER_1]);
+          });
+      },
+    );
+
+    test('getAllChildOrdersWithStatus should return childOrderWithStatus for EGY,' + ' EGY set in body', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+      const getChildOrdersRequest = {
+        filterObj: {
+          fromDate: new Date(time.setDate(time.getDate() - 3)),
+          toDate: '2100-12-12',
+          status: 'refund_request_accepted',
+        },
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      await request(app)
+        .post('/api/child-order/getAllChildOrdersWithStatus')
+        .send(getChildOrdersRequest)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .then((childOrderResponse) => {
+          expect(childOrderResponse.body.data.length).toEqual(1);
+          expect(childOrderResponse.body.data).toMatchObject([REFUND_ORDER_1]);
+        });
+    });
+
+    test('getAllChildOrdersWithStatus should return 403,' + ' country in body not allowed', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, adminUserId);
+      const getChildOrdersRequest = {
+        filterObj: {
+          fromDate: new Date(time.setDate(time.getDate() - 3)),
+          toDate: '2100-12-12',
+          status: 'refund_request_accepted',
+        },
+        country: 'ARE',
+      };
+      await login(app);
+
+      // Act
+      await request(app)
+        .post('/api/child-order/getAllChildOrdersWithStatus')
+        .send(getChildOrdersRequest)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(403);
+    });
+
+    afterEach(() => {
+      AfterSaleOrder.remove({});
+    });
+  });
+
+  afterAll(async () => {
+    await Product.deleteMany({});
+    await mongooseConnector.disconnectFromMongoDB();
+  });
+});

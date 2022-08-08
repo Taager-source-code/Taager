@@ -1,0 +1,16 @@
+import { Service } from 'typedi';
+import UserCountriesAccessRepo from '../../infrastructure/repositories/UserCountriesAccessRepo';
+
+@Service({ global: true })
+export default class IsCountryAvailableToLoggedInUser {
+  private userCountriesAccessRepo: UserCountriesAccessRepo;
+
+  constructor(userCountriesAccessRepo: UserCountriesAccessRepo) {
+    this.userCountriesAccessRepo = userCountriesAccessRepo;
+  }
+  async execute(userId: string, countryIsoCode: string): Promise<boolean> {
+    const countries = await this.userCountriesAccessRepo.getAvailableCountriesToUser(userId);
+
+    return countries.includes(countryIsoCode);
+  }
+}

@@ -1,0 +1,48 @@
+import express from 'express';
+import errorHandler from 'express-async-handler';
+
+import isAuthenticated from '../middlewares/auth';
+import * as getBatchByIdController from '../order-management/queries/infrastructure/controllers/batch/GetBatchController';
+import * as getBatchesController from '../order-management/queries/infrastructure/controllers/batch/GetBatchesController';
+import * as GetBatchOrdersByBatchIdController from '../order-management/queries/infrastructure/controllers/batch/GetBatchOrdersController';
+import * as CreateBatchController from '../order-management/commands/infrastructure/controllers/batch/CreateBatchController';
+import * as UpdateBatchController from '../order-management/commands/infrastructure/controllers/batch/UpdateBatchController';
+import * as DeleteBatchController from '../order-management/commands/infrastructure/controllers/batch/DeleteBatchController';
+import * as GetBatchSummaryController from '../order-management/queries/infrastructure/controllers/batch/GetBatchSummaryController';
+import * as GetBatchCsvController from '../order-management/queries/infrastructure/controllers/batch/GetBatchCsvController';
+import * as GetBatchPicklistController from '../order-management/queries/infrastructure/controllers/batch/GetBatchPicklistController';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+import UserCountriesAccessQueryParamMiddleware from '../middlewares/UserCountriesAccessQueryParamMiddleware';
+import UserCountriesAccessBodyMiddleware from '../middlewares/UserCountriesAccessBodyMiddleware';
+
+const router = express.Router();
+
+router.get('/:batchId', isAuthenticated, errorHandler(getBatchByIdController.execute));
+
+router.get('/', isAuthenticated, UserCountriesAccessQueryParamMiddleware, errorHandler(getBatchesController.execute));
+
+router.get(
+  '/:batchId/orders/:page/:pageSize',
+  isAuthenticated,
+  errorHandler(GetBatchOrdersByBatchIdController.execute),
+);
+
+router.post(
+  '/',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(CreateBatchController.execute),
+);
+
+router.patch('/:batchId', isAuthenticated, CountryMiddleware, errorHandler(UpdateBatchController.execute));
+
+router.delete('/:batchId', isAuthenticated, errorHandler(DeleteBatchController.execute));
+
+router.get('/:batchId/summary', isAuthenticated, errorHandler(GetBatchSummaryController.execute));
+
+router.get('/:batchId/csv', isAuthenticated, errorHandler(GetBatchCsvController.execute));
+
+router.get('/:batchId/picklist', isAuthenticated, errorHandler(GetBatchPicklistController.execute));
+
+export = router;

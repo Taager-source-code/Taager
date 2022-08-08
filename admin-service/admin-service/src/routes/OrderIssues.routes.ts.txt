@@ -1,0 +1,22 @@
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import * as orderIssuesCtrl from '../controllers/orderIssues.controller';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+import UserCountriesAccessBodyMiddleware from '../middlewares/UserCountriesAccessBodyMiddleware';
+
+const router = express.Router();
+
+router.post(
+  '/ViewOrderIssues',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(orderIssuesCtrl.ViewOrderIssues),
+);
+
+router.post('/ResolveOrderIssues', isAuthenticated, errorHandler(orderIssuesCtrl.ResolveOrderIssues));
+
+router.post('/getOrderIssue', isAuthenticated, errorHandler(orderIssuesCtrl.getOrderIssue));
+
+export = router;

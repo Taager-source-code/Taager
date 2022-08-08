@@ -1,0 +1,507 @@
+@import 'common.scss';
+
+.status-badge {
+    width: 170px;
+    height: 26px;
+    border-radius: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  margin-top:10px;
+  margin-right:10px;
+  &:focus{
+    outline: none;
+  }
+}
+.received {
+    background-color: $order-received-fill;
+    color: $order-received-text;
+}
+
+.delivered {
+    background-color: $order-delievered-fill;
+    color: $order-delievered-text;
+}
+
+.pending {
+    background-color: $order-pending-fill;
+    color: $order-pending-text;
+}
+
+.cancelled {
+    background-color: $order-cancelled-fill;
+    color: $order-cancelled-text;
+}
+.main {
+    width:100%;
+    height:auto;
+    background-color: $fill-white;
+    margin-top: 10px;
+    border-radius: 5px;
+    min-height: 300px;
+    overflow: hidden;
+}
+.main-mobile {
+    width:100%;
+    height:420px;
+    background-color: $fill-white;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+.btn-width {
+    letter-spacing: normal;
+    font-size: 12px;
+    background-color: $secondary-color;
+    color: var(--white);
+    width:48%;
+    height:25px;
+    margin-top: 20px;
+    margin-left:5%;
+}
+
+.btn-return {
+    width: 20%;;
+    height: 35px;
+    margin: 0 0 10px 15px;
+    border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $text-white;
+  background-color: $primary-color;
+}
+
+.btn-return-mob {
+    width: 27% !important;
+    height: 35px;
+    border-radius: 15px !important;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $text-white;
+  background-color: $primary-color;
+}
+
+
+.btn-replace {
+    background-color: $secondary-color !important;
+}
+
+.btn-complete {
+    background-color: $fill-warn !important;
+}
+
+.title {
+    display: inline-flex;
+    direction: rtl;
+    width:100%;
+    height:50px;
+    background-color: $fill-white;
+    border-bottom: 1px solid $border-color-medium-gray;
+}
+
+.footer-div {
+    display: inline-flex;
+    direction: rtl;
+    width:100%;
+    height: 50px;
+    border-top: 1px solid $border-color-medium-gray;
+    margin-top: 20px;
+}
+.title-mobile {
+    display: inline-flex;
+    direction: rtl;
+    width:100%;
+    height:30px;
+    background-color: $fill-white;
+}
+.details-container {
+    display: inline-flex;
+    direction: rtl;
+    width:100%;
+    height: auto;
+}
+
+.aftersale-container {
+    direction: rtl;
+    width:100%;
+    height: auto;
+    border-top: 1px solid $border-color-medium-gray;
+    margin-top: 15px;
+}
+.details {
+    direction: rtl;
+    width:75%;
+    height:160px;
+    background-color: $fill-white;
+}
+
+.details-mobile {
+    direction: rtl;
+    width:100%;
+    height:auto;
+    background-color: $fill-white;
+}
+
+.btn-viewOrder {
+    width: 80%;
+    height: 34px;
+    margin-right: 10%;
+    margin-left: 10%;
+    border-radius: 4px;
+    border: solid 1.2px $border-color-primary;
+    margin-top: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $text-light-green;
+  background-color: $fill-white;
+  }
+
+  .btn-cancel {
+    width: 80%;
+    height: 34px;
+    margin-right: 10%;
+    margin-left: 10%;
+    border-radius: 4px;
+    border: solid 1.2px $dark-red;
+    margin-top: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $dark-red;
+  background-color: $fill-white;
+  }
+
+
+  .btn-message {
+    width: 80%;
+    padding: 5px;
+    border-radius: 4px;
+    margin-right: 10%;
+    margin-left: 10%;
+    margin-top: 5px;
+    border: solid 1.2px $border-color-secondary;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $text-primary;
+  background-color: $fill-white;
+  white-space: break-spaces;
+  }
+
+.inline-div {
+    display: inline-flex;
+    width:100%;
+    margin-right: 20px;
+    margin-top: 10px;
+}
+
+.status {
+    width:30%;
+    height:auto;
+    background-color: $fill-white;
+    text-align: center;
+}
+.unit {
+    margin-top: 10px;
+    text-align: right;
+    direction: rtl;
+    min-width: 20%;
+}
+
+.unit-mobile {
+    margin-top: 10px;
+    text-align: right;
+    direction: rtl;
+    min-width: 60%;
+}
+
+.unit-mobile-1 {
+    margin-top: 10px;
+    text-align: right;
+    direction: rtl;
+    min-width: 30%;
+}
+
+.notes-unit {
+    width: 100%;
+    margin-right: 10px;
+    text-align: right;
+    display: inline-flex;
+    direction: rtl;
+}
+.btn-prods {
+    letter-spacing: normal;
+    font-size: 12px;
+    background-color: $secondary-color;
+    color: var(--white);
+    width:90%;
+    height:25px;
+    margin-top: 5px;
+    margin-left:5%;
+}
+.btn-prods-mobile {
+    letter-spacing: normal;
+    font-size: 12px;
+    background-color: $secondary-color;
+    color: var(--white);
+    width:90%;
+    height:25px;
+    margin-top: 5px;
+    margin-right:15px;
+}
+.btn-prods-small {
+    letter-spacing: normal;
+    font-size: 12px;
+    background-color: $secondary-color;
+    color: var(--white);
+    width:48%;
+    height:25px;
+    margin-top: 5px;
+    margin-right:15px;
+}
+
+.btn-cancel-mobile {
+    letter-spacing: normal;
+    font-size: 12px;
+    background-color: $dark-red;
+    color: var(--white);
+    width:48%;
+    height:25px;
+    margin-top: 5px;
+    margin-left:5%;
+}
+
+
+.code-title {
+    opacity: 0.7;
+    font-size: 14px;
+    font-weight: 600;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: right;
+    color: $text-primary;
+    margin-right: 20px;
+    margin-top: 15px;
+}
+.code-title-mob {
+    letter-spacing: normal;
+    font-size: 13px;
+    width:80px;
+    color: $text-primary;
+}
+.code-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: right;
+  color: $text-primary;
+  margin-right: 10px;
+  text-decoration: underline;
+  margin-top: 15px;
+}
+
+.code-value-mob {
+    font-size: 15px;
+    margin-right: 10px;
+    margin-left: 20px;
+    font-weight:bold;
+    color: $dark-red;
+}
+
+.date-title {
+    opacity: 0.7;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: right;
+  color: $text-primary;
+    margin-top: 15px;
+    margin-right: 20px;
+
+}
+.rating-title {
+    opacity: 0.6;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $text-primary;
+  width:100%;
+}
+.rating-title-mob {
+    opacity: 0.6;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: right;
+  color: $text-primary;
+  width:55%;
+  margin: 15px;
+}
+.date-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: right;
+  color: $text-primary;
+    margin-right: 10px;
+    margin-top: 15px;
+    margin-left: 30px;
+
+}
+.lab-title {
+    opacity: 0.8;
+    font-size: 14px;
+    font-weight: 600;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: right;
+    color: $text-primary;
+}
+.order-issue {
+    font-size: 14px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: right;
+    color: $text-primary;
+    max-width: 70%;
+    margin: 20px;
+}
+.lab-value {
+    font-size: 14px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: right;
+    color: $text-primary;
+    max-width: 70%;
+}
+
+.status-title {
+    letter-spacing: normal;
+    font-size: 13px;
+    margin-right: 20px;
+    margin-top: 5px;
+    color: $text-primary;
+}
+.star-rating {
+    position: relative;
+    /*  other styles to match preference */
+}
+
+.btn-policy {
+    width: 30%;
+    height: 35px;
+    border-radius: 4px;
+    border: solid 1.2px $border-color-primary;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $primary-color;
+  background-color: $fill-white;
+    float:left;
+}
+.rejected {
+    color: $order-cancelled-text;
+}
+
+.btn-mobile {
+    width:19%;
+}
+
+.btn-return-mob {
+    width: 30%;
+    height: 35px;
+    margin: 0 0 10px 15px;
+    border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  color: $text-white;
+  background-color: $primary-color;
+}
+
+.btn-policy-mob {
+    width: 90%;
+    margin-left:5%;
+    margin-bottom:10px;
+    margin-right:5%;
+    height: 35px;
+    border-radius: 4px;
+    border: solid 1.2px $border-color-primary;
+    font-size: 14px;
+    font-weight: 600;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: center;
+    color: $primary-color;
+    background-color: $fill-white;
+    float:left;
+}
+
+.bulk-order-error {
+  color: $red;
+  text-align: right;
+}
+
+

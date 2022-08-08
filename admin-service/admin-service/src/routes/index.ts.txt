@@ -1,0 +1,118 @@
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import isNotAuthenticated from '../middlewares/no-auth';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+
+import * as authCtrl from '../controllers/auth.controller';
+import * as userCtrl from '../controllers/user.controller';
+import * as userFeaturesCtrl from '../controllers/userFeatures.controller';
+import * as productCtrl from '../controllers/product.controller';
+import * as shippingCtrl from '../controllers/shipping/shipping.controller';
+import * as surveyCtrl from '../controllers/survey/survey.controller';
+import * as featuredProductsGroupCtrl from '../controllers/featuredProductsGroup/featuredProductsGroup.controller';
+
+const router = express.Router();
+
+// -------------------------------Auth------------------------------------------
+router.post('/auth/login', errorHandler(authCtrl.login));
+router.post('/auth/google-login/', errorHandler(authCtrl.googleLogin));
+
+router.patch('/auth/forgotPassword', isNotAuthenticated, errorHandler(authCtrl.forgotPassword));
+
+router.patch(
+  '/auth/resetPassword/:userId/:resetPasswordToken',
+  isNotAuthenticated,
+  errorHandler(authCtrl.resetPassword),
+);
+
+// ----------------------------------User-------------------------------------
+
+router.get('/user/viewAdminUsers', isAuthenticated, errorHandler(userCtrl.viewAdminUsers));
+
+router.post('/user/getAllAdminUsers', isAuthenticated, errorHandler(userCtrl.getAllAdminUsers));
+
+router.get('/user/viewOwnProfile', isAuthenticated, errorHandler(userCtrl.viewOwnProfile));
+
+router.get('/user/viewUserProfile/:uid', isAuthenticated, errorHandler(userCtrl.viewUserProfile));
+
+router.get('/user/getUserByTaagerId/:id', isAuthenticated, errorHandler(userCtrl.getUserByTaagerId));
+
+router.post('/user/viewUsers', isAuthenticated, errorHandler(userCtrl.viewUsers));
+
+router.get('/user/getUserLevel', isAuthenticated, errorHandler(userCtrl.getUserLevel));
+
+router.get('/user/getUserRoles', isAuthenticated, errorHandler(userCtrl.getUserRoles));
+
+router.get('/user/getAdminUserRoles', isAuthenticated, errorHandler(userCtrl.getAdminUserRoles));
+
+router.get('/user/getUserLoyaltyProgram', isAuthenticated, errorHandler(userCtrl.getUserLoyaltyProgram));
+
+router.post('/user/setUserRole', isAuthenticated, errorHandler(userCtrl.setUserRole));
+
+router.post('/user/setUserLevel', isAuthenticated, errorHandler(userCtrl.setUserLevel));
+
+// ---------------------------------UserFeatures--------------------------------------
+router.get('/userFeatures/getAllUserFeatures', isAuthenticated, errorHandler(userFeaturesCtrl.viewAllUserFeatures));
+
+router.post('/userFeatures/addUserFeatures', isAuthenticated, errorHandler(userFeaturesCtrl.addUserFeatures));
+
+router.patch(
+  '/userFeatures/updateUserFeatures/:id',
+  isAuthenticated,
+  errorHandler(userFeaturesCtrl.updateUserFeatures),
+);
+
+router.delete(
+  '/userFeatures/deleteUserFeatures/:id',
+  isAuthenticated,
+  errorHandler(userFeaturesCtrl.deleteUserFeatures),
+);
+
+// ---------------------------------Product--------------------------------------
+router.post('/product/viewProducts', isAuthenticated, errorHandler(productCtrl.viewProducts));
+
+router.post('/product/getProductsByIds', isAuthenticated, errorHandler(productCtrl.getProductsByIds));
+
+router.post('/product/addProdImage', isAuthenticated, errorHandler(productCtrl.addProdImage));
+
+// ---------------------------------Shipping--------------------------------------
+
+router.post('/shipping/addOrderToBosta', isAuthenticated, errorHandler(shippingCtrl.addOrderToBosta));
+
+router.post('/shipping/getAWBFromBosta', isAuthenticated, errorHandler(shippingCtrl.getAWBFromBosta));
+
+router.post('/shipping/trackBostaOrder', isAuthenticated, errorHandler(shippingCtrl.trackBostaOrder));
+
+router.post('/shipping/aramex', isAuthenticated, errorHandler(shippingCtrl.addOrderToAramex));
+
+router.post('/shipping/aramex-track', isAuthenticated, errorHandler(shippingCtrl.trackOrderFromAramex));
+
+router.post('/shipping/vhubs', isAuthenticated, errorHandler(shippingCtrl.addShipmentToVHubs));
+
+router.post('/shipping/vhubs/importCities', isAuthenticated, errorHandler(shippingCtrl.importVHubCities));
+
+router.post('/shipping/vhubs/track', isAuthenticated, errorHandler(shippingCtrl.trackOrderFromVHubs));
+
+//  ---------------------------survey-----------------------
+
+router.post('/survey', isAuthenticated, errorHandler(surveyCtrl.createSurvey));
+
+router.get('/survey', isAuthenticated, errorHandler(surveyCtrl.viewSurveys));
+
+router.patch('/survey/:_id', isAuthenticated, errorHandler(surveyCtrl.updateSurvey));
+
+router.patch(
+  '/featuredProductsGroup/:type',
+  isAuthenticated,
+  CountryMiddleware,
+  errorHandler(featuredProductsGroupCtrl.saveFeaturedProductsGroup),
+);
+
+router.get(
+  '/featuredProductsGroup/:type',
+  isAuthenticated,
+  errorHandler(featuredProductsGroupCtrl.getFeaturedProductsGroup),
+);
+
+export = router;

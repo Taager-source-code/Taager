@@ -1,0 +1,65 @@
+<h1 mat-dialog-title></h1>
+<div mat-dialog-content>
+  <app-country-dropdown
+    (selectedCountry)="getSelectedCountry($event)"
+  ></app-country-dropdown>
+  <mat-form-field class="example-full-width">
+    <input
+      matInput
+      (dateInput)="OnFromDateChange($event)"
+      (dateChange)="OnFromDateChange($event.value)"
+      [matDatepicker]="fromPicker"
+      placeholder="Choose from date"
+    />
+    <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+    <mat-datepicker
+      #fromPicker
+      (dateInput)="OnFromDateChange($event)"
+    ></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field class="example-full-width">
+    <input
+      matInput
+      (dateInput)="OnToDateChange($event)"
+      (dateChange)="OnToDateChange($event.value)"
+      [matDatepicker]="toPicker"
+      placeholder="Choose To date"
+    />
+    <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+    <mat-datepicker
+      #toPicker
+      (dateInput)="OnToDateChange($event)"
+    ></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Select Order Status</mat-label>
+    <mat-select [(ngModel)]="status">
+      <mat-option>Select Order Status</mat-option>
+      <mat-option [value]="'confirmed'">Confirmed</mat-option>
+      <mat-option [value]="'pending_shipping_company'"
+        >Pending Shipping Company</mat-option
+      >
+      <mat-option [value]="'delivery_in_progress'"
+        >Delivery In Progress</mat-option
+      >
+      <mat-option [value]="'customer_refused'">Customer Refused</mat-option>
+      <mat-option [value]="'delivered'">Delivered</mat-option>
+      <mat-option [value]="'delivery_suspended'">Delivery Suspended</mat-option>
+      <mat-option [value]="'return_in_progress'">Return In Progress</mat-option>
+      <mat-option [value]="'return_verified'">Return Verified</mat-option>
+      <mat-option [value]="'order_verified'">Order Verified</mat-option>
+      <mat-option [value]="'suspended'">Suspended</mat-option>
+      <mat-option [value]="'taager_cancelled'">Taager Cancelled</mat-option>
+      <mat-option [value]="'customer_rejected'">Rejected</mat-option>
+      <mat-option [value]="'order_received'">Order Received</mat-option>
+      <mat-option [value]="'cancel'">Cancel</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button type="button" class="btn btn-success" (click)="onExtractOrders()">
+    Extract orders
+  </button>
+</div>

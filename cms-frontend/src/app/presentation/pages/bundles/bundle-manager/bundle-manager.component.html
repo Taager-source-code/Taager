@@ -1,0 +1,59 @@
+<div class="add-bundle-container">
+    <ng-container
+        *ngTemplateOutlet="isGettingBundle ? showLoadingBundleTemplate : showBundleManagerTemplate"></ng-container>
+    
+    <!-- loading content -->
+    <ng-template #showLoadingBundleTemplate>
+        <div
+            [nbSpinner]="true"
+            nbSpinnerStatus="primary"
+            nbSpinnerSize="giant"
+            class="add-bundle-container__loading"></div>
+    </ng-template>
+    <ng-template #showBundleManagerTemplate>
+        <ng-container
+            *ngTemplateOutlet="successGettingBundle ? showBundleManagerFormsTemplate : showErrorGettingBundleTemplate"></ng-container>
+        
+        <ng-template #showBundleManagerFormsTemplate>
+            <div class="add-bundle-container__header">
+                <button nbButton ghost class="add-bundle-container__header__back-button" (click)="onDiscardAttempt()">
+                    <nb-icon class="add-bundle-container__header__back-button__icon" icon="arrow-ios-back-outline"></nb-icon>
+                </button>
+                <h5 class="add-bundle-container__header__title">
+                    {{ bundleId ? 'Edit' : 'Add' }} bundle
+                </h5>
+                <div class="add-bundle-container__header__country-dropdown">
+                    <ngx-country-dropdown [isReadOnly]="true"></ngx-country-dropdown>
+                </div>
+            </div>
+            <hr>
+            <div class="add-bundle-container__body">
+                <ngx-bundle-info
+                    [initialData]="bundleUISections?.info"
+                    [onDialogClose$]="onDialogClose$"
+                    [showFormErrors$]="showFormErrors$"
+                    [selectedCountryPrice]="selectedCountryPrice"
+                    (bundleInfoFormGroupChange)="onBundleInfoFormGroupChange($event)"></ngx-bundle-info>
+                <ngx-bundle-attributes
+                    [bundleSavedCountry]="bundleUISections?.bundleSavedCountry"
+                    [initialData]="bundleUISections?.attributes"
+                    [onDialogClose$]="onDialogClose$"
+                    [showFormErrors$]="showFormErrors$"
+                    (bundleAttributesFormGroupChange)="onBundleAttributesFormGroupChange($event)"></ngx-bundle-attributes>
+            </div>
+            <div class="add-bundle-container__footer">
+                <button nbButton ghost class="add-bundle-container__footer__discard" (click)="onDiscardAttempt()">
+                    Discard
+                </button>
+                <button nbButton ghost class="add-bundle-container__footer__add" (click)="onSubmitBundleManagerForm()">
+                    {{ bundleId ? 'Save' : 'Add' }}
+                </button>
+            </div>
+        </ng-template>
+        <ng-template #showErrorGettingBundleTemplate>
+            <div class="add-bundle-container__error-getting-bundle">
+                some error!
+            </div>
+        </ng-template>
+    </ng-template>
+</div>

@@ -1,0 +1,154 @@
+<div class="capacity-table-section large-top-space">
+    <form [formGroup]="priorityForm">
+        <table class="capacity-table" cdkDropList (cdkDropListDropped)="drop($event)" aria-label="Shipping Capacity Table">
+            <ng-container formArrayName="shippingCompanies">
+                <thead class="secondary-color light-text">
+                    <tr>
+                        <th>Priorities of Shipping Companies</th>
+                        <th>Capacity Per Day</th>
+                        <th *ngIf="capacityType !== zoneCapacityType">Capacity Mode</th>
+                        <th *ngIf="capacityType === zoneCapacityType">In-Testing </th>
+                        <th>Remaining Capacity</th>
+                        <th *ngIf="capacityType !== zoneCapacityType">Cut-off Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="standard-text fw-600">
+                    <ng-container *ngFor="let company of shippingCompaniesFA().controls; let companyIndex = index">
+                        <ng-container [formGroupName]="companyIndex"></ng-container>
+                        <tr>
+                            <td class="no-padding" cdkDrag>
+                                <div class="priority-number secondary-color">
+                                    {{companyIndex + 1}}
+                                </div>
+                                <div class="shipping-name">
+                                    <img class="icon-right-space" [src]="imgUrl+'/icons/shipping-company-truck.svg'" alt="Shipping">
+                                    {{formValue.value[companyIndex].shippingCompany}}
+                                </div>
+                            </td>
+                            <td> 
+                                <ng-container *ngIf="!formValue.value[companyIndex].editActive else showCapacityPerDayInput">
+                                    {{formValue.value[companyIndex].capacityPerDay}}
+                                </ng-container>
+                                <ng-template #showCapacityPerDayInput>
+                                    <ejs-numerictextbox class="capacity-input" (change)="editCapacityValue($event,companyIndex)" [value]='formValue.value[companyIndex].capacityPerDay' format='#' 
+                                    [enabled]="capacityType === zoneCapacityType || formValue.value[companyIndex].capacityMode === province_level"></ejs-numerictextbox>
+                                </ng-template>
+                            </td>
+                            <td *ngIf="capacityType !== zoneCapacityType">
+                                <ng-container *ngIf="!formValue.value[companyIndex].editActive else showCapacityModeInput">
+                                    {{formValue.value[companyIndex].capacityMode === province_level?'Province Level':'Zone Level'}} 
+                                </ng-container>
+                                <ng-template #showCapacityModeInput>
+                                    <ejs-combobox
+                                        id='comboelement' (change)="capacityModeValueSet($event)" [dataSource]='capacityMode' [fields]="{text: 'name', value: 'id'}" [(value)]='formValue.value[companyIndex].capacityMode'>
+                                    </ejs-combobox>
+                                </ng-template>
+                            </td>
+                            <td *ngIf="capacityType === zoneCapacityType">
+                                <ejs-checkbox [checked]="formValue.value[companyIndex].inTesting" (change)="inTestingValueSet(companyIndex)" [disabled]="!formValue.value[companyIndex].editActive">In-Testing</ejs-checkbox> 
+                            </td>
+                            <td> {{formValue.value[companyIndex].capacityRemaining}}</td>
+                            <td *ngIf="capacityType !== zoneCapacityType" class="cutoff-time-cell">
+                                <ng-container *ngIf="!formValue.value[companyIndex].editActive else showTimePicker">
+                                    <img class="icon-right-space pointer-cursor"
+                                        (click)="editRow(companyIndex, formValue.value[companyIndex].editActive)"
+                                        [src]="imgUrl+'/icons/clock.svg'" alt="Clock">
+                                    {{formValue.value[companyIndex].cutOffTime}}
+                                </ng-container>
+                                <ng-template #showTimePicker>
+                                    <div class="cutOffTime-picker">
+                                        <ejs-timepicker openOnFocus="true"
+                                            (change)="setCutOffTime($event, companyIndex)"
+                                            [value]='formValue.value[companyIndex].cutOffTime' [format]="cutOffTimeFormat" [enableMask]="'true'"></ejs-timepicker>
+                                    </div>
+                                </ng-template>
+                            </td>
+                            <td>
+                                <ng-container *ngIf="!formValue.value[companyIndex].editActive else editButtons">
+                                    <img *ngIf="(formValue.value[companyIndex].capacityMode !== 'province-level' && capacityType === zoneCapacityType) || capacityType !== zoneCapacityType"
+                                        class="icon-right-space pointer-cursor"
+                                        (click)="editRow(companyIndex, formValue.value[companyIndex].editActive)"
+                                        [ngClass]="{'edit-active': formValue.value[companyIndex].editActive}"
+                                        [src]="imgUrl+'/icons/edit.svg'" alt="Edit Icon">
+                                    <img (click)="removeShippingCompanyPriority(company.value)"
+                                        class="icon-right-space pointer-cursor" [src]="imgUrl+'/icons/delete.svg'" alt="Delete Icon">
+                                </ng-container>
+                                <ng-template #editButtons>
+                                    <div class="edit-btn-container">
+                                        <button class="edit-save-btn standard-text mini-btn" (click)="editSelectedPriority(company.value, capacityType, companyIndex)">Save</button>
+                                        <button class="cancel-save-btn standard-text mini-btn" (click)="editActiveValueSet(companyIndex)" >Cancel </button>
+                                    </div>
+                                </ng-template>
+                            </td>
+                        </tr>
+                    </ng-container>
+                    <tr *ngIf="addPriorityRowVisible" class="add-new-priority">
+                        <td>
+                            <ng-container *ngIf="capacityType !== zoneCapacityType else zoneCapacityBox">
+                                <ejs-combobox id='comboelement' (change)="setProvinceShippingCompany($event)"
+                                [dataSource]='shippingCompanyList' 
+                                (beforeOpen)="fetchShippingCompaniesList()" [fields]="{text: 'name', value: 'name'}">
+                            </ejs-combobox>
+                            </ng-container>
+                            <ng-template #zoneCapacityBox>
+                                <ejs-combobox id='comboelement2' (change)="setZoneShippingCompany($event)"
+                                [dataSource]='provinceShippingCompaniesPriority' 
+                                (beforeOpen)="fetchProvinceShippingCompanyPrioritiesList('fetch')" 
+                                [fields]="{text: 'companyName', value: 'priorityId'}">
+                                <ng-template #itemTemplate let-data>
+                                    <span>{{data.companyName}} - {{data.capacity}}</span>
+                                </ng-template>
+                            </ejs-combobox>
+                            </ng-template>
+                        </td>
+                        <td class="capacity-input">
+                            <ejs-numerictextbox (change)="capacityValueSet($event, capacityType)" value='0' format='#' [enabled]="provinceShippingCompanyPriorityForm.value.capacityMode === province_level"></ejs-numerictextbox>
+                        </td>
+                        <td *ngIf="capacityType !== zoneCapacityType"> 
+                            <ejs-combobox
+                            id='comboelement' (change)="capacityModeValueSet($event)" [value]="provinceShippingCompanyPriorityForm.value.capacityMode" [dataSource]='capacityMode' [fields]="{text: 'name', value: 'id'}" placeholder = 'Select capacity mode'>
+                           </ejs-combobox>
+                        </td>
+                        <td *ngIf="capacityType === zoneCapacityType"> 
+                            <ejs-checkbox></ejs-checkbox>
+                        </td>
+                        <td></td>
+                        <td *ngIf="capacityType !== zoneCapacityType">
+                            <div class="cutOffTime-picker">
+                                <ejs-timepicker openOnFocus="true"
+                                    (change)="cutOffTimeValueSet($event)"
+                                    [value]='provinceShippingCompanyPriorityForm.value.cutOffTime'></ejs-timepicker>
+                            </div>
+                        </td>
+                        <td>
+                            <button *ngIf="addPriorityRowVisible" class="edit-save-btn standard-text mini-btn" (click)="submitNewCompany(capacityType)">Save</button>
+                            <img (click)="removePriorityRow()" class="icon-right-space pointer-cursor"
+                                [src]="imgUrl+'/icons/delete.svg'" alt="Delete Icon">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="priority-button-cell">
+                            <button (click)="addPriorityRow()" nbButton ghost type="button">
+                                <img [src]="imgUrl+'/icons/plus-sign.svg'" alt="Add Icon">
+                                <span> Add Shipping Company Priority</span></button>
+                        </td>
+                        <!-- Empty Cells to accomodate for the button row -->
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td *ngIf="capacityType !== zoneCapacityType"></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </ng-container>
+        </table>
+    </form>
+</div>
+<div class="button-container">
+    <button nbButton ghost (click)="cancelEditAll()">Cancel</button>
+    <button *ngIf="capacityType !== zoneCapacityType" nbButton outline status="primary" (click)="updateProvincePriorities(true)">
+        Reset Zones</button>
+    <button nbButton status="primary" (click)="updatePriorities()">
+        {{capacityType === zoneCapacityType? 'Apply': 'Apply to Zones'}}</button>
+</div>

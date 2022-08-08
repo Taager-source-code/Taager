@@ -1,0 +1,181 @@
+@import "common.scss";
+
+.profile-card {
+
+  @include fluid-type(768px, 1920px, 12px, 18px);
+
+  width: 100%;
+
+  background-color: $fill-white;
+
+  display: flex;
+
+  flex-direction: column;
+
+  padding: em-calc(15px 20px);
+
+  position: relative;
+
+  bottom: 20px;
+
+  border-radius: em-calc(6px);
+
+  border: em-calc(1px) solid #ddd;
+
+  &__multitenancy-tooltip {
+
+    background-color: $fill-text-area;
+
+    padding: em-calc(5px 10px);
+
+    border-radius: 5px;
+
+    display: flex;
+
+    width: fit-content;
+
+    align-items: center;
+
+    margin-bottom: em-calc(15px);
+
+  }
+
+  &__multitenancy-tooltip-text {
+
+    font-size: em-calc(18px);
+
+    color: $dark-gray;
+
+    margin: 0;
+
+    margin-top: em-calc(4px, em-calc(18px));
+
+    text-align: start;
+
+  }
+
+  &__multitenancy-tooltip-icon {
+
+    margin-left: em-calc(8px);
+
+  }
+
+  .profile-picture-loyalty-program-wrapper {
+
+    display: flex;
+
+    justify-content: space-between;
+
+  }
+
+  &__profile-picture {
+
+    width: em-calc(52px);
+
+    height: em-calc(52px);
+
+    background-color: $secondary-color;
+
+    border-radius: 10px;
+
+  }
+
+  &__loyalty-status {
+
+    font-size: em-calc(18px);
+
+    padding: em-calc(0 30px, em-calc(18px));
+
+    height: em-calc(39px, em-calc(18px));
+
+    border-radius: 10px;
+
+    font-weight: bold;
+
+    text-align: center;
+
+    color: $text-white;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    margin: 0;
+
+    &--silver {
+
+      background-color: $royalty-silver;
+
+    }
+
+    &--gold {
+
+      background-color: $royalty-gold;
+
+    }
+
+    &--platinum {
+
+      background-color: $royalty-platinum;
+
+    }
+
+    &--blue {
+
+      background-color: $royalty-blue;
+
+    }
+
+  }
+
+  &__user-name {
+
+    text-align: start;
+
+    font-weight: bold;
+
+    color: $secondary-color;
+
+    margin: 0;
+
+    font-size: em-calc(18px);
+
+    margin-top: em-calc(10px, em-calc(18px));
+
+  }
+
+  &__referral-code-wrapper {
+
+    display: flex;
+
+    align-items: center;
+
+    margin-top: em-calc(10px);
+
+  }
+
+  &__referral-code {
+
+    font-size: em-calc(18px);
+
+    color: $dark-gray;
+
+    margin: 0;
+
+    text-align: start;
+
+  }
+
+  &__referral-code-icon {
+
+    font-size: em-calc(18px);
+
+    color: $dark-gray;
+
+    margin-right: em-calc(3px, em-calc(18px));
+
+  }
+
+}

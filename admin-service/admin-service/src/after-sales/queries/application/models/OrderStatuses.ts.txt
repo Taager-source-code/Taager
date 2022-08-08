@@ -1,0 +1,32 @@
+export const DELIVERED = 'delivered';
+export const DELIVERY_CANCELLED = 'delivery_cancelled';
+export const DELIVERY_IN_PROGRESS = 'delivery_in_progress';
+export const DELIVERY_SUSPENDED = 'delivery_suspended';
+export const ORDER_ADDITION = 'order_addition';
+export const ORDER_ADDITION_INPROGRESS = 'order_addition_inprogress';
+export const ORDER_DELIVERED = 'order_delivered';
+export const REFUND_IN_PROGRESS = 'refund_in_progress';
+export const REFUND_VERIFIED = 'refund_verified';
+export const REPLACEMENT_IN_PROGRESS = 'replacement_in_progress';
+export const REPLACEMENT_VERIFIED = 'replacement_verified';
+export const RETURN_IN_PROGRESS = 'return_in_progress';
+export const RETURN_VERIFIED = 'return_verified';
+
+export const orderStatusesDelivered = [
+  DELIVERED,
+  DELIVERY_CANCELLED,
+  DELIVERY_SUSPENDED,
+  ORDER_ADDITION,
+  ORDER_ADDITION_INPROGRESS,
+  ORDER_DELIVERED,
+  REFUND_IN_PROGRESS,
+  REFUND_VERIFIED,
+  REPLACEMENT_IN_PROGRESS,
+  REPLACEMENT_VERIFIED,
+  RETURN_IN_PROGRESS,
+  RETURN_VERIFIED,
+];
+
+export const orderStatusesInProgress = [DELIVERY_IN_PROGRESS];
+
+export const orderStatusesAll = [...orderStatusesDelivered, ...orderStatusesInProgress];

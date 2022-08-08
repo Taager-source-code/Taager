@@ -1,0 +1,88 @@
+<div class="sidebar-title"> Create Batch</div>
+<hr>
+<form [formGroup]="form">
+    <div class="sub-title">
+        <div class="row">
+            <div class="col-12">
+                <label>Batch Category</label>
+                <div class="row">
+                    <div class="col-md-6" *ngFor="let category of sharedData.batchCategory">
+                        <div class="selection-box" [ngClass]="{'activated-selection': category.active}"
+                            (click)="selectBatchCategory(category.value)">
+                            <div class="icon-container">
+                                <img class="cat-icon" [src]="sharedData.imgUrl+category.img" alt="Category">
+                            </div>
+                            <div class="text">
+                                <span class="box-title">{{category.text}}</span>
+                            </div>
+                            <div class="selected-icon" *ngIf="category.active">
+                                <img [src]="sharedData.imgUrl+'/icons/check-icon.svg'" alt="Check Icon">
+                            </div>
+                        </div>
+                    </div>   
+                </div>
+            </div>
+        </div>
+        <div class="row mt-adjust">
+            <div class="col-12">
+                <label>Batch Quantity</label>
+                <div class="row">
+                    <div class="col-md-6" *ngFor="let type of sharedData.batchQuantityType">
+                        <div class="selection-box" [ngClass]="{'activated-selection': type.active}"
+                            (click)="selectBatchQuantity(type.value)">
+                            <div class="icon-container">
+                                <img class="cat-icon" [src]="sharedData.imgUrl+type.img" alt="Batch Quantity">
+                            </div>
+                            <div class="text">
+                                <span class="box-title">{{type.text}}</span>
+                            </div>
+                            <div class="selected-icon" *ngIf="type.active">
+                                <img [src]="sharedData.imgUrl+'/icons/check-icon.svg'" alt="Check Icon">
+                            </div>
+                        </div>
+                        <ngx-form-error [control]="form.get('batchCategory')"></ngx-form-error>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-adjust">
+            <div class="col-12">
+                <label>Shipping Company</label>
+                <ejs-dropdownlist cssClass="e-custom" formControlName="shippingCompany" placeholder="Shipping Company"
+                    [fields]='{ text: "name", value: "value" }' [allowFiltering]='true'></ejs-dropdownlist>
+                <ngx-form-error [control]="form.get('shippingCompany')"></ngx-form-error>
+            </div>
+        </div>
+        <div class="row mt-adjust">
+            <div class="col-12">
+                <label>Province</label>
+                <ejs-dropdownlist cssClass="e-custom" (beforeOpen)="sharedData.fetchProvinces()" (change)="getProvince($event)" formControlName="province" placeholder="Provinces"
+                [dataSource]='sharedData.provinceList' [allowFiltering]='true' [fields]='{ text: "location", value: "location" }'>
+                </ejs-dropdownlist>
+                <ngx-form-error [control]="form.get('province')"></ngx-form-error>
+            </div>
+        </div>
+        <div class="row mt-adjust">
+            <div class="col-12">
+                <label>Zone</label>
+                <ejs-multiselect [enabled]="sharedData.provinceList !== undefined" cssClass="e-custom" placeholder="Zone" id='multiselectelement' formControlName="zone"
+                    mode="CheckBox" selectAllText='Select All' showSelectAll=true
+                    [fields]='{ text: "name", value: "_id" }' [dataSource]='activeZones'></ejs-multiselect>
+            </div>
+        </div>
+        <div class="row mt-adjust">
+            <div class="col-12">
+                <label>Warehouse</label>
+                <ejs-textbox cssClass="e-custom" formControlName="warehouse" type="text"></ejs-textbox>
+                <ngx-form-error [control]="form.get('warehouse')"></ngx-form-error>
+            </div>
+        </div>
+        <div class="row mt-adjust">
+            <div class="col-12">
+                <label>Cap</label>
+                <ejs-textbox cssClass="e-custom" formControlName="cap" type="number"></ejs-textbox>
+                <ngx-form-error [control]="form.get('cap')"></ngx-form-error>
+            </div>
+        </div>
+    </div>
+</form>

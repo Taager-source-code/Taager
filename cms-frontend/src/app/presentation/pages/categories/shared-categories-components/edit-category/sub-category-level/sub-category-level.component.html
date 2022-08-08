@@ -1,0 +1,24 @@
+<nb-card class="sub-category-level" [nbSpinner]="loading" nbSpinnerSize="giant" nbSpinnerStatus="primary">
+  <nb-card-body>
+    <p class="sub-category-level__header">Level {{levelNumber}}</p>
+    <button *ngIf="parentCategory"  class="sub-category-level__add-button" (click)="onClickAddNew()">
+      + Add new
+    </button>
+    <ngx-sub-category-card 
+      *ngFor="let subCategory of levelSubCategories; let idx = index" 
+      [subCategory]="subCategory" [cardIndex]="idx" 
+      [subCategoryLevel]="levelNumber"
+      [selectedCategoryId]="selectedSubCategoryId"
+      (subCategorySelected)="onSubCategorySelect($event)"
+      (deleteSubCategoryClicked)="onSubCategoryDelete($event)"
+      (editSubCategoryConfirmed)="onSubCategoryEdit($event)"
+    ></ngx-sub-category-card>
+    <div class="empty-subcategory-level" *ngIf="parentCategory && !this.levelSubCategories?.length && !loading">
+      <img class="empty-subcategory-level__image" src="assets/images/empty-subcategory.svg" alt="">
+      <p class="empty-subcategory-level__text">There’s no sub-categories for this  category</p>
+    </div>
+    <p class="no-parent-selected-text" *ngIf="!parentCategory && !loading">
+      Select one from level {{levelNumber - 1}} to show it’s sub-categories here
+    </p>
+  </nb-card-body>
+</nb-card>

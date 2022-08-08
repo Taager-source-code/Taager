@@ -1,0 +1,19 @@
+<div class="d-flex title bestsellers">الأكثر مبيعا</div>
+<div class="carousel-wrapper">
+  <div *ngIf="loading; else loadingDone" class="loader-wrap"></div>
+  <ng-template #loadingDone>
+    <div class="tags d-none d-md-flex">
+      <div
+        class="tag"
+        [ngClass]="activeTag === i ? 'active' : ''"
+        *ngFor="let i of topCategories"
+        (click)="filterBestsellers(i)"
+      >
+        {{ i }}
+      </div>
+    </div>
+    <div *ngIf="showBestsellers.length > 0">
+      <div *ngIf="changeCat"></div>
+    </div>
+  </ng-template>
+</div>

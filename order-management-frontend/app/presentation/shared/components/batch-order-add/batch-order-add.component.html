@@ -1,0 +1,104 @@
+<hr>
+<div class="row mt-adjust">
+    <div class="batch-details-container">
+        <div class="batch-icon">
+            <img [src]="sharedData.imgUrl+'/icons/batch-detail.svg'" alt="Detail Icon">
+        </div>
+        <div class="text-container">
+           <div class="row">
+            <div class="col-3 padding-override">
+                <span class="batch-id">{{data.batchId}}</span>
+            </div>
+            <div class="col-2">
+                <span class="attr-title">
+                    Shipping Company
+                </span>
+            </div>
+            <div class="col-1">
+                <span class="attr-title">
+                     Province
+                </span>
+            </div>
+            <div class="col-2">
+                <span class="attr-title">
+                    Zone
+                </span>
+            </div>
+            <div class="col-1">
+                <span class="attr-title">
+                    Cap
+                </span>
+            </div>
+           </div>
+           <div class="row attr-val">
+               <div class="col-3 padding-override">
+                   <span class="alternate-color">Created at: {{data.createdAt | date: 'dd MMM yy, hh:mm a'}}</span>
+               </div>
+            <div class="col-2">
+                <span>{{data.shipping.company}}</span>
+            </div>
+            <div class="col-1">
+                <span>{{data.shipping.province}}</span>
+            </div>
+            <div class="col-2">
+                <span>{{data.shipping.zone.join(', ')}}</span>
+            </div>
+            <div class="col-1">
+                <span>100</span>
+            </div>
+           </div>
+        </div>
+    </div>
+</div>
+<div class="orders-details mt-adjust">
+    <div class="row">
+        <div class="col-3">
+            <div class="title">
+                <span>Orders ({{selectedOrderDetails?.length}})</span>
+                <br>
+                <span class="small">Last updated on: {{data.updatedAt | date: 'dd MMM yy, hh:mm a'}}</span>
+            </div>
+        </div>
+        <div class="col-5 text-right">
+            <button class="download-btn" nbButton status="primary" (click)="generatePicklist(data.batchId)">
+                <nb-icon icon="shopping-bag-outline"></nb-icon>Generate Picklist
+            </button>
+            <button class="download-btn" nbButton status="primary" (click)="downloadSheet(data.batchId)">
+                <nb-icon icon="file-text-outline"></nb-icon>Download Excel File
+            </button>
+        </div>
+        <div class="col-4">
+            <!-- <ejs-multiselect #ordersListMS cssClass="e-custom order-dd" placeholder="Order ID" id='multiselectelement' mode="CheckBox" selectAllText='Select All' showSelectAll=true [fields]='{ text: "orderID", value: "orderID" }' [dataSource]='ordersList'></ejs-multiselect> -->
+            <ejs-textbox cssClass="e-custom order-dd" [(ngModel)]="orderId" type="text"></ejs-textbox>
+            <button class="download-btn" nbButton status="primary" [disabled]="orderId === null || orderId?.length === 0" (click)="addOrderId()">Add</button>
+        </div>
+    </div>
+</div>
+<div class="data-table">
+    <div class="row">
+        <ejs-grid  #ejsGrid [allowExcelExport]="true"  (actionBegin)="pageChange($event)" [dataSource]='selectedOrderDetails' [allowPaging]='true' [pageSettings]='pageSettings'>
+            <e-columns>
+                <e-column field='orderID' headerText='Order ID' width=120></e-column>
+                <e-column field='receiverName' headerText='Reciever Name' width=150></e-column>
+                <e-column field='productQuantities' headerText='Product Quantity' width=150></e-column>
+                <e-column field='trackingId' headerText='Tracking ID' width=150></e-column>
+                <e-column field='price' headerText='Price' width=150></e-column>
+                <e-column [allowSorting]="false" textAlign="left" width=80>
+                    <ng-template #template let-data>
+                        <button nbButton ghost [nbPopover]="actions" nbPopoverPlacement="bottom">
+                            <nb-icon icon="more-horizontal-outline"></nb-icon>
+                        </button>
+                        <ng-template #actions>
+                            <!-- <button class="actions-btn" nbButton ghost (click)="showOrderSidebar()">
+                                <nb-icon icon="edit-outline"></nb-icon>Edit
+                            </button> -->
+                            <button class="actions-btn" nbButton ghost (click)="removeOrderId(data)">
+                                <nb-icon icon="trash-2-outline"></nb-icon>Delete
+                            </button>
+                        </ng-template>
+                    </ng-template>                       
+                </e-column>
+            </e-columns>
+        </ejs-grid>
+    </div>
+</div>

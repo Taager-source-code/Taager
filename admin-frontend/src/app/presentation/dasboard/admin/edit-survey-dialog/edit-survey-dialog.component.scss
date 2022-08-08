@@ -1,0 +1,25 @@
+:host {
+  .mat-dialog-content {
+    padding: 0 24px 24px 24px;
+    .btn-success {
+      font-size: 12px;
+      font-family: "Roboto";
+    }
+    mat-checkbox::ng-deep .mat-checkbox-inner-container {
+      width: 16px !important;
+      height: 16px !important;
+    }
+    .survey-question {
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #aaa;
+      .title {
+        font-size: 1rem;
+        margin-bottom: 2px;
+        letter-spacing: normal;
+      }
+      .question {
+        color: rgba(0, 0, 0, 0.87);
+      }
+    }
+  }
+}

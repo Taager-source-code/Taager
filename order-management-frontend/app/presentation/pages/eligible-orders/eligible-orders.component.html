@@ -1,0 +1,83 @@
+<ngx-spinner type="ball-scale-multiple">
+    <p class="loading">Loading</p>
+</ngx-spinner>
+<div class="filter-container">
+    <p>Search</p>
+    <form (ngSubmit)="searchOrders()">
+        <div class="row">
+            <div class="col-md-10">
+                <nb-form-field class="full">
+                    <nb-icon nbPrefix icon="search-outline" pack="eva"></nb-icon>
+                    <input class="width-80" type="text" placeholder="Search by Order Id, Phone Number" nbInput name="searchTerm"
+                        [(ngModel)]="searchTerm">
+                    <button nbSuffix nbButton ghost *ngIf="searchTerm?.length > 0" (click)="clearSearch()" type="button">
+                        <nb-icon icon='close-outline' pack="eva"></nb-icon>
+                    </button>
+                </nb-form-field>
+            </div>
+            <div class="col-md-2 filter-search-btn-container pos-center">
+                <button class="filter-search" nbButton status="primary" type="submit">Search</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="body-container">
+    <div class="table-filters">
+        <nb-radio-group class="table-filters__statuses" [(value)]="selectedStatus" (valueChange)="changeStatus()" status="primary">
+            <nb-radio *ngFor="let status of statusFilter" [value]="status.value" class="table-filters__radio-button"
+                [ngClass]="{'table-filters__radio-button--active':selectedStatus === status.value}"
+            >
+                {{status.name}}
+            </nb-radio>
+        </nb-radio-group>
+        <country-dropdown (selectedCountryChanged)="onSelectedCountryChanged($event)"></country-dropdown>
+    </div>
+    <div class="data-table">
+        <div class="row">
+            <ejs-grid #ejsGrid (actionBegin)="pageChange($event)" [dataSource]='ordersData' class="default-table-style"
+                [allowPaging]='true' [pageSettings]='tableSettings'>
+                <e-columns>
+                    <e-column field='orderId' headerText='Order ID' width=120></e-column>
+                    <e-column field='customerDetails.customerName' headerText='Customer Name' width=120></e-column>
+                    <e-column field='customerDetails.customerPhoneNum1' headerText='Phone Number' width=100></e-column>
+                    <e-column field='status' headerText='Status' width=150>
+                        <ng-template #template let-data>
+                            <nb-alert class="order-status-badge" 
+                                [status]="
+                                    data.status === 'delivered'? 'success' :
+                                    data.status === 'delivery_in_progress'? 'warning' :
+                                    'basic'
+                                "
+                            >
+                                {{data.status | snakeCaseToTitleCase}}
+                            </nb-alert>
+                        </ng-template>
+                    </e-column>
+                    <e-column field='placedAt' type="date" format="HH:MM, d MMM yy" headerText='Created' width=100></e-column>
+                    <e-column field='deliveredAt' type="date" format="d MMM yy" headerText='Delivery Date' width=100>
+                    </e-column>
+                    <e-column [allowSorting]="false" textAlign="left" width=120>
+                        <ng-template #template let-data>
+                           <button nbButton status="primary" (click)="onOpenOrderDetails(data)">
+                                View details
+                           </button>
+                        </ng-template>
+                    </e-column>
+                </e-columns>
+            </ejs-grid>
+        </div>
+    </div>
+</div>
+<ejs-sidebar id="edit-sidebar" class="edit-sidebar" #orderDetails position="Right" type="Over" style="visibility: hidden" width="80vw"
+    zIndex="1004" showBackdrop="true">
+    <div class="edit-sidebar__header">
+        <button class="edit-sidebar__back-button" nbButton ghost (click)="closeOrderSideBar()">
+            <nb-icon icon="arrow-ios-back-outline" pack="eva"></nb-icon>
+        </button>
+        <p class="edit-sidebar__title">Order details</p>
+    </div>
+    <hr>
+    <div class="edit-sidebar__order-details">
+        <ngx-order-details [selectedOrder]="selectedOrder" [selectedCountry]="selectedCountry"></ngx-order-details>
+    </div>
+</ejs-sidebar>

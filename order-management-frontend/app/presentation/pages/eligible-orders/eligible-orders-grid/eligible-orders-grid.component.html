@@ -1,0 +1,58 @@
+<div class="details-grid">
+    <ejs-grid #ejsGrid [dataSource]='selectedOrder?.orderLines' class="default-table-style">
+        <e-columns>
+            <e-column field='itemDetails' headerText='Item Details' width=80>
+                <ng-template #template let-data>
+                    <p *ngIf="data?.productName" class="product-name">{{data.productName}}</p>
+                    <div class="product-sku">
+                        <p class="product-sku__text">{{data?.productId}}</p>
+                        <button nbButton ghost class="product-sku__button" (click)="copySKU(data?.productId)">
+                            <nb-icon pack="taager-icons" icon="copy-icon"></nb-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </e-column>
+            <e-column field='status' headerText='Status' width=80>
+                <ng-template #template let-data>
+                    <nb-alert class="order-line__order-status small-text" [status]="
+                    data?.status === 'delivered'? 'success' :
+                    data?.status === 'delivery_in_progress'? 'warning' :
+                    'basic'">
+                        {{data?.status | snakeCaseToTitleCase}}
+                    </nb-alert>
+                </ng-template>
+            </e-column>
+            <e-column field='quantity' headerText='QTY' width=30></e-column>
+            <e-column field='pricePerPiece' headerText='Price/Piece' width=40></e-column>
+            <e-column field='shippingCompanyId' headerText='Shipping Company' width=60></e-column>
+            <e-column field='trackingNumber' headerText='Tracking Number' width=60></e-column>
+            <e-column headerText='Actions' width=100>
+                <ng-template #template let-data>
+                    <button nbButton status="primary" class="long-text-btn" (click)="openAfterSalesSidebar(data)">
+                        Create After Sales Request
+                    </button>
+                </ng-template>
+            </e-column>
+        </e-columns>
+    </ejs-grid>
+</div>
+<ejs-sidebar id="create-aftersales-sidebar" class="edit-sidebar" #afterSales position="Right" type="Over" style="visibility: hidden" width="79vw"
+    zIndex="1004" showBackdrop="true">
+    <div class="edit-sidebar__header">
+        <button class="edit-sidebar__back-button" nbButton ghost (click)="closeAfterSalesSideBar()">
+            <nb-icon icon="arrow-ios-back-outline" pack="eva"></nb-icon>
+        </button>
+        <p class="edit-sidebar__title">Create After Sales Request</p>
+    </div>
+    <hr>
+    <div class="edit-sidebar__after-sales">
+        <ngx-create-after-sales 
+            *ngIf="afterSales.isOpen"
+            (cancelClicked)="closeAfterSalesSideBar()"
+            [orderLine]="selectedOrderLine"
+            [selectedCountry]="selectedCountry"
+            [customerDetails]="selectedOrder?.customerDetails"
+            [shippingDetails]="selectedOrder?.shippingInfo"
+        ></ngx-create-after-sales>
+    </div>
+</ejs-sidebar>

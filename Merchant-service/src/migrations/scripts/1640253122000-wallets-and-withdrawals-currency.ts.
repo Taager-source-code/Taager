@@ -1,0 +1,29 @@
+import PaymentRequests from '../../merchant/common/infrastructure/db/schemas/paymentRequest.model';
+import UserWalletModel from '../../merchant/common/infrastructure/db/schemas/userWallet.model';
+
+export const up = async () => {
+  const filter: any = { currency: { $exists: false } };
+  const update = { $set: { currency: 'EGP' } };
+  await PaymentRequests.updateMany(filter, update, { timestamps: false });
+  await UserWalletModel.updateMany(filter, update, { timestamps: false });
+  await PaymentRequests.updateMany({ withdrawalId: { $exists: false } }, [
+    {
+      $set: {
+        withdrawalId: {
+          $function: {
+            body: `function() {
+              // @ts-ignore
+              return UUID()
+                .toString()
+                .split('"')[1];
+            }`,
+            args: [],
+            lang: 'js',
+          },
+        },
+      },
+    },
+  ]);
+};
+
+

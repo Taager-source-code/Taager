@@ -1,0 +1,128 @@
+<div class="container-custom">
+  <div class="grid">
+    <div *ngIf="loading; else loadingDone" class="row mt-5"></div>
+    <ng-template #loadingDone>
+      <div class="title-wrap">
+        <div class="d-flex title">
+          {{ title }}
+        </div>
+        <div class="items-on-page d-flex">
+          <div class="btn-group" dropdown>
+            <button
+              id="button-animated"
+              dropdownToggle
+              type="button"
+              class="btn btn-primary dropdown-toggle"
+              aria-controls="dropdown-animated"
+            >
+              <span class="items-number">{{ maxItemPerPage }}</span>
+              <span class="caret"></span>
+            </button>
+            <ul
+              id="dropdown-animated"
+              *dropdownMenu
+              class="dropdown-menu"
+              role="menu"
+              aria-labelledby="button-animated"
+            >
+              <li
+                role="menuitem"
+                class="dropdown-item"
+                (click)="changeItemsOnPage(6)"
+              >
+                6
+              </li>
+              <li
+                role="menuitem"
+                class="dropdown-item"
+                (click)="changeItemsOnPage(9)"
+              >
+                9
+              </li>
+              <li
+                role="menuitem"
+                class="dropdown-item"
+                (click)="changeItemsOnPage(12)"
+              >
+                12
+              </li>
+            </ul>
+            <span class="items-text">اختر عدد المنتجات</span>
+          </div>
+        </div>
+      </div>
+      <div class="row wrapper">
+        <div class="col-12 col-md-3 item d-none d-md-block">
+          <div class="card category-list">
+            <div *ngFor="let cat of categories">
+              <div
+                class="category-el"
+                (click)="onCategoryChange(cat)"
+                [ngClass]="cat.text === selectedCategory ? 'selected' : ''"
+              >
+                <!-- <img *ngIf="cat.text === selectedCategory" class="category-icon" [src]="getActiveIcon(cat.name)">
+                <img *ngIf="cat.text !== selectedCategory" class="category-icon" [src]="getIcon(cat.name)"> -->
+                <p class="category-name">{{ cat.text }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 d-md-none collapse-wrap">
+          <button
+            type="button"
+            class="btn btn-primary collapse-category"
+            (click)="isCollapsed = !isCollapsed"
+            [attr.aria-expanded]="!isCollapsed"
+            aria-controls="collapseBasic"
+            [ngClass]="{ opened: !isCollapsed }"
+          >
+            <img class="collapse-icon" src="../../../assets/img/dropdown.svg" />
+            {{ title }}
+          </button>
+          <div id="collapseBasic" class="card category-list">
+            <div *ngFor="let cat of categories">
+              <div
+                class="category-el"
+                (click)="onCategoryChange(cat); isCollapsed = true"
+                [ngClass]="cat.text === selectedCategory ? 'selected' : ''"
+              >
+                <img
+                  *ngIf="cat.text === selectedCategory"
+                  class="category-icon"
+                  [src]="getActiveIcon(cat.name)"
+                />
+                <img
+                  *ngIf="cat.text !== selectedCategory"
+                  class="category-icon"
+                  [src]="getIcon(cat.name)"
+                />
+                <p class="category-name">{{ cat.text }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-9">
+          <div class="row no-gutters">
+            <div
+              *ngIf="products && products.length < 1; else showProducts"
+              id="no-products"
+            >
+              <div class="col col-xs-12">
+                <span> لا يوجد منتجات</span>
+              </div>
+            </div>
+            <ng-template #showProducts>
+              <card-item
+                *ngFor="let item of products"
+                [product]="item"
+                class="item col-lg-4 col-md-4 col-6"
+              >
+              </card-item>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+      <app-item-carousel></app-item-carousel>
+    </ng-template>
+  </div>
+</div>

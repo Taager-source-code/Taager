@@ -1,0 +1,18 @@
+export default interface GetOrdersQueryResult {
+  count: number;
+  orders: Order[];
+}
+
+export interface Order {
+  orderId: string;
+  status?: string;
+  placedAt?: Date;
+  deliveredAt?: Date;
+  customerDetails?: CustomerDetails;
+}
+
+export type CustomerDetails = {
+  customerName: string;
+  customerPhoneNum1: string;
+  customerPhoneNum2?: string;
+};

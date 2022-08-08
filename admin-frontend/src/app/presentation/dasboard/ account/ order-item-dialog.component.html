@@ -1,0 +1,234 @@
+<div mat-dialog-content>
+  <div class="title">
+    <div class="unit">
+      <div class="lab-title">كود الطلب</div>
+      <div class="lab-value">{{ order.orderID }}</div>
+    </div>
+    <div *ngIf="!isMobile" class="unit">
+      <div class="lab-title">اسم العميل</div>
+      <div class="lab-value">{{ order.receiverName }}</div>
+    </div>
+    <div *ngIf="!isMobile" class="unit">
+      <div class="lab-title">رقم الموبايل</div>
+      <div class="lab-value">{{ order.phoneNumber }}</div>
+    </div>
+    <div *ngIf="!isMobile" class="date-title">حالة الطلب</div>
+    <div class="btn status-badge">{{ returnOrderStatus(order.status) }}</div>
+  </div>
+  <div *ngIf="viewProducts" class="main">
+    <div class="inline-div">
+      <img src="../../../assets/img/prods-i.png" class="icon" />
+      <div class="title-text">المنتجات</div>
+      <div
+        *ngIf="!isMobile && !data.draft"
+        class="btn btn-message"
+        (click)="openChatModel(order)"
+      >
+        ارسال رسالة
+      </div>
+    </div>
+    <div class="table">
+      <div class="table-header">
+        <div class="prod-name">اسم المنتج</div>
+        <div *ngIf="!isMobile" class="prod-details">عدد القطع</div>
+        <div class="prod-details">السعر</div>
+      </div>
+      <div
+        *ngFor="let product of Products; let index = index"
+        class="table-row"
+      >
+        <div *ngIf="!isMobile" class="image-container">
+          <img class="product-image" [src]="product.productPicture" />
+        </div>
+        <div *ngIf="isMobile" class="prod-name-text">
+          {{ product.productName }} ({{
+            OrderProductQuantities[index] + "قطع"
+          }})
+        </div>
+        <div *ngIf="!isMobile" class="prod-name-text">
+          {{ product.productName }}
+        </div>
+        <div *ngIf="!isMobile" class="prod-details-text">
+          {{ OrderProductQuantities[index] }} قطع
+        </div>
+        <div class="prod-details-text">
+          {{ OrderProductPrices[index] }} جنيه
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!data.draft" class="footer-message">
+      اذا واجهتك اي مشاكل من فضل؛ انتظر حتي نقوم بإعادة النظر في طلب سيادتكم، و
+      يمكنكم ايضا ارسال رسالة الي مدير اعمالك للمساعدة
+    </div>
+  </div>
+  <div *ngIf="!viewProducts" class="main">
+    <div class="table">
+      <div class="table-header">
+        <div class="prod-details margin-text">تاريخ</div>
+        <div class="prod-details margin-text">حالة</div>
+        <div *ngIf="data.TransitEvents" class="prod-details margin-text">
+          السبب
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && userType == 3"
+          class="prod-details margin-text"
+        >
+          Admin Name
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details margin-text"
+        >
+          Notes
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details margin-text"
+        >
+          Suspended Reason
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details margin-text"
+        >
+          Rejected Reason
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details margin-text"
+        >
+          Failed Attempts
+        </div>
+      </div>
+      <div
+        *ngFor="let event of TransitEvents; let index = index"
+        class="table-row"
+      >
+        <div class="prod-details-text margin-text">{{ event.timestamp }}</div>
+        <div class="prod-details-text margin-text">{{ event.state }}</div>
+        <div *ngIf="data.TransitEvents" class="prod-details margin-text">
+          {{ event.reason }}
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && userType == 3"
+          class="prod-details-text margin-text"
+        >
+          {{ event.adminName }}
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details-text margin-text"
+        >
+          {{ event.notes }}
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details-text margin-text"
+        >
+          {{ event.suspendedReason }}
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details-text margin-text"
+        >
+          {{ event.customerRejectedReason }}
+        </div>
+        <div
+          *ngIf="!data.TransitEvents && !isMobile"
+          class="prod-details-text margin-text"
+        >
+          {{ event.failedAttemptNote }}
+        </div>
+      </div>
+      <div
+        *ngFor="let event of waybillTrackingDetail; let index = index"
+        class="table-row"
+      >
+        <div class="prod-details-text margin-text">{{ event.date }}</div>
+        <div class="prod-details-text margin-text">
+          {{ event.waybillStatus }}
+        </div>
+        <div *ngIf="data.TransitEvents" class="prod-details margin-text">
+          {{ event.reason }}
+        </div>
+      </div>
+      <div
+        *ngFor="let event of aramexTrackingResults; let index = index"
+        class="table-row"
+      >
+        <div class="prod-details-text margin-text">
+          {{ epochToJsDate(event.UpdateDateTime) }}
+        </div>
+        <div class="prod-details-text margin-text">
+          {{ event.UpdateDescription }}
+        </div>
+        <div *ngIf="data.TransitEvents" class="prod-details margin-text">
+          {{ event.Comments }}
+        </div>
+      </div>
+      <div
+        *ngFor="let event of vhubsTrackingResults; let index = index"
+        class="table-row"
+      >
+        <div class="prod-details-text margin-text">
+          {{ event.updatedDate }}
+        </div>
+        <div class="prod-details-text margin-text">
+          {{ event.shipmentStatus }}
+        </div>
+        <div *ngIf="data.TransitEvents" class="prod-details margin-text">
+          {{ event.reason }}
+        </div>
+      </div>
+    </div>
+    <div
+      *ngIf="
+        (data.TransitEvents || data.waybillTrackingDetail) && userType == 3
+      "
+      class="btn btn-awb"
+      (click)="downloadAWB()"
+    >
+      Download AWB
+    </div>
+  </div>
+</div>
+<!-- <h1 mat-dialog-title class="text-center title">المنتجات</h1>
+<div mat-dialog-content>
+      <div class="main-content">
+        <div class="row no-gutters table-header d-none d-md-flex">
+          <div class="col-md-6 table-header-names">
+<          <div class="profit-head"> الربح</div>
+            <div class="quantity-head">الكمية</div>
+            <div class="price-head">السعر</div>
+          </div>
+        </div>
+        <div class="table-content">
+           <div *ngFor="let product of products; let index = index" class="table-element row no-gutters">
+          <div *ngFor="let product of Products; let index = index" class="table-element row no-gutters">
+            <div class="col-12 col-md-6 product-info">
+              <div class="image-wrap" [routerLink]="['/product',product.id]" [queryParams]="{name: product.productName}">
+                <img class="product-image" [src]="product.productPicture">
+                </div>
+              <div class="product-name">
+                <p class="name"
+                   [title]="product.productName"
+                   [routerLink]="['/product',product.id]"
+                   [queryParams]="{name: product.productName}"
+                >{{product.productName}}</p>
+                <p class="category-name">{{product.Category}}</p>
+              </div>
+            </div>
+            <div class="col-6 d-none d-md-flex price-info">
+              <div class="price">
+                {{OrderProductPrices[index]}}
+              </div>
+              <div class="price">
+                {{OrderProductQuantities[index]}}
+              </div>
+              <div class="profit">
+                {{profitByProducts(product.productProfit, product.productPrice, OrderProductPrices[index], OrderProductQuantities[index])}}
+              </div>
+            </div>
+      </div>
+    </div>
+  </div> -->

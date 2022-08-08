@@ -1,0 +1,9 @@
+export class MissingTextLanguageError extends Error {
+  language: string;
+  constructor(language: string) {
+    super(`Language=${language} is empty`);
+    this.language = language;
+  }
+}
+
+

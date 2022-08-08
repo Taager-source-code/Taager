@@ -1,0 +1,29 @@
+@import 'colors';
+.product-name {
+  margin-bottom: 5px;
+  text-overflow: ellipsis;
+  display: inline;
+}
+.product-sku {
+  display: flex;
+  align-items: flex-start;
+  &__text {
+    margin-bottom: 0;
+    color: $text-dark-grey;
+  }
+  &__button {
+    padding: 0 !important;
+    margin-left: 5px;
+    &:focus {
+      border: none !important;
+      box-shadow: none !important;
+      background-color: transparent !important;
+    }
+  }
+}
+.e-rowcell {
+  cursor: default;
+  &.e-active {
+    background-color: $white;
+  }
+}

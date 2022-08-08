@@ -1,0 +1,35 @@
+<a
+
+  *ngIf="commercialCategoriesFeatureFlag"
+
+  appHoverStyle
+
+  class="sub-banner p-3"
+
+  [routerLink]="['/', 'products', 'category', bannerData.categoryId]"
+
+  [queryParams]="queryParams"
+
+>
+
+  <img class="sub-banner__image" [src]="bannerData.bannerSource" />
+
+</a>
+
+<a
+
+  *ngIf="!commercialCategoriesFeatureFlag"
+
+  appHoverStyle
+
+  class="sub-banner p-3"
+
+  [routerLink]="['/category-products']"
+
+  [queryParams]="queryParams"
+
+>
+
+  <img class="sub-banner__image" [src]="bannerData.bannerSource" />
+
+</a>

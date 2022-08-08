@@ -1,0 +1,45 @@
+<div class="province-card">
+    <nb-accordion>
+        <nb-accordion-item class="province-card-accordion">
+            <nb-accordion-item-header (click)="setCapacityType(provinceCapacityType)">
+                <div class="row w-100 m-reset">
+                    <div class="col-auto p-1">
+                        <img [src]="imgUrl+'/icons/province-building.svg'" alt="building"/>
+                    </div>
+                    <div class="col-md-8 text-align-center">
+                        <div class="province-title larger-text primary-color">
+                            {{capacity.provinceName}}
+                        </div>
+                        <div class="zone-count standard-text secondary-color half-space">
+                            {{capacity.numberOfZones}} Zones
+                        </div>
+                    </div>
+                    <div class="col-md-3 remaining-capacity">
+                       <div class="rc-container w-100">
+                        <img [src]="imgUrl+'/icons/capacity-icon.svg'" alt="Capacity">
+                        <div class="capacity-title">
+                            <span class="primary-color larger-text bold-text">{{capacity.remainingCapacity}} </span><span
+                                class="standard-text secondary-color"> Remaining Capacity</span>
+                        </div>
+                       </div>
+                    </div>
+                </div>
+            </nb-accordion-item-header>
+            <nb-accordion-item-body class="card-body">
+                <div class="card-buttons">
+                    <button class="card-button" (click)="setCapacityType(provinceCapacityType)"
+                        [ngClass]="{'card-button-active' : capacityType === provinceCapacityType}">Shipping
+                        Companies</button>
+                    <button class="card-button" (click)="setCapacityType(zoneCapacityType)"
+                        [ngClass]="{'card-button-active' : capacityType === zoneCapacityType}">Zones</button>
+                </div>
+                <div class="shipping-table">
+                    <ngx-shipping-capacity-table *ngIf="capacityType === provinceCapacityType"
+                        [capacityType]="capacityType" [provinceId]="capacity.provinceId"></ngx-shipping-capacity-table>
+                    <ngx-zones-list *ngIf="capacityType === zoneCapacityType" [capacityType]="capacityType" [provinceId]="capacity.provinceId">
+                    </ngx-zones-list>
+                </div>
+            </nb-accordion-item-body>
+        </nb-accordion-item>
+    </nb-accordion>
+</div>

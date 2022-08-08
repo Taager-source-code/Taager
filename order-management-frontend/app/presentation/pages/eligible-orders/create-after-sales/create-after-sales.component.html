@@ -1,0 +1,92 @@
+<ngx-spinner type="ball-scale-multiple"><p class="loading">Loading</p></ngx-spinner>
+<div class="product-information">
+  <ejs-grid #ejsgrid [dataSource]='[orderLine]' class="default-table-style">
+    <e-columns>
+      <e-column field='productId' headerText='SKU' width=80></e-column>
+      <e-column field='productName' headerText='Item name' width=80></e-column>
+      <e-column field='pricePerPiece' headerText='Price/piece' width=80></e-column>
+      <e-column field='quantity' headerText='QTY' width=80></e-column>
+    </e-columns>
+  </ejs-grid>
+</div>
+<form *ngIf="afterSaleRequestsDetailsForm" [formGroup]="afterSaleRequestsDetailsForm" (ngSubmit)="onCreateAfterSaleRequest()">
+  <div class="request-details">
+    <div class="request-details__type">
+      <p class="request-details__title">Request type</p>
+      <nb-select formControlName="type" class="request-details__type-select" 
+        placeholder="Select request type" (ngModelChange)="onRequestTypeChanged()"
+      >
+        <nb-option *ngFor="let requestType of afterSalesRequestTypes" [value]="requestType.value">
+          {{requestType.option}}
+        </nb-option>
+      </nb-select>
+    </div>
+    <div class="request-details__quantity">
+      <p class="request-details__title">Quantity</p>
+      <input formControlName="quantity" type="number" class="request-details__quantity-input" nbInput>
+    </div>
+    <div class="request-details__add-shipping-cost">
+      <p class="request-details__title">Add shipping cost</p>
+      <nb-toggle formControlName="addShippingCost"></nb-toggle>
+    </div>
+  </div>
+  <div class="replacement-products" *ngIf="afterSaleRequestsDetailsForm.get('type').value === 'replacement'">
+    <p class="replacement-products__title">Replacement items:</p>
+    <hr>
+    <div formArrayName="replacementSKUs">
+      <div [formGroup]="replacementSKUGroup" class="replacement-products__input-group"
+        *ngFor="let replacementSKUGroup of afterSaleRequestsDetailsForm.get('replacementSKUs')['controls']; let idx = index">
+          <input class="replacement-products__input"
+            nbInput formControlName="SKU" placeholder="SKU">
+          <input class="replacement-products__input" type="number"
+            nbInput formControlName="quantity" placeholder="Quantity">
+          <button *ngIf="idx !== 0" nbButton type="button" status="danger"
+            class="replacement-products__delete-input" (click)="onDeleteReplacementSKUFields(idx)"
+          >
+            <nb-icon  icon="trash-2-outline" pack="eva"></nb-icon>
+          </button>
+      </div>
+    </div>
+    <button nbButton status="primary" (click)="onAddReplacementSKU()" type="button">
+      Add item
+    </button>
+  </div>
+  <div class="customer-edit-info">
+    <p class="customer-edit-info__title">Edit customer information:</p>
+    <nb-toggle class="customer-edit-info__input" formControlName="editInfo"
+      (ngModelChange)="toggleEditInfo()"></nb-toggle>
+  </div>
+  <div class="customer-information">
+    <div class="customer-information__field">
+      <p class="customer-information__title">Customer Name:</p>
+      <input nbInput class="customer-information__input" formControlName="customerName">
+    </div>
+    <div class="customer-information__field">
+      <p class="customer-information__title">Mobile number:</p>
+      <input nbInput class="customer-information__input" formControlName="phoneNumber">
+    </div>
+    <div class="customer-information__field">
+      <p class="customer-information__title">Province:</p>
+      <input nbInput class="customer-information__input" formControlName="province">
+    </div>
+    <div class="customer-information__field">
+      <p class="customer-information__title">Zone:</p>
+      <nb-select class="customer-information__select" formControlName="zone" 
+        [placeholder]="orderProvinceZones.length? 'Select zone' : 'No zones available'"
+      >
+        <nb-option *ngIf="!orderProvinceZones.length">No zones available</nb-option>
+        <nb-option *ngFor="let zone of orderProvinceZones" [value]="zone">
+          {{ zone | titlecase }}
+        </nb-option>
+      </nb-select>
+    </div>
+    <div class="customer-information__field">
+      <p class="customer-information__title">Address:</p>
+      <input nbInput class="customer-information__input" formControlName="address">
+    </div>
+  </div>
+  <div class="action-buttons">
+    <button nbButton status="primary" [disabled]="afterSaleRequestsDetailsForm.invalid">Submit</button>
+    <button nbButton type="button" (click)="onCancelButtonClicked()">Cancel</button>
+  </div>
+</form>

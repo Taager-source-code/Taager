@@ -1,0 +1,237 @@
+@import "common.scss";
+
+section.track-orders-dialog {
+
+  ::ng-deep .custom-modalbox {
+
+    mat-dialog-container {
+
+      border-radius: 2.7rem;
+
+    }
+
+  }
+
+  .mat-dialog-content {
+
+    margin: 0px;
+
+    direction: rtl;
+
+    text-align: right;
+
+    margin-bottom: 2rem;
+
+    .dialog-title {
+
+      color: $primary-color;
+
+      font-weight: bolder;
+
+    }
+
+    .dialog-close-button {
+
+      background-color: transparent;
+
+      border: none;
+
+      color: $red;
+
+      font-size: 3rem;
+
+      box-shadow: none;
+
+      outline: none;
+
+    }
+
+    .row {
+
+      margin: 0rem;
+
+    }
+
+    .order-info-title {
+
+      font-size: 1rem;
+
+      color: $dark-gray;
+
+      margin-left: 0.4rem;
+
+    }
+
+    .order-info-value {
+
+      font-size: 1.1rem;
+
+      color: $secondary-color;
+
+    }
+
+    hr {
+
+      color: $dark-gray;
+
+      padding: 0rem;
+
+      opacity: 0.6;
+
+      margin-bottom: 2.9rem;
+
+    }
+
+    .order-status-icon {
+
+      padding: 1.2rem;
+
+      width: 5.5rem;
+
+      height: 5rem;
+
+      border-radius: 1rem;
+
+      fill: $dark-gray;
+
+      background-color: rgba($dark-gray, 0.34);
+
+      margin-bottom: 3rem;
+
+    }
+
+    .order-status-icon__active {
+
+      fill: $primary-color;
+
+      background-color: rgba($primary-color, 0.14);
+
+    }
+
+    .order-status-icon__warning {
+
+      fill: $red;
+
+      background-color: rgba($red, 0.14);
+
+    }
+
+    .order-status-title {
+
+      margin: 0.5rem 0;
+
+      font-size: 1.1rem;
+
+      font-weight: bold;
+
+      color: $secondary-color;
+
+    }
+
+    .order-status-title__active {
+
+      color: $primary-color;
+
+    }
+
+    .order-status-date {
+
+      font-size: 1.1rem;
+
+      font-weight: normal;
+
+      direction: ltr;
+
+      color: $dark-gray;
+
+    }
+
+    .order-status-text__warning {
+
+      font-size: 1.1rem;
+
+      font-weight: normal;
+
+      color: $red;
+
+    }
+
+    .order-status-circle-indicator {
+
+      width: 2.5rem;
+
+      height: 2.5rem;
+
+      border-radius: 100%;
+
+      margin-bottom: 0.5rem;
+
+      background: $dark-gray;
+
+      span {
+
+        display: none;
+
+      }
+
+    }
+
+    .order-status-circle-indicator__active {
+
+      background: $primary-color;
+
+      span {
+
+        display: block;
+
+        text-align: center;
+
+        margin: auto;
+
+        padding-top: 10%;
+
+        color: white;
+
+      }
+
+    }
+
+    .order-status-circle-indicator__warning {
+
+      background: $red;
+
+      span {
+
+        display: block;
+
+        text-align: center;
+
+        margin: auto;
+
+        padding-top: 10%;
+
+        color: white;
+
+      }
+
+    }
+
+    .vertical_dotted_line {
+
+      border-right: 0.01rem dashed $dark-gray;
+
+      height: 60%;
+
+      margin-right: 1.2rem;
+
+    }
+
+    .left-div {
+
+      margin-top: 0.8rem;
+
+    }
+
+  }
+
+}

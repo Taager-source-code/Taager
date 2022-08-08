@@ -1,0 +1,109 @@
+@import "common.scss";
+
+:host {
+
+  @include fluid-type(991px, 1920px, 12px, 16px);
+
+  .category-list-item {
+
+    width: 100%;
+
+    background-color: $white;
+
+    border: none;
+
+    outline: none;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: em-calc(10px 14px);
+
+    height: 7vh;
+
+    cursor: pointer;
+
+    border: 1px solid $medium-gray;
+
+    border-top: none;
+
+    &:hover {
+
+      text-decoration: none;
+
+    }
+
+    &__category {
+
+      display: flex;
+
+      &-icon {
+
+        width: em-calc(32px);
+
+        height: em-calc(32px);
+
+        margin-left: em-calc(16px);
+
+      }
+
+      &-name {
+
+        margin-bottom: 0;
+
+        font-weight: 700;
+
+        padding-top: em-calc(4px);
+
+      }
+
+    }
+
+    &__left-chevron,
+
+    &__category-icon {
+
+      filter: brightness(0);
+
+    }
+
+    &--selected,
+
+    &--hovered {
+
+      .category-list-item__category-name {
+
+        color: $primary-color;
+
+      }
+
+      .category-list-item__left-chevron {
+
+        filter: none;
+
+      }
+
+      .category-list-item__category-icon {
+
+        filter: invert(59%) sepia(60%) saturate(489%) hue-rotate(126deg)
+
+          brightness(90%) contrast(90%);
+
+      }
+
+    }
+
+    &--hovered {
+
+      border-left-color: transparent;
+
+    }
+
+  }
+
+}
+
+

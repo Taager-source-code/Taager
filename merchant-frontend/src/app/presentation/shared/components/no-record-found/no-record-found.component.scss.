@@ -1,0 +1,21 @@
+@import 'common.scss';
+
+.no-record-found {
+
+    text-align:center;
+
+    padding: 10%;
+
+    background-color: $fill-dark-gray;
+
+    color: $text-white;
+
+    font-size: 32px;
+
+    i {
+
+      margin-right: 20px;
+
+    }
+
+}

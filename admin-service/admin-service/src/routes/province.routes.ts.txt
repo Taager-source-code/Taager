@@ -1,0 +1,56 @@
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import * as ViewProvincesController from '../order-management/queries/infrastructure/controllers/ViewProvincesController';
+import * as ViewAllProvincesController from '../order-management/queries/infrastructure/controllers/ViewAllProvincesController';
+import * as GetAllAramexCitiesController from '../order-management/queries/infrastructure/controllers/GetAllAramexCitiesController';
+import * as UpdateProvinceController from '../order-management/commands/infrastructure/controllers/UpdateProvinceController';
+import * as AddProvinceZonesController from '../order-management/commands/infrastructure/controllers/AddProvinceZonesController';
+import * as CreateProvinceController from '../order-management/commands/infrastructure/controllers/CreateProvinceController';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+import UserCountriesAccessBodyMiddleware from '../middlewares/UserCountriesAccessBodyMiddleware';
+import UserCountriesAccessQueryParamMiddleware from '../middlewares/UserCountriesAccessQueryParamMiddleware';
+
+const router = express.Router();
+
+router.get(
+  '/getProvinces',
+  isAuthenticated,
+  UserCountriesAccessQueryParamMiddleware,
+  errorHandler(ViewProvincesController.execute),
+);
+
+router.get(
+  '/viewProvinces',
+  isAuthenticated,
+  UserCountriesAccessQueryParamMiddleware,
+  errorHandler(ViewAllProvincesController.execute),
+);
+
+router.get('/aramex-cities', isAuthenticated, errorHandler(GetAllAramexCitiesController.execute));
+
+router.patch(
+  '/updateProvince/:id',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(UpdateProvinceController.execute),
+);
+
+router.post(
+  '/addProvinceZones',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(AddProvinceZonesController.execute),
+);
+
+router.post(
+  '/createProvince',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(CreateProvinceController.execute),
+);
+
+export = router;

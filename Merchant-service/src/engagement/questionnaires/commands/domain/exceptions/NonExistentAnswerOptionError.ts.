@@ -1,0 +1,11 @@
+export class NonExistentAnswerOptionError extends Error {
+  questionId: string;
+  answerId: string;
+  constructor(questionId: string, answerId: string) {
+    super(`Question with id=${questionId} has a non existent answer submitted: answerId=${answerId}`);
+    this.questionId = questionId;
+    this.answerId = answerId;
+  }
+}
+
+

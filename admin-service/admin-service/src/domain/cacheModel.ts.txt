@@ -1,0 +1,10 @@
+export const CacheType = {
+  Memory: 'memoryLru',
+};
+
+export const DefaultInMemoryCacheParameters = {
+  ttl: Number(process.env.CACHE_TTL) || 300, // in seconds
+  max: Number(process.env.CACHE_MAX_ITEMS) || 10000, // max elements in cache
+  stale: false,
+  updateAgeOnGet: process.env.CACHE_UPDATE_ITEMS_ONGET || false,
+};

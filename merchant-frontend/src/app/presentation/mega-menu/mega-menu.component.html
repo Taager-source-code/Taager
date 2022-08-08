@@ -1,0 +1,11 @@
+<div class="mega-menu-container">
+
+  <app-category-list
+
+    (categoryHoveredEmitter)="onCategoryHovered($event)"
+
+  ></app-category-list>
+
+  <app-subcategories-list *ngIf="shouldDisplaySideMenu" [hoveredCategoryId]="hoveredCategoryId"></app-subcategories-list>
+
+</div>

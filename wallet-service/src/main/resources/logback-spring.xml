@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--    Json logging appender   -->
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+    <!-- Default logging format in dev for console  -->
+    <springProfile name="default">
+        <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    </springProfile>
+    <!--  Json logging for production environment   -->
+    <springProfile name="dev | prod">
+        <root level="${logging.level.com.taager.wallet}">
+            <appender-ref ref="jsonConsoleAppender" />
+        </root>
+    </springProfile>
+    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter">
+        <level value="DEBUG" />
+    </logger>
+</configuration>

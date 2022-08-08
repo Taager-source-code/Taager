@@ -1,0 +1,10 @@
+import express from 'express';
+import { registerGet } from '../common/http/HttpHandler';
+import isAuthenticated from '../middlewares/auth';
+import GetVariantByProdIDController from '../content-management/variants/queries/infrastructure/controllers/GetVariantByProdIDController';
+
+const router = express.Router();
+
+registerGet('/:prodID', GetVariantByProdIDController, router, isAuthenticated);
+
+export = router;

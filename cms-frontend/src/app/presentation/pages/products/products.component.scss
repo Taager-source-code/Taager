@@ -1,0 +1,34 @@
+.filter-container {
+  background-color: #f8f8fab3;
+  min-height: 125px;
+  padding: 1.5rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+.filter-search-btn-container {
+  text-align: right;
+  .clear-search {
+    width: 30%;
+    border-radius: 8px;
+    float: left;
+  }
+  .filter-search {
+    width: 50%;
+    border-radius: 8px;
+  }
+}
+.thumbnail-image {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd;
+  padding: 2px;
+  border-radius: 5px;
+}
+.product-id--bold {
+  margin-bottom: 0;
+  font-family: 'Taager-Medium';
+}
+.category-edit-button {
+  padding: 7px !important;
+  border-radius: 5px !important;
+}

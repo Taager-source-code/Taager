@@ -1,0 +1,49 @@
+@import "common.scss";
+
+.success-message-wrapper {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  img {
+
+    max-height: 20vmin;
+
+    max-width: 20vmin;
+
+  }
+
+  p {
+
+    font-weight: 700;
+
+    font-size: em-calc(24px);
+
+  }
+
+  button {
+
+    width: 40%;
+
+    padding: 10px 32px;
+
+    border-radius: 24px;
+
+    font-size: em-calc(24px);
+
+    margin: 20px auto 0;
+
+    border: none;
+
+    outline: none;
+
+    color: white;
+
+    background-color: $primary-color;
+
+  }
+
+}

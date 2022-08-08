@@ -1,0 +1,17 @@
+export type QuestionnaireAnswerModel = {
+  _id?: string;
+  questionnaireName: string;
+  taagerId: string;
+  status: string;
+  totalScore?: number;
+  answers?: GivenAnswerModel[];
+};
+
+export type GivenAnswerModel = {
+  questionId: string;
+  answerIds: string[];
+  score: number;
+  scoreCap: number;
+};
+
+

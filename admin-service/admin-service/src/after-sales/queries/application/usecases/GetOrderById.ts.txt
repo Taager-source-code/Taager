@@ -1,0 +1,23 @@
+import { Inject, Service } from 'typedi';
+import OrderRepo from '../contracts/OrderRepo';
+import OrderRepoImpl from '../../infrastructure/repositories/OrderRepoImpl';
+import Order from '../models/Order';
+import { OrderNotFound } from '../../../common/application/exceptions/OrderNotFound';
+
+@Service({ global: true })
+export default class GetOrderById {
+  private orderRepo: OrderRepo;
+
+  constructor(@Inject(() => OrderRepoImpl) orderRepo: OrderRepo) {
+    this.orderRepo = orderRepo;
+  }
+
+  async execute(orderId: string): Promise<Order> {
+    const order = await this.orderRepo.getById(orderId);
+    if (order != null) {
+      return order;
+    } else {
+      throw new OrderNotFound(orderId);
+    }
+  }
+}

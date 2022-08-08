@@ -1,0 +1,23 @@
+import mongoose from 'mongoose';
+import Env from '../Env';
+
+/**
+ * Opens Mongoose's connection to MongoDB.
+ * @func
+ * @param {String} uri - [takes in MONGO_URI environment variable by default] the MongoDB server url to connect to.
+ * @returns {Promise<typeof mongoose>}
+ */
+export const connectToMongoDB = (uri = Env.MONGO_URI) =>
+  mongoose.connect(uri, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true,
+  });
+
+/**
+ * Disconnects all MongoDB connections.
+ * @func
+ * @returns {Promise<void>}
+ */
+export const disconnectFromMongoDB = () => mongoose.disconnect();

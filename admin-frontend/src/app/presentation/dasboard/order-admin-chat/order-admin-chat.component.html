@@ -1,0 +1,139 @@
+<div class="order-status-form">
+  <h4 mat-dialog-title>Order Admin Note</h4>
+  <span class="close-modal" (click)="closeModal()"
+    ><i class="fa fa-times" aria-hidden="true"></i
+  ></span>
+  <div mat-dialog-content>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-primary">
+          <div
+            class="content-container"
+            fxLayout="column"
+            fxLayoutAlign="stretch"
+            fxFlex="auto"
+          >
+            <perfect-scrollbar
+              class="scroll-container"
+              fxFlex="auto"
+              [config]="config"
+              [scrollIndicators]="true"
+            >
+              <div class="panel-body scrollable-content">
+                <ul class="chat" *ngIf="adminNoteLists">
+                  <ng-container *ngFor="let item of adminNoteLists">
+                    <li
+                      class="clearfix"
+                      [ngClass]="{
+                        right:
+                          (item.userId && item.userId._id === currentUserId) ||
+                          (item.adminId && item.adminId._id === currentUserId),
+                        left:
+                          (item.userId && item.userId._id !== currentUserId) ||
+                          (item.adminId && item.adminId._id !== currentUserId)
+                      }"
+                    >
+                      <span
+                        class="chat-img"
+                        [ngClass]="{
+                          'pull-right':
+                            (item.userId &&
+                              item.userId._id === currentUserId) ||
+                            (item.adminId &&
+                              item.adminId._id === currentUserId),
+                          'pull-left':
+                            (item.userId &&
+                              item.userId._id !== currentUserId) ||
+                            (item.adminId && item.adminId._id !== currentUserId)
+                        }"
+                      >
+                        <img
+                          *ngIf="item.userId && item.userId._id"
+                          src="{{
+                            item.userId.profilePicture
+                              ? item.userId.profilePicture
+                              : 'assets/img/default_avatar.png'
+                          }}"
+                          height="50"
+                          alt="Image"
+                          class="img-circle"
+                        />
+                        <img
+                          *ngIf="item.adminId && item.adminId._id"
+                          src="{{
+                            item.adminId.profilePicture
+                              ? item.adminId.profilePicture
+                              : 'assets/img/default_avatar.png'
+                          }}"
+                          height="50"
+                          alt="Image"
+                          class="img-circle"
+                        />
+                      </span>
+                      <div class="chat-body clearfix">
+                        <div class="header">
+                          <strong
+                            class="primary-font"
+                            *ngIf="item.userId && item.userId._id"
+                            >{{
+                              item.userId.firstName + " " + item.userId.lastName
+                            }}</strong
+                          >
+                          <strong
+                            class="primary-font"
+                            *ngIf="item.adminId && item.adminId._id"
+                            >{{
+                              item.adminId.firstName +
+                                " " +
+                                item.adminId.lastName
+                            }}</strong
+                          >
+                          <small class="pull-right text-muted">
+                            <span class="glyphicon glyphicon-time"></span
+                            >{{ item.createdAt | date: "medium" }}</small
+                          >
+                        </div>
+                        <p>
+                          {{
+                            item.userNote
+                              ? item.userNote
+                              : item.adminNote
+                              ? item.adminNote
+                              : ""
+                          }}
+                        </p>
+                      </div>
+                    </li>
+                  </ng-container>
+                </ul>
+              </div>
+            </perfect-scrollbar>
+          </div>
+          <div class="panel-footer">
+            <form [formGroup]="orderChatForm">
+              <div class="input-group">
+                <textarea
+                  matInput
+                  formControlName="note"
+                  dir="rtl"
+                  class="form-control input-sm"
+                  placeholder="Enter note here"
+                ></textarea>
+                <span class="input-group-btn">
+                  <button
+                    mat-raised-button
+                    [disabled]="orderChatForm.invalid"
+                    color="primary"
+                    (click)="sendOrderNote()"
+                  >
+                    Send
+                  </button>
+                </span>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

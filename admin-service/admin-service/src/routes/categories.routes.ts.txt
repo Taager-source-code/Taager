@@ -1,0 +1,40 @@
+import express from 'express';
+const router = express.Router();
+import errorHandler from 'express-async-handler';
+
+import isAuthenticated from '../middlewares/auth';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+
+import * as GetCategoriesController from '../content-management/categories/queries/infrastructure/controllers/GetCategoriesController';
+import * as CreateCategoryController from '../content-management/categories/commands/infrastructure/controllers/AddCategoryController';
+import * as UpdateCategoryController from '../content-management/categories/commands/infrastructure/controllers/UpdateCategoryController';
+import * as DeleteCategoryController from '../content-management/categories/commands/infrastructure/controllers/DeleteCategoryController';
+import UserCountriesAccessQueryParamMiddleware from '../middlewares/UserCountriesAccessQueryParamMiddleware';
+import UserCountriesAccessBodyMiddleware from '../middlewares/UserCountriesAccessBodyMiddleware';
+
+router.get(
+  '/getCategories',
+  isAuthenticated,
+  UserCountriesAccessQueryParamMiddleware,
+  errorHandler(GetCategoriesController.execute),
+);
+
+router.post(
+  '/addCategory',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(CreateCategoryController.execute),
+);
+
+router.patch(
+  '/updateCategory/:id',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  errorHandler(UpdateCategoryController.execute),
+);
+
+router.delete('/delete/:id', isAuthenticated, CountryMiddleware, errorHandler(DeleteCategoryController.execute));
+
+export = router;

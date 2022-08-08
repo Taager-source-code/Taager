@@ -1,0 +1,24 @@
+// region requires
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import * as paymentRequestCtrl from '../controllers/paymentRequest.controller';
+import { registerPatch, registerPost } from '../common/http/HttpHandler';
+import { ListWithdrawalsController } from '../merchant/queries/infrastructure/withdrawals/controllers/ListWithdrawalsController';
+import UpdateWithdrawalController from '../merchant/commands/infrastructure/withdrawals/controllers/UpdateWithdrawalController';
+
+const router = express.Router();
+router.post('/payment/getPaymentRequests', isAuthenticated, errorHandler(paymentRequestCtrl.viewPaymentRequest));
+router.patch(
+  '/payment/updatePaymentRequest/:id',
+  isAuthenticated,
+  errorHandler(paymentRequestCtrl.updatePaymentRequest),
+);
+// region new APIs
+// registerPost('/withdrawals/request', RequestWithdrawalController, router, isAuthenticated);
+
+registerPatch('/withdrawals/:id', UpdateWithdrawalController, router, isAuthenticated);
+
+registerPost('/withdrawals/list', ListWithdrawalsController, router, isAuthenticated);
+// endregion
+export = router;

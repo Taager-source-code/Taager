@@ -1,0 +1,24 @@
+<ejs-dropdownlist id="countryDropdown" [readonly]="isReadOnly" [dataSource]="productsService.countriesList" [fields]="countryFields" [value]="productsService.selectedCountryCode" (change)="changeSelectedCountry($event)" placeholder="Select Country">
+  <ng-template #itemTemplate let-data>
+    <p>{{ data.englishName }}</p>
+    <img
+    src="assets/images/{{
+      data.isoCode2.toLowerCase()
+    }}.svg"
+    alt="{{ data.englishName }} 's image"
+    class="country-btn__icon"
+  />
+  </ng-template>
+  <ng-template #valueTemplate let-data>
+    <div class="country-option">
+      <p>{{ data.englishName }}</p>
+      <img
+      src="assets/images/{{
+        data.isoCode2.toLowerCase()
+      }}.svg"
+      alt="{{ data.englishName }} 's image"
+      class="country-btn__icon"
+    />
+    </div>
+  </ng-template>
+</ejs-dropdownlist>

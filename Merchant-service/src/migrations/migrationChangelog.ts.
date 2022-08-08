@@ -1,0 +1,29 @@
+import mongoose from 'mongoose';
+
+const MigrationChangelog = new mongoose.Schema(
+  {
+    state: {
+      type: String,
+      default: 'up',
+      enum: ['up', 'down'],
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+  },
+  {
+    timestamps: true,
+    toObject: {
+      transform: function(doc, ret) {
+        return ret;
+      },
+    },
+  },
+);
+
+export = mongoose.model('migrationChangelog', MigrationChangelog, 'migrationChangelog');
+
+

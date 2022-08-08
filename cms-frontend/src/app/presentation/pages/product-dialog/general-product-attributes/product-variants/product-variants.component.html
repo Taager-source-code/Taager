@@ -1,0 +1,125 @@
+<div class="variants-container">
+  <h1>Variants</h1>
+  <nb-checkbox [checked]="!!attributeSets.length" (checkedChange)="toggle($event)" 
+    [disabled]="isEditProductDialog || selectedColorVariants.length || selectedSizeVariants.length">
+      This product has multiple options
+  </nb-checkbox>
+  <div *ngIf="productHasVariants">
+    <p class="section-title" *ngIf="!isEditProductDialog || preSelectedColorVariants.length">Color variants:</p>
+    <nb-select *ngIf="!isEditProductDialog || preSelectedColorVariants.length" class="color-variants-select"
+      (selectedChange)="onSelectedColorVariantsChange($event)" multiple fullWidth [(ngModel)]="selectedColorVariants"
+    >
+        <nb-option-group *ngFor="let colorVariantGroup of colorVariantsGroups" [title]="colorVariantGroup[0].group">
+            <nb-option *ngFor="let colorVariant of colorVariantGroup"
+                [value]="colorVariant.color" [disabled]="preSelectedColorVariants.includes(colorVariant.color)"
+            >
+                <div class="color-variants-select__color-ball" [ngStyle]="{backgroundColor: colorVariant.color}"></div>
+                {{colorVariant.arabicColorName}}
+            </nb-option>
+        </nb-option-group>
+    </nb-select>
+    <p class="section-title" *ngIf="!isEditProductDialog || preSelectedSizeVariants.length">Size variants:</p>
+    <form *ngIf="!isEditProductDialog || preSelectedSizeVariants.length"
+      class="add-size-form" [formGroup]="sizeVariantsForm" (ngSubmit)="onAddSizeVariant()">
+        <input class="add-size-form__size-input" formControlName="addedSize" nbInput type="text">
+        <button class="add-size-form__add-button" nbButton status="primary" placeholder="Add sizes">Add size</button>
+    </form>
+    <div class="selected-size-variants">
+        <div *ngFor="let size of selectedSizeVariants; let idx = index" class="selected-size-variants__pill">
+            <button class="selected-size-variants__pill-button"
+                nbButton ghost (click)="onReOrderSizeVariant(idx)"
+                [disabled]="idx === 0"
+            >
+                <nb-icon icon="chevron-left-outline"></nb-icon>
+            </button>
+            <p class="selected-size-variants__pill-text">{{size}}</p>
+            <button class="selected-size-variants__pill-button"
+                nbButton ghost status="danger" (click)="onDeleteSizeVariant(idx)"
+                [disabled]="this.preSelectedSizeVariants.includes(size)"
+            >
+                <nb-icon icon="close-circle-outline"></nb-icon>
+            </button>
+        </div>
+    </div>
+    <table class="variants-table">
+      <ng-container>
+        <thead>
+          <tr>
+            <th *ngFor="let header of variantTableHeaders">
+              {{ header }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let variant of productsService.variants; let idx = index">
+            <tr>
+              <td>
+                <nb-checkbox name="isPrimaryCheckbox" [(ngModel)]="variant.isPrimary"
+                  (change)="onSelectNewPrimary(variant)"
+                ></nb-checkbox>
+              </td>
+              <td>
+                <button class="add-images-button" (click)="showImagesClicked(variant._id)"
+                  [ngClass]="{'add-images-button--success': variant.variantImages[0]}">
+                    <i class="fa fa-plus" aria-hidden="true"></i>
+                </button>
+              </td>
+              <td *ngIf="selectedSizeVariants.length">
+                <p class="size-variant__text">{{ variantsAttributesLookup[variant._id].size }}</p>
+              </td>
+              <td *ngIf="selectedColorVariants.length">
+                <div class="color-variant">
+                  <div class="color-variant__ball" [ngStyle]="{backgroundColor: variantsAttributesLookup[variant._id].color }"></div>
+                  <p class="color-variant__color-name">{{ variantsAttributesLookup[variant._id].colorArabicName }}</p>
+                </div>
+              </td>
+              <td>
+                <input nbInput type="number" [(ngModel)]="variant.price" class="table-input" />
+              </td>
+              <td>
+                <input nbInput type="number" [(ngModel)]="variant.profit" class="table-input" />
+              </td>
+              <td>
+                <input nbInput type="text" [(ngModel)]="variant.productId" [disabled]="!variant._id.startsWith('temp_')" class="table-input table-input--wide" />
+              </td>
+              <td>
+                <nb-select class="table-input table-input--wider" [(ngModel)]="variant.productAvailability">
+                  <nb-option
+                    *ngFor="let status of availabilityStatuses"
+                    [value]="status.code"
+                    >{{ status.name }}</nb-option
+                  >
+                </nb-select>
+              </td>
+              <td>
+                <nb-toggle [(ngModel)]="variant.isExpired"
+                  (change)="resetPrimaryVariant()"
+                ></nb-toggle>
+              </td>
+              <td>
+                <nb-toggle
+                  [(ngModel)]="variant.isDisabled" [disabled]="!variant._id.startsWith('temp_')"
+                  (change)="resetPrimaryVariant()"
+                ></nb-toggle>
+              </td>
+            </tr>
+            <tr *ngIf="showImagesRowId === variant._id">
+              <td colspan="9">
+                <ng-container>
+                  <table class="add-image-table">
+                    <ngx-image-carousel
+                      class="image-carousel-container"
+                      [imageUrlList]="variant.variantImages"
+                      (uploadedImagesURL)="onUpdateVariantsImages($event, variant._id)"
+                      (deletedImageIndex)="onUpdateVariantsImages($event, variant._id)"
+                    ></ngx-image-carousel>
+                  </table>
+                </ng-container>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </ng-container>
+    </table>
+  </div>
+</div>

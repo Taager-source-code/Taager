@@ -1,0 +1,55 @@
+<loader size="lg" [loading]="loading"></loader>
+
+<div class="form" *ngIf="!loading">
+
+    <br/>
+
+    <br/>
+
+  <div class="d-flex justify-content-between title">
+
+  
+
+            <button *ngIf="!isSubmitted" class="btn mat-raised-button place-order" (click)="orderNow()">تأكيد الطلب</button>
+
+            <button *ngIf="failedOrdersFlag" class="btn mat-raised-button place-order" (click)="downloadRetryOrders()">تنزيل ملف إعادة المحاولة</button>
+
+       
+
+    <div  (click)="backToCart()" class="arrow-back">
+
+      <img src="../../../assets/img/left-chevron.svg">
+
+    </div>
+
+  </div>
+
+  
+
+    <div class="row no-gutters">
+
+  
+
+        <div class="row">
+
+            <div class="col col-12">
+
+            <app-order-overview *ngFor="let order of ordersToSubmit" [order]="order" [draft]="true"></app-order-overview>
+
+            </div>
+
+        </div>
+
+       
+
+       
+
+    
+
+     
+
+    </div>
+
+</div>
+
+

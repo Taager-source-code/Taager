@@ -1,0 +1,47 @@
+import IncentiveProgram from './../../domain/models/incentive-program/IncentiveProgram';
+import Milestone from './../../domain/models/incentive-program/Milestone';
+import { IncentiveProgramType } from '../../domain/models/incentive-program/IncentiveProgramType';
+
+export default class IncentiveProgramMapper {
+  static toDomain(dbEntity: any) {
+    return new IncentiveProgram(
+      dbEntity._id,
+      dbEntity.target,
+      dbEntity.active,
+      dbEntity.default,
+      this.getProgramType(dbEntity.incentiveProgramType),
+      dbEntity.milestones.map(milestoneDBEntity => {
+        return new Milestone(
+          dbEntity.target,
+          milestoneDBEntity.targetPercentage,
+          milestoneDBEntity.rewardValuePerOrder,
+        );
+      }),
+    );
+  }
+
+  /**
+   *
+   * @param {IncentiveProgram} domain
+   * @returns {{}}
+   */
+  static toDbEntity(domain: any) {
+    return {
+      target: domain.programTarget,
+      active: domain.isActive,
+      default: domain.isDefault,
+      milestones: domain.milestones.map(milestone => {
+        return {
+          targetPercentage: milestone.percentage,
+          rewardValuePerOrder: milestone.rewardPerOrder,
+        };
+      }),
+    };
+  }
+
+  static getProgramType(incentiveProgramType: string): IncentiveProgramType {
+    return incentiveProgramType != null ? (incentiveProgramType as IncentiveProgramType) : IncentiveProgramType.LIMITED;
+  }
+}
+
+

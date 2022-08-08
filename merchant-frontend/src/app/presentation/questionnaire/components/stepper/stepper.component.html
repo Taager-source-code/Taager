@@ -1,0 +1,383 @@
+<div class="stepper">
+
+    <div class="stepper__progress-bar">
+
+        <mat-progress-bar
+
+            class="questionnaire-customized-progress-bar"
+
+            mode="determinate"
+
+            [value]="currentProgress"></mat-progress-bar>
+
+    </div>
+
+    <div class="stepper__content">
+
+        <ng-container
+
+            *ngTemplateOutlet="showSubmitStep ? showSubmitStepTemplate : showSteppersTemplate"></ng-container>
+
+        <ng-template #showSubmitStepTemplate>
+
+            <div class="stepper__content__show-submit-template">
+
+                <ng-container
+
+                    *ngTemplateOutlet="isSubmittingQuestionnaire ? showSubmittingQuestionnaireTemplate : showConsentToSubmitQuestionnaireTemplate"></ng-container>
+
+                <ng-template #showSubmittingQuestionnaireTemplate>
+
+                    <ng-container
+
+                        *ngTemplateOutlet="submittingQuestionnaireFailed ? submittingQuestionnaireFailedTemplate : submittingQuestionnaireLoadingTemplate"></ng-container>
+
+                    <ng-template #submittingQuestionnaireFailedTemplate>
+
+                        <div class="stepper__content__show-submit-template__submitting-questionnaire-failed">
+
+                            <div class="stepper__content__show-submit-template__submitting-questionnaire-failed__section-one">
+
+                                <div class="stepper__content__show-submit-template__submitting-questionnaire-failed__section-one__icons">
+
+                                    <img src="{{ questionnaireAssetsFolder + '/comment-1.svg' }}" alt="comment-1">
+
+                                    <img src="{{ questionnaireAssetsFolder + '/comment-2.svg' }}" alt="comment-2">
+
+                                </div>
+
+                                <div class="stepper__content__show-submit-template__submitting-questionnaire-failed__section-one__instructions">
+
+                                    <p class="stepper__content__show-submit-template__submitting-questionnaire-failed__section-one__instructions__text">
+
+                                        حدث خطأ أثناء الإرسال، يرجى إعادة المحاولة
+
+                                    </p>
+
+                                    <div class="stepper__content__show-submit-template__submitting-questionnaire-failed__section-one__instructions__icon">
+
+                                        <img src="{{ questionnaireAssetsFolder + '/error-evaluating-user-icon.svg' }}" alt="error-evaluating-user-icon">
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="stepper__content__show-submit-template__submitting-questionnaire-failed__section-two">
+
+                                <div
+
+                                    class="stepper__content__show-submit-template__submitting-questionnaire-failed__section-two__retry-button"
+
+                                    (click)="submitQuestionnaire()">
+
+                                        إعادة المحاولة
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </ng-template>
+
+                    <ng-template #submittingQuestionnaireLoadingTemplate>
+
+                        <div class="stepper__content__show-submit-template__submitting-questionnaire">
+
+                            <div class="stepper__content__show-submit-template__submitting-questionnaire__icons">
+
+                                <img src="{{ questionnaireAssetsFolder + '/comment-1.svg' }}" alt="comment-1">
+
+                                <img src="{{ questionnaireAssetsFolder + '/comment-2.svg' }}" alt="comment-2">
+
+                            </div>
+
+                            <div class="stepper__content__show-submit-template__submitting-questionnaire__instructions">
+
+                                <div class="stepper__content__show-submit-template__submitting-questionnaire__instructions__spinner">
+
+                                    <img src="{{ questionnaireAssetsFolder + '/submit-questionnaire-loading-icon.svg' }}" alt="submit-questionnaire-loading-icon">
+
+                                </div>
+
+                                <span class="stepper__content__show-submit-template__submitting-questionnaire__instructions__text">
+
+                                    يرجى الانتظار، نقوم بمراجعة  إجاباتك
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </ng-template>
+
+                </ng-template>
+
+                <ng-template #showConsentToSubmitQuestionnaireTemplate>
+
+                    <ng-template
+
+                        [ngTemplateOutlet]="moveToPreviousTemplate"></ng-template>
+
+                    <div class="stepper__content__show-submit-template__section">
+
+                        <div class="stepper__content__show-submit-template__section__instruction">
+
+                            <p class="stepper__content__show-submit-template__section__instruction__text">
+
+                                وصلنا الى نهاية الاسئلة 🎉، يرجى الضغط على ارسال لمراجعة اجاباتك و اطلاعك على النتيجة
+
+                            </p>
+
+                        </div>
+
+                        <button
+
+                            class="stepper__content__show-submit-template__section__button"
+
+                            (click)="submitQuestionnaire()">ارسال</button>
+
+                    </div>
+
+                </ng-template>
+
+            </div>
+
+        </ng-template>
+
+        <ng-template #showSteppersTemplate>
+
+            <div *ngIf="currentActiveStep" class="stepper__content__step">
+
+                <div class="stepper__content__step__previous-button">
+
+                    <div *ngIf="currentActiveStep.index !== 1">
+
+                        <ng-template
+
+                            [ngTemplateOutlet]="moveToPreviousTemplate"></ng-template>
+
+                    </div>
+
+                </div>
+
+                <div class="stepper__content__step__content">
+
+                    <ng-template
+
+                        [ngTemplateOutlet]="stepLabelTemplate"
+
+                        [ngTemplateOutletContext]="{currentPage: currentActiveStep.index}"></ng-template>
+
+                    <ng-template
+
+                        [ngTemplateOutlet]="stepQuestionTemplate"
+
+                        [ngTemplateOutletContext]="{questionIndex: currentActiveStep.index, meta: currentActiveStep.meta}"></ng-template>
+
+                    <div class="stepper__content__step__content__footer">
+
+                        <ng-template
+
+                            [ngTemplateOutlet]="moveToNextTemplate"
+
+                            [ngTemplateOutletContext]="{buttonIsDisabled: !canMoveToNext(currentActiveStep.index)}"></ng-template>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </ng-template>
+
+    </div>
+
+</div>
+
+<!-- shared templates -->
+
+<ng-template #moveToPreviousTemplate let-buttonIsDisabled="buttonIsDisabled">
+
+    <div class="stepper__previous-button">
+
+        <div class="stepper__previous-button__icon">
+
+            <div class="stepper__previous-button__icon__outer" (click)="moveToPreviousStep()">
+
+                <img src="{{ questionnaireAssetsFolder + '/previous-page-icon.svg' }}" alt="previous-page-icon">
+
+            </div>
+
+        </div>
+
+        <div class="stepper__previous-button__instruction">
+
+            <span class="stepper__previous-button__instruction__text">السابق</span>
+
+        </div>
+
+    </div>
+
+</ng-template>
+
+<ng-template #moveToNextTemplate let-buttonIsDisabled="buttonIsDisabled">
+
+    <button
+
+        class="stepper__content__step__content__footer__next-button"
+
+        [ngClass]="{'disabled': buttonIsDisabled}"
+
+        [disabled]="buttonIsDisabled"
+
+        (click)="moveToNextStep()">التالي</button>
+
+</ng-template>
+
+<!-- shareable stepper contents -->
+
+<ng-template #stepLabelTemplate>
+
+    <ng-template #stepLabelTemplateOutletTemplate></ng-template>
+
+</ng-template>
+
+<ng-template #stepQuestionTemplate let-questionIndex="questionIndex" let-meta="meta">
+
+    <div class="stepper__content__step__content__body">
+
+        <ng-template #stepQuestionBoxOutletTemplate></ng-template>
+
+        <ng-template
+
+            [ngTemplateOutlet]="stepQuestionChoicesTemplate"
+
+            [ngTemplateOutletContext]="{
+
+                type: meta.content.type,
+
+                choices: meta.content.answers,
+
+                maximumAllowedChoices: meta.content.maxAllowedAnswers
+
+            }"></ng-template>
+
+        <!--Custom question choices go here! -->
+
+        <ng-template
+
+            let-type="type"
+
+            let-choices="choices"
+
+            let-maximumAllowedChoices="maximumAllowedChoices"
+
+            #stepQuestionChoicesTemplate>
+
+                <div [ngSwitch]="type" class="stepper__content__step__content__body__question-choices">
+
+                    <div *ngSwitchCase="'single'" class="stepper__content__step__content__body__question-choices__single-choice">
+
+                        <div
+
+                            *ngFor="let choice of choices"
+
+                            [ngClass]="{'checked': questionnaireForm.at(questionIndex - 1).get('value').value === choice.id}"
+
+                            class="stepper__content__step__content__body__question-choices__single-choice__wrapper"
+
+                            (click)="doPatchSingleSubFormGroup(questionIndex - 1, choice.id)">
+
+                                <span
+
+                                    [ngClass]="{'checked': questionnaireForm.at(questionIndex - 1).get('value').value === choice.id}"
+
+                                    class="stepper__content__step__content__body__question-choices__single-choice__wrapper__label">
+
+                                        {{ choice.languageText }}
+
+                                </span>
+
+                                <div class="stepper__content__step__content__body__question-choices__single-choice__wrapper__radio">
+
+                                        <div
+
+                                            [ngClass]="{'checked': questionnaireForm.at(questionIndex - 1).get('value').value === choice.id}"
+
+                                            class="stepper__content__step__content__body__question-choices__single-choice__wrapper__radio__outer">
+
+                                                <div
+
+                                                    [ngClass]="{'checked': questionnaireForm.at(questionIndex - 1).get('value').value === choice.id}"
+
+                                                    class="stepper__content__step__content__body__question-choices__single-choice__wrapper__radio__outer__inner"></div>
+
+                                        </div>
+
+                                </div>
+
+                        </div>
+
+                    </div>
+
+                    <div *ngSwitchCase="'multiple'" class="stepper__content__step__content__body__question-choices__multiple-choice">
+
+                        <div
+
+                            *ngFor="let choice of choices"
+
+                            class="stepper__content__step__content__body__question-choices__multiple-choice__wrapper"
+
+                            [ngClass]="{'checked': questionnaireForm.at(questionIndex - 1).get('value').value.indexOf(choice.id) !== -1, 'disabled': isMultiChoiceFormOptionDisabled(questionIndex - 1, choice.id, maximumAllowedChoices)}"
+
+                            (click)="doPatchMultipleCheckSubFormGroup(questionIndex - 1, choice.id, maximumAllowedChoices)">
+
+                                <div class="stepper__content__step__content__body__question-choices__multiple-choice__wrapper__checkbox">
+
+                                    <div
+
+                                        [ngClass]="{'checked': questionnaireForm.at(questionIndex - 1).get('value').value.indexOf(choice.id) !== -1}"
+
+                                        class="stepper__content__step__content__body__question-choices__multiple-choice__wrapper__checkbox__outer">
+
+                                        <img src="{{ questionnaireAssetsFolder + '/white-check-mark.svg' }}" alt="">
+
+                                    </div>
+
+                                </div>
+
+                                <div *ngIf="choice.iconUrl" class="stepper__content__step__content__body__question-choices__multiple-choice__wrapper__icon">
+
+                                    <img src="{{ choice.iconUrl }}" alt="{{ choice.languageText }}">
+
+                                </div>
+
+                                <div class="stepper__content__step__content__body__question-choices__multiple-choice__wrapper__text">
+
+                                    {{ choice.languageText }}
+
+                                </div>
+
+                        </div>
+
+                        <!-- Here, the selected options will be the only ones which will can be toggled, and the others cannot IFF the maxAllowedAnswers has been hit -->
+
+                    </div>
+
+                    <div *ngSwitchDefault class="stepper__content__step__content__body__question-choices__unknown-question-type">
+
+                        <span>Ooops! Please contact admin with this exact message: <b>This question type is not known</b></span>
+
+                    </div>
+
+                </div>
+
+        </ng-template>
+
+    </div>
+
+</ng-template>

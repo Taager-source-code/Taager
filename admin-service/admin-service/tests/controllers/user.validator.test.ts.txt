@@ -1,0 +1,53 @@
+import {
+  isAdminAllowedToLogin,
+  isNormalLoginAllowed,
+  validateGetAllAdminUsersSchema,
+} from '../../src/controllers/user.validator';
+import { when } from 'jest-when';
+import * as activeFeatureToggle from '../../src/shared-kernel/infrastructure/toggles/activeFeatureToggles';
+
+jest.mock('../../src/shared-kernel/infrastructure/toggles/activeFeatureToggles');
+const setUpTogglesMock = () => {
+  when(activeFeatureToggle.isLoginWithUsernameAndPasswordEnabled).calledWith().mockReturnValue(true);
+};
+
+describe('user.validator', () => {
+  describe('get all admin users validation', () => {
+    test('empty request should fail validation', async () => {
+      const { error } = validateGetAllAdminUsersSchema({});
+      expect(error).toBeTruthy();
+      expect(error?.details).toHaveLength(1);
+    });
+
+    test('valid request should pass validation', async () => {
+      const { error, value } = validateGetAllAdminUsersSchema({
+        page: 1,
+        pageSize: 25,
+      });
+      expect(error).toBeFalsy();
+      expect(value).toEqual({ page: 1, pageSize: 25, filter: {} });
+    });
+  });
+
+  describe('login flow', () => {
+    describe('is normal login allowed', () => {
+      beforeEach(() => {
+        setUpTogglesMock();
+      });
+      test('Should return true if normal login allowed or api token provided', async () => {
+        const result = isNormalLoginAllowed('someApiToken');
+        expect(result).toBeTruthy();
+      });
+    });
+    describe('is admin allowed to login', () => {
+      test('Should return true as admin is in the list of allowed admins to login', async () => {
+        const result = isAdminAllowedToLogin('customerService');
+        expect(result).toBeTruthy();
+      });
+      test('Should return false as admin is not in the list of allowed admins to login', async () => {
+        const result = isAdminAllowedToLogin('admin');
+        expect(result).toBeFalsy();
+      });
+    });
+  });
+});

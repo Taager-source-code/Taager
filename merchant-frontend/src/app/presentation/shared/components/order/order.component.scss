@@ -1,0 +1,677 @@
+@import 'common.scss';
+
+.totalPrice label {
+
+  padding: 1.6rem;
+
+}
+
+.headers {
+
+  margin-bottom: 26px;
+
+  font-size: 21px;
+
+  font-weight: 800;
+
+  color: $text-primary;
+
+}
+
+.delivery {
+
+  font-size: 16px;
+
+  line-height: 18px;
+
+  margin-top: -20px;
+
+  text-align: right;
+
+}
+
+.orderBtn {
+
+  font-size: 2rem;
+
+}
+
+.form-wrapper {
+
+  margin: 30px;
+
+}
+
+label {
+
+  margin-bottom: 0;
+
+  line-height: 21px;
+
+}
+
+.row {
+
+  margin-top: 0;
+
+}
+
+.col {
+
+  padding: 0 8px;
+
+}
+
+.title {
+
+  display: flex;
+
+  font-size: 30px;
+
+  font-weight: bold;
+
+  margin-top: 50px;
+
+  margin-bottom: 30px;
+
+}
+
+.arrow-back {
+
+  display: flex;
+
+  justify-content: center;
+
+  width: 30px;
+
+  height: 30px;
+
+  cursor: pointer;
+
+  img {
+
+    height: 100%;
+
+    width: auto;
+
+  }
+
+}
+
+.right-side {
+
+  background: var(--white);
+
+  border-radius: 4px;
+
+  text-align: right;
+
+  padding: 30px;
+
+  font-size: 18px;
+
+  line-height: 18px;
+
+  margin-bottom: 30px;
+
+  .phone-text {
+
+    margin-top: 20px;
+
+    font-size: 18px;
+
+    font-weight: 500;
+
+    color: $text-primary;
+
+    .phone-sub-text {
+
+      font-size: 16px;
+
+      font-weight: 500;
+
+      color: $text-light-green;
+
+    }
+
+  }
+
+  .phone-2 {
+
+    font-size: 16px;
+
+    font-weight: 500;
+
+    color: $text-secondary;
+
+  }
+
+  .province {
+
+    text-align: right;
+
+  }
+
+  
+
+  .select-2 {
+
+    height: 45px;
+
+    border-radius: 10px;
+
+    border: solid 1px $border-color-medium-gray;
+
+    background-color: $fill-white;
+
+  }
+
+  .textarea {
+
+    resize: none;
+
+    height: 100px;
+
+  }
+
+}
+
+.product-image {
+
+  display: flex;
+
+  justify-content: right;
+
+  width: 89px;
+
+  height: 83px;
+
+  border-radius: 20px;
+
+  border: solid 1px $border-color-medium-gray;
+
+  background-color: $fill-white;
+
+  padding: 2px 1px 3px;
+
+}
+
+.table-element {
+
+  margin-bottom: 20px;
+
+  .product-info {
+
+    display: flex;
+
+    flex-direction: row;
+
+    justify-content: flex-start;
+
+    text-align: right;
+
+    align-items: center;
+
+    .image-wrap {
+
+      display: flex;
+
+      justify-content: flex-start;
+
+    }
+
+    .product-name {
+
+      margin-right: 10px;
+
+      padding-left: 10px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      justify-content: flex-start;
+
+      overflow: hidden;
+
+      p {
+
+        margin-bottom: 0px;
+
+      }
+
+      .name {
+
+        color: $text-primary;
+
+        font-size: 18px;
+
+        font-weight: 800;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+      }
+
+      .count-name {
+
+        font-size: 16px;
+
+        font-weight: 500;
+
+        color: $text-secondary;
+
+        .count {
+
+          font-size: 16px;
+
+          font-weight: 500;
+
+          color: $text-primary;
+
+        }
+
+      }
+
+    }
+
+    .product-variants {
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      font-size: 14px;
+
+      .color-variant-label, .size-variant-label {
+
+        color: $text-secondary;
+
+        font-weight: 500;
+
+      }
+
+      .color-variant, .size-variant {
+
+        margin-left: 10px;
+
+        display: flex;
+
+        align-items: center;
+
+        .color-ball {
+
+          display: inline-block;
+
+          border-radius: 50%;
+
+          width: 10px;
+
+          height: 10px;
+
+          margin-bottom: 4px;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  .price-info {
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    p {
+
+      margin-bottom: 0px;
+
+    }
+
+    .prod-price {
+
+      font-size: 18px;
+
+      font-weight: 800;
+
+      text-align: right;
+
+      color: $text-primary;
+
+      .price-text {
+
+        font-size: 16px;
+
+        text-align: center;
+
+        color: $text-secondary;
+
+      }
+
+    }
+
+    .prod-profit {
+
+      font-size: 18px;
+
+      font-weight: 800;
+
+      text-align: right;
+
+      color: $text-primary;
+
+      .profit-text {
+
+        font-size: 16px;
+
+        font-weight: 500;
+
+        text-align: right;
+
+        color: $text-secondary;
+
+      }
+
+      span {
+
+        font-weight: 800;
+
+      }
+
+    }
+
+    .profit {
+
+      width: 120px;
+
+    }
+
+    .info-wrap-mob {
+
+      display: flex;
+
+      width: 196px;
+
+      justify-content: space-between;
+
+      margin-top: 20px;
+
+      align-items: center;
+
+    }
+
+  }
+
+}
+
+.left-side {
+
+  padding-right: 20px;
+
+  .left-wrapper {
+
+    background: var(--white);
+
+    border-radius: 20px;
+
+    padding: 20px;
+
+    .left-header {
+
+      width: 100%;
+
+      margin-bottom: 25px;
+
+      height: 70px;
+
+      padding: 20px 19px;
+
+      background-color: $primary-color;
+
+      .left-header-text {
+
+        position: center;
+
+        width: 100%;
+
+        height: 31px;
+
+        font-size: 21px;
+
+        font-weight: bold;
+
+        text-align: center;
+
+        color: $text-white;
+
+      }
+
+    }
+
+    .order-btn {
+
+      font-size: 20px;
+
+      width: 100%;
+
+      height: 60px;
+
+      border-radius: 30px;
+
+      color: var(--white);
+
+      margin-top: 41.7px;
+
+      background-color: $primary-color;
+
+    }
+
+    .order-btn:disabled {
+
+      background-color: $fill-medium-gray;
+
+    }
+
+  }
+
+  .place-order {
+
+    font-size: 20px;
+
+    width: 100%;
+
+    height: 60px;
+
+    color: var(--white);
+
+    background-color: $primary-color;
+
+    box-shadow: none;
+
+    margin-top: 30px;
+
+  }
+
+  .total-cost {
+
+    font-size: 25px;
+
+    font-weight: bold;
+
+    padding-top: 30px;
+
+    margin-top: 30px;
+
+    border-top: 1px solid $border-color-secondary;
+
+    text-align: right;
+
+    display: flex;
+
+    justify-content: space-between;
+
+  }
+
+  .profit-text {
+
+    color: $text-light-green;
+
+    margin-bottom: 30px;
+
+  }
+
+  .cart-text {
+
+    font-size: 20px;
+
+    font-weight: bold;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    .delivery {
+
+      font-size: 16px;
+
+      line-height: 18px;
+
+      margin-bottom: 40px;
+
+      text-align: right;
+
+    }
+
+    .profit-text {
+
+      color: $text-light-green;
+
+    }
+
+    .price,
+
+    .profit {
+
+      font-size: 20px;
+
+      font-weight: bold;
+
+    }
+
+    .products {
+
+      text-align: right;
+
+    }
+
+  }
+
+}
+
+.input-error {
+
+  margin-bottom: 0;
+
+  border-color: $border-color-danger;
+
+}
+
+@media (max-width: 768px) {
+
+  .title {
+
+    margin-top: 20px;
+
+    margin-bottom: 16px;
+
+    justify-content: center;
+
+  }
+
+  .right-side {
+
+    margin-bottom: 0;
+
+  }
+
+  .left-side {
+
+    padding-right: 0;
+
+    margin: 10px 0;
+
+    .total-cost {
+
+      font-size: 20px;
+
+    }
+
+    .cart-text {
+
+      font-size: 18px;
+
+    }
+
+    .place-order {
+
+      height: 50px;
+
+    }
+
+    .cart-text .products .products-length {
+
+      font-size: 16px;
+
+    }
+
+  }
+
+  .arrow-back {
+
+    height: 25px;
+
+  }
+
+}
+
+.enable-zero-profit {
+
+  margin-top: 31px;
+
+  width: 100%;
+
+  height: 44px;
+
+  padding: 10px;
+
+  font-size: 16px;
+
+  color: $text-primary;
+
+  line-height: 28px;
+
+}
+
+.enable-zero-profit:hover {
+
+  color: $text-white !important;
+
+  background-color: $primary-color;
+
+}
+
+.bonus {
+
+  color: $text-danger;
+
+  margin-top: -40px;
+
+  margin-bottom: 40px;
+
+}

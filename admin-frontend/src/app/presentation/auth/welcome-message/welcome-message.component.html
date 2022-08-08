@@ -1,0 +1,40 @@
+<h1 mat-dialog-title></h1>
+<div mat-dialog-content style="text-align: right">
+  <h1>أهلا بيك معانا في تاجر</h1>
+  <br />
+  <p>تقدر دلوقتي تشوف المنتجات وتبدأ تبيع اللي يناسبك</p>
+  <p>
+    لكن قبل ما تعمل أوردر شوف تفاصيل الشحن وسحب الأرباح وسياسة الاسترجاع أو
+    الاستبدال من <a href="https://www.taager.co/info">هنا</a>
+  </p>
+  <p>لو عندك أي أسئلة أو استفسارات اتواصل معانا من خلال صفحتنا على الفيسبوك</p>
+  <p>
+    ممكن كمان تتابع فيديوهاتنا عشان تعرف معلومات أكتر عن تاجر وعن المنتجات
+    المعروضة على الموقع من خلال صفحتنا على
+    <a href="https://www.youtube.com/channel/UCukMlDP68rQwho-P6WsuJMw/videos"
+      >يوتيوب</a
+    >
+  </p>
+</div>
+<div mat-dialog-actions class="float-right">
+  <div class="row">
+    <div class="col">
+      <button
+        type="button"
+        class="btn-custom btn-custom--blue"
+        (click)="onProductClick()"
+      >
+        ادمن بانل
+      </button>
+    </div>
+    <div class="col">
+      <button
+        type="button"
+        class="btn-custom btn-custom--blue"
+        (click)="onLogoutClick()"
+      >
+        الخروج
+      </button>
+    </div>
+  </div>
+</div>

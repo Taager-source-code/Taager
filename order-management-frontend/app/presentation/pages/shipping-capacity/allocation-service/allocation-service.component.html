@@ -1,0 +1,20 @@
+<div class="allocation-container">
+    <div class="sidebar-title"> Allocation Service Settings</div>
+    <hr>
+    <div class="allocation-service-status">
+        <div class="row">
+            <div class="col-6">
+                <p>Allocation Service Status: </p>
+            </div>
+            <div class="col-6">
+                <nb-toggle status="primary" [(ngModel)]="toggleStatus"></nb-toggle>
+            </div>
+        </div>
+        <div class="row">
+           <div class="col-6">
+            <button nbButton outline status="primary" (click)="runAllocationService()">Run Allocation Service</button>
+           </div>
+        </div>
+    </div>
+    
+</div>

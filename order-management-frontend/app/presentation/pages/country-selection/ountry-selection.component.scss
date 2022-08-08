@@ -1,0 +1,51 @@
+@import './colors';
+.country-selector-logo {
+  width: 250px;
+  margin-bottom: 1.6em;
+}
+#monitor {
+  animation: monitor-in 1s ease-in-out forwards;
+  opacity: 0;
+}
+.monitor-img {
+  width: 30%;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative !important;
+}
+.country-selector {
+  text-align: center;
+  margin-top: 2rem;
+}
+div.position-abs {
+  p,
+  img {
+    position: absolute;
+  }
+}
+@keyframes monitor-in {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.margin-adjust {
+  margin-top: 3rem;
+}
+.center {
+  text-align: center;
+}
+.btn-style {
+  margin: 1rem auto;
+  width: 200px;
+  height: 40px;
+}
+.btn-style:hover {
+  background-color: $primary;
+  background-color: none;
+  border: none;
+}

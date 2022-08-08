@@ -1,0 +1,129 @@
+<div mat-dialog-content>
+
+    <div class="title">
+
+        <div class="unit">
+
+            <div class="lab-title">كود الطلب</div>
+
+            <div *ngIf="data.displayIDsInTable" class="lab-value">{{ data.order.orderID }}</div>
+
+            <div *ngIf="!data.displayIDsInTable" class="lab-value">{{ data.childOrders[0].orderID }}</div>
+
+        </div>
+
+        <div *ngIf="!isMobile" class="unit">
+
+            <div class="lab-title">اسم العميل</div>
+
+            <div class="lab-value">{{ data.order.receiverName }}</div>
+
+        </div>
+
+        <div *ngIf="!isMobile" class="unit">
+
+            <div class="lab-title">رقم الموبايل</div>
+
+            <div class="lab-value">{{ data.order.phoneNumber }}</div>
+
+        </div>
+
+        <div *ngIf="!isMobile" class="date-title">حالة الطلب</div>
+
+        <button *ngIf="data.displayIDsInTable" class="btn status-badge" [ngClass]="{'received': data.statusStage == 'received','delivered': data.statusStage == 'delivered','cancelled': data.statusStage == 'cancelled','pending': data.statusStage == 'pending'}">{{returnOrderStatus(data.order.status)}}</button>
+
+        <button *ngIf="!data.displayIDsInTable" class="btn status-badge" [ngClass]="{'received': data.statusStage == 'received','delivered': data.statusStage == 'delivered','cancelled': data.statusStage == 'cancelled','pending': data.statusStage == 'pending'}">{{returnOrderStatus(data.childOrders[0].status)}}</button>
+
+    </div>
+
+    <div>
+
+        <div class="inline-div">
+
+          <img src="../../../assets/img/prods-i.png" class="icon" />
+
+          <div class="title-text">الاستبدالات و الاسترجاعات</div>
+
+        </div>
+
+        <table class="table">
+
+            <thead>
+
+                <tr>
+
+                    <th scope="col">تاريخ آخر تحديث</th>
+
+                    <th scope="col">حالة الطلب</th>
+
+                    <th scope="col">تاريخ الطلب</th>
+
+                    <th scope="col">نوع الطلب</th>
+
+                    <th scope="col">عدد القطع</th>
+
+                    <th scope="col" [attr.colspan]="isMobile? '1':'2'" style="text-align: center">المنتج</th>
+
+                    <th scope="col" *ngIf="data.displayIDsInTable">كود الطلب</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <tr class="table-active" *ngFor="let childOrder of data.childOrders; index as idx">
+
+                    <td>{{ convertDate(childOrder.updatedAt) }}</td>
+
+                    <td>{{ getChildOrderStatus(childOrder.status) }}</td>
+
+                    <td>{{ convertDate(childOrder.createdAt) }}</td>
+
+                    <td>{{ getChildOrderType(childOrder.orderID) }}</td>
+
+                    <td>{{ OrderProductQuantities[idx] }}</td>
+
+                    <th scope="row" *ngIf="Products[idx]">
+
+                        {{Products[idx].productName}}
+
+                        <div class="product-variants">
+
+                            <span *ngIf="Products[idx].productColor" class="color-variant">
+
+                              <span>اللون:&nbsp;</span> 
+
+                              <span [ngStyle]="{backgroundColor: Products[idx].productColorHex}" class="color-ball"></span> 
+
+                              <span>&nbsp;{{Products[idx].productColor}}</span>
+
+                            </span>
+
+                            <span *ngIf="Products[idx].productSize" class="size-variant">المقاس: {{Products[idx].productSize}}</span>
+
+                          </div>
+
+                    </th>
+
+                    <td *ngIf="!isMobile && Products[idx]">
+
+                        <div class="image-container">
+
+                            <img class="product-image" [src]="Products[idx].productPicture" />
+
+                        </div>
+
+                    </td>
+
+                    <th *ngIf="data.displayIDsInTable">{{ childOrder.orderID }}</th>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+</div>
+
+

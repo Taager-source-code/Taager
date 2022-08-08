@@ -1,0 +1,35 @@
+@import 'common.scss';
+
+h4 {
+    font-size: 21px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.48;
+    letter-spacing: normal;
+    text-align: right;
+    color: $text-light-green;
+    float: right;
+  }
+
+  mat-dialog-content {
+      display: block;
+      direction: rtl;
+  }
+
+  h3 {
+    margin-top:20px;
+    width: 90%;
+    margin-right: 5%;
+    margin-left: 5%;
+    font-size: 14px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.78;
+    letter-spacing: normal;
+    text-align: right;
+    color: $text-primary;
+    float: right;
+  }
+

@@ -1,0 +1,182 @@
+<form [formGroup]="packageForm">
+  <mat-form-field *ngIf="shippingCompany === 'bosta'">
+    <mat-label>Select Shipment Type</mat-label>
+    <mat-select formControlName="shipmentType">
+      <mat-option>Select Shipment Type</mat-option>
+      <mat-option [value]="packageDelivery.value">{{
+        packageDelivery.name
+      }}</mat-option>
+      <mat-option [value]="cashCollection.value">{{
+        cashCollection.name
+      }}</mat-option>
+      <mat-option [value]="exchange.value">{{ exchange.name }}</mat-option>
+      <mat-option [value]="customerReturnPickup.value">{{
+        customerReturnPickup.name
+      }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="shippingCompany === 'bosta'">
+    <mat-label>Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨ÙØªØ­ Ø§Ù„Ø´Ø­Ù†Ø© ØŸ</mat-label>
+    <mat-select formControlName="allowToOpenPackage">
+      <mat-option [value]="true">Ù†Ø¹Ù…</mat-option>
+      <mat-option [value]="false">Ù„Ø§</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="shippingCompany === 'mylerz'">
+    <mat-label>Select Service Type</mat-label>
+    <mat-select formControlName="serviceType">
+      <mat-option>Select Service Type</mat-option>
+      <mat-option [value]="'DTD'">Door to door</mat-option>
+      <mat-option [value]="'DTC'">Door to counter</mat-option>
+      <mat-option [value]="'CTD'">Counter to door</mat-option>
+      <mat-option [value]="'CTC'">Counter to counter</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="shippingCompany === 'mylerz'">
+    <mat-label>Select Service</mat-label>
+    <mat-select formControlName="service">
+      <mat-option>Select Service</mat-option>
+      <mat-option [value]="'SD'">Same day</mat-option>
+      <mat-option [value]="'ND'">Next Day</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="shippingCompany === 'mylerz'">
+    <mat-label>Select Service Category</mat-label>
+    <mat-select formControlName="serviceCategory">
+      <mat-option>Select Service Category</mat-option>
+      <mat-option [value]="'DELIVERY'">Delivery</mat-option>
+      <mat-option [value]="'RETURN'">Return</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Description</mat-label>
+    <input
+      matInput
+      formControlName="description"
+      placeholder="Enter Description"
+    />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Client Name</mat-label>
+    <input
+      matInput
+      formControlName="receiverName"
+      placeholder="Enter client name"
+    />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Phone Number</mat-label>
+    <input
+      matInput
+      formControlName="phoneNumber"
+      placeholder="Enter phone number"
+    />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Phone Number2</mat-label>
+    <input
+      matInput
+      formControlName="phoneNumber2"
+      placeholder="Enter phone number 2"
+    />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Address</mat-label>
+    <input matInput formControlName="address" placeholder="Enter address" />
+  </mat-form-field>
+  <mat-form-field *ngIf="shippingCompany === 'bosta'">
+    <mat-label>City</mat-label>
+    <mat-select formControlName="city">
+      <mat-option>Select City</mat-option>
+      <mat-option [value]="'EG-01'" [id]="'Cairo'">Cairo</mat-option>
+      <mat-option [value]="'EG-02'" [attr.data-text]="'Alexandria'"
+        >Alexandria</mat-option
+      >
+      <mat-option [value]="'EG-03'" [attr.data-text]="'Sahel'"
+        >Sahel</mat-option
+      >
+      <mat-option [value]="'EG-04'" [attr.data-text]="'Behira'"
+        >Behira</mat-option
+      >
+      <mat-option [value]="'EG-05'" [attr.data-text]="'Dakahlia'"
+        >Dakahlia</mat-option
+      >
+      <mat-option [value]="'EG-06'" [attr.data-text]="'Kalioubia'"
+        >El Kalioubia</mat-option
+      >
+      <mat-option [value]="'EG-07'" [attr.data-text]="'Gharbia'"
+        >Gharbia</mat-option
+      >
+      <mat-option [value]="'EG-08'" [attr.data-text]="'Kafr Alsheikh'"
+        >Kafr Alsheikh</mat-option
+      >
+      <mat-option [value]="'EG-09'" [attr.data-text]="'Monufia'"
+        >Monufia</mat-option
+      >
+      <mat-option [value]="'EG-10'" [attr.data-text]="'Sharqia'"
+        >Sharqia</mat-option
+      >
+      <mat-option [value]="'EG-11'" [attr.data-text]="'Ismailia'"
+        >Ismailia</mat-option
+      >
+      <mat-option [value]="'EG-12'" [attr.data-text]="'Suez'">Suez</mat-option>
+      <mat-option [value]="'EG-13'" [attr.data-text]="'PortSaid'"
+        >PortSaid</mat-option
+      >
+      <mat-option [value]="'EG-14'" [attr.data-text]="'Damietta'"
+        >Damietta</mat-option
+      >
+      <mat-option [value]="'EG-15'" [attr.data-text]="'Fayoum'"
+        >Fayoum</mat-option
+      >
+      <mat-option [value]="'EG-16'" [attr.data-text]="'Bani Suif'"
+        >Bani Suif</mat-option
+      >
+      <mat-option [value]="'EG-17'" [attr.data-text]="'Assuit'"
+        >Assuit</mat-option
+      >
+      <mat-option [value]="'EG-18'" [attr.data-text]="'Sohag'"
+        >Sohag</mat-option
+      >
+      <mat-option [value]="'EG-19'" [attr.data-text]="'Menya'"
+        >Menya</mat-option
+      >
+      <mat-option [value]="'EG-20'" [attr.data-text]="'Qena'">Qena</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field *ngIf="shippingCompany === 'aramex'">
+    <mat-label>City</mat-label>
+    <mat-select formControlName="city">
+      <!-- <mat-option *ngIf="city" [value]="city" [attr.data-text]="city">{{
+        city
+      }}</mat-option> -->
+      <mat-option
+        *ngFor="let aramexCity of filteredAramexCities"
+        [value]="aramexCity"
+        >{{ aramexCity }}</mat-option
+      >
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Building</mat-label>
+    <input matInput formControlName="building" placeholder="Enter building" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Cash On Delivery</mat-label>
+    <input matInput formControlName="cashOnDelivery" placeholder="Enter COD" />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Shipping Notes</mat-label>
+    <input
+      matInput
+      formControlName="shippingNotes"
+      placeholder="Enter shipping Notes"
+    />
+  </mat-form-field>
+</form>

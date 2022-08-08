@@ -1,0 +1,245 @@
+@import 'common.scss';
+
+:host {
+  
+  .mini-card-container {
+    margin: 32px auto;
+    position: relative;
+    cursor: pointer;
+    text-decoration: none;
+    
+    @media (max-width: 900px) {
+      padding: 20px 16px 15px;  
+      width: 275px;
+    }
+
+    @media (max-width: 767px) {
+      height: 250px;
+      padding: 8px;
+      width: 158px;
+    }
+
+    .product-qty-icon {
+      position: absolute;
+      right: -1px;
+      top: -14px;
+      
+      @media (max-width: 767px) {
+        top: -10px;
+        
+        img {
+          width: 120px;
+        }
+      }
+    }
+      
+    .card-img {
+      border: solid 1px $border-color-medium-gray;
+      height: 80px;
+      width: 80px;
+      margin: 0 0 15px;
+      border-radius: 10px;
+      border: solid 1px $border-color-medium-gray;
+      
+      @media (max-width: 900px) {
+        height: 220px;
+      }
+
+      @media (max-width: 767px) {
+        height: 121px;
+      }
+    }
+
+    .product-title {
+      margin: 0 16px 6px 0;
+      font-size: 14px;
+      font-weight: bold;
+      font-stretch: normal;
+      font-style: normal;
+      line-height: 1.44;
+      letter-spacing: normal;
+      text-align: right;
+      color: $text-primary;
+      
+      @media (max-width: 767px) {
+        font-size: 13px;
+        margin: 5px 0;
+      }
+    }
+
+    .product-category {
+      color: $text-secondary;
+      margin: 0 0 4px 40px;
+      font-size: 14px;
+      font-weight: normal;
+      font-stretch: normal;
+      font-style: normal;
+      line-height: 1.36;
+      letter-spacing: normal;
+      text-align: right;
+
+      @media (max-width: 767px) {
+        font-size: 10px;
+      }
+    }
+
+    .product-price {
+      margin: 0 15px 0 ;
+      font-size: 20px;
+      font-weight: bold;
+      font-stretch: normal;
+      font-style: normal;
+      line-height: 1.5;
+      letter-spacing: normal;
+      text-align: right;
+      color: $text-primary;
+
+      @media (max-width: 900px) {
+        font-size: 22px;
+      }
+
+      @media (max-width: 767px) {
+        font-size: 16px;
+        padding-left: 0;
+      }
+
+      span {
+        margin: 11px 4px 9px 0;
+        font-size: 14px;
+        font-weight: normal;
+        font-stretch: normal;
+        font-style: normal;
+        line-height: 1.36;
+        letter-spacing: normal;
+        text-align: center;
+        color: $text-primary;
+
+        @media (max-width: 767px) {
+          font-size: 10px;
+        }
+      }
+    }
+
+    .product-profit {
+      font-size: 18px;
+      font-weight: 800;
+      color: $text-light-green;
+
+      @media (max-width: 900px) {
+        font-size: 20px;
+      }
+
+      @media (max-width: 767px) {
+        font-size: 13px;
+      }
+
+      span {
+        margin: 51px 16px 5px 5px;
+        font-size: 16px;
+        font-weight: normal;
+        font-stretch: normal;
+        font-style: normal;
+        line-height: 1.94;
+        letter-spacing: normal;
+        text-align: right;
+        color: $text-primary;
+
+        @media (max-width: 767px) {
+          font-size: 10px;
+        }
+      }
+    }
+
+    .add-to-cart-btn {
+      background-color: $primary-color;
+      border-radius: 30px;
+      height: 53px;
+      margin: 18px 36px 0 36px;
+      padding: 14px 38px;
+      width: 234px;
+
+      @media (max-width: 900px) {
+        margin: 10px 0;
+      }
+
+      @media (max-width: 767px) {
+        width: 135px;
+        height: 28px;
+        margin: 6px 0 0 0;
+        padding: 0 15px 5px 15px;
+      }
+
+      span {
+        color: $text-white;
+        font-size: 18px;
+        font-weight: bold;
+        font-stretch: normal;
+        font-style: normal;
+        height: 26px;
+        line-height: 1.44;
+        letter-spacing: normal;
+        margin: 0 10px 0 0;
+        text-align: center;
+        width: 122px;
+        
+        @media (max-width: 767px) {
+          font-size: 12px;
+        }
+      }
+
+      img {
+        width: 26px;
+
+        @media (max-width: 767px) {
+          width: 15px
+        }
+      }
+    }
+
+    .product-profit {
+      position: relative;
+      display: inline-block;
+    }
+        
+    .product-profit .tooltip-text {
+      background-color: $primary-color;
+      border-radius: 10px;
+      color: $text-white;
+      font-size: 18px;
+      font-weight: 500;
+      font-stretch: normal;
+      font-style: normal;
+      height: 73px;
+      line-height: 1.39;
+      letter-spacing: normal;
+      left: 20px;
+      padding: 11px 23px 11px 21px;
+      position: absolute;
+      text-align: right;
+      top: 50px;
+      visibility: hidden;
+      width: 300px;
+      z-index: 1;
+    }
+        
+    .product-profit:hover .tooltip-text {
+      visibility: visible;
+    }
+
+    .product-profit .tooltip-text::after {
+      content: " ";
+      bottom: 100%;  /* At the top of the tooltip */
+      border-color: transparent transparent $border-color-primary transparent;
+      border-style: solid;
+      border-width: 8px;
+      left: 20%;
+      margin-left: -8px;
+      position: absolute;
+    }
+  }
+
+  .mini-card-container:hover{
+    opacity: 0.7;
+  }
+}
+

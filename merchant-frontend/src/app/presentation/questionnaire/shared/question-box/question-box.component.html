@@ -1,0 +1,37 @@
+<div [ngClass]="{'rtl-dir': currentPageDir === 'rtl', 'ltr-dir': currentPageDir === 'ltr'}" class="question-box">
+
+    <div class="question-box__question-number">
+
+        {{ label }}
+
+    </div>
+
+    <div class="question-box__content">
+
+        <div class="question-box__content__question">
+
+            {{ question }}
+
+        </div>
+
+        <div *ngIf="!maxAllowedAnswers" class="question-box__content__additional-instruction">
+
+            {{ youCanChooseMoreThanOneOptionLabel }}
+
+        </div>
+
+        <div *ngIf="maxAllowedAnswers && maxAllowedAnswers === 2" class="question-box__content__additional-instruction">
+
+            {{ youCanChooseTwoOptionsLabel }}
+
+        </div>
+
+    </div>
+
+    <div class="question-box__character">
+
+        <img src="{{ iconUrl }}" alt="{{ question }}">
+
+    </div>
+
+</div>

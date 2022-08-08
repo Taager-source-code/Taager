@@ -1,0 +1,38 @@
+.product-media-wrapper {
+  .product-image-wrapper {
+    &__title {
+      display: flex;
+      justify-content: space-between;
+      span {
+        color: #aaaaaa;
+      }
+      span.strong {
+        color: black;
+        font-weight: bold;
+      }
+    }
+  }
+  .product-video-links {
+    margin-top: 20px;
+    button {
+      border: none;
+      background: transparent;
+    }
+    &__input {
+      display: flex;
+      margin-top: 10px;
+      input {
+        border: 1px solid #dddddd;
+        border-radius: 8px;
+        padding: 10px 5px;
+        width: 100%;
+      }
+    }
+    a.add-video-link {
+      display: block;
+      margin-top: 15px;
+      color: #46b8b0;
+      text-decoration: none;
+    }
+  }
+}

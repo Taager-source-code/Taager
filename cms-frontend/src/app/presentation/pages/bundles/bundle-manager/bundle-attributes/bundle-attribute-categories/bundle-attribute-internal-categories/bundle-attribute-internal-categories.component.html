@@ -1,0 +1,63 @@
+<nb-accordion class="internal-categories-accordion">
+  <nb-accordion-item expanded>
+    <nb-accordion-item-header class="accordion-header">
+      Internal Categories
+    </nb-accordion-item-header>
+    <nb-accordion-item-body
+      class="accordion-body"
+      [nbSpinner]="isLoading"
+      nbSpinnerStatus="primary"
+    >
+      <form *ngIf="!isLoading" [formGroup]="internalCategoriesFormGroup">
+        <div>
+          <p class="warning-paragraph">You should fill all levels</p>
+          <p>Category (Level 1)</p>
+          <nb-select
+            fullWidth
+            class="down-spacing"
+            [ngClass]="{'--has-error': (showFormErrors$ | async) && internalCategoriesFormGroup.get('internalCategoryLevelOne').errors}"
+            (selectedChange)="onLevelOneChange($event)"
+            formControlName="internalCategoryLevelOne">
+              <nb-option disabled *ngIf="!levelOneInternalCategoriesList.length"> 
+                There is no internal categories
+              </nb-option>
+              <nb-option *ngFor="let internalCategory of levelOneInternalCategoriesList" [value]="internalCategory.id">
+                {{internalCategory.name.englishName}}
+              </nb-option>
+          </nb-select>
+        </div>
+        <div>
+          <p>Level 2</p>
+          <nb-select
+            fullWidth
+            class="down-spacing"
+            [ngClass]="{'--has-error': (showFormErrors$ | async) && internalCategoriesFormGroup.get('internalCategoryLevelTwo').errors}"
+            (selectedChange)="onLevelTwoChange($event)"
+            formControlName="internalCategoryLevelTwo">
+              <nb-option disabled *ngIf="!levelTwoInternalCategoriesList.length"> 
+                There is no internal categories
+              </nb-option>
+              <nb-option *ngFor="let internalCategoryLevelTwo of levelTwoInternalCategoriesList" [value]="internalCategoryLevelTwo.id">
+                {{internalCategoryLevelTwo.name.englishName}}
+              </nb-option>
+          </nb-select>
+        </div>
+        <div>
+          <p>Level 3</p>
+          <nb-select
+            fullWidth
+            class="down-spacing"
+            [ngClass]="{'--has-error': (showFormErrors$ | async) && internalCategoriesFormGroup.get('internalCategoryLevelThree').errors}"
+            formControlName="internalCategoryLevelThree">
+              <nb-option disabled *ngIf="!levelThreeInternalCategoriesList.length"> 
+                There is no internal categories
+              </nb-option>
+              <nb-option *ngFor="let internalCategoryLevelThree of levelThreeInternalCategoriesList" [value]="internalCategoryLevelThree.id">
+                {{internalCategoryLevelThree.name.englishName}}
+              </nb-option>
+          </nb-select>
+        </div>
+      </form>
+    </nb-accordion-item-body>
+  </nb-accordion-item>
+</nb-accordion>

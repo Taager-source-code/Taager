@@ -1,0 +1,20 @@
+import QuestionnaireRepo from '../../application/contracts/QuestionnaireRepo';
+import { Service } from 'typedi';
+import QuestionnaireQueryDao from '../db/access/QuestionnaireQueryDao';
+import { Questionnaire } from '../../application/models/Questionnaire';
+import QuestionnaireModelConverter from './converters/QuestionnaireModelConverter';
+@Service({ global: true })
+export default class QuestionnaireRepoImpl implements QuestionnaireRepo {
+  private questionnaireQueryDao: QuestionnaireQueryDao;
+  constructor(questionnaireQueryDao: QuestionnaireQueryDao) {
+    this.questionnaireQueryDao = questionnaireQueryDao;
+  }
+
+  findByName(name: string): Promise<Questionnaire | null> {
+    return this.questionnaireQueryDao
+      .findByName(name)
+      .then(q => (q ? QuestionnaireModelConverter.toQuestionnaireModel(q) : null));
+  }
+}
+
+

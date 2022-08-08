@@ -1,0 +1,10 @@
+input {
+  font-size: 1.8rem;
+  height: 40px;
+  border-bottom: 1px solid #28a745;
+}
+::ng-deep {
+  .selected-list .c-btn {
+    font-size: 16px;
+  }
+}

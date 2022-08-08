@@ -1,0 +1,51 @@
+import { Service } from 'typedi';
+import { HttpError, HttpProcessor, HttpSuccess } from '../../../../common/http/HttpProcessor';
+import { OK } from 'http-status';
+import joi, { Schema } from 'joi';
+import GetOrders from '../../application/usecases/GetOrders';
+import { OrdersQuery } from '../../OrdersQuery';
+import { Request } from 'express';
+
+@Service({ global: true })
+export class GetOrdersController extends HttpProcessor {
+  private getOrders: GetOrders;
+
+  constructor(getOrders: GetOrders) {
+    super();
+    this.getOrders = getOrders;
+  }
+
+  getValueToValidate(req: Request): any {
+    return req.query;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async execute(_req: Request, validatedValue: any): Promise<HttpSuccess | HttpError> {
+    const ordersQuery: OrdersQuery = {
+      pageSize: parseInt(validatedValue.pageSize),
+      page: parseInt(validatedValue.page),
+      country: validatedValue.country,
+      orderId: validatedValue.orderId,
+      customerPhoneNum: validatedValue.customerPhoneNum,
+      deliveryDate: validatedValue.deliveryDate,
+      status: validatedValue.status,
+    };
+    const result = await this.getOrders.execute(ordersQuery);
+    return {
+      status: OK,
+      data: result,
+    };
+  }
+
+  schema: Schema = joi
+    .object({
+      page: joi.number().optional().min(1).default(1),
+      pageSize: joi.number().optional().min(1).default(100).max(400),
+      country: joi.string().required().valid('EGY', 'SAU', 'ARE'),
+      orderId: joi.string().optional(),
+      customerPhoneNum: joi.string().optional().min(9, 'utf-8').max(13),
+      deliveryDate: joi.date().optional(),
+      status: joi.string().optional().valid('delivered', 'delivery_in_progress'),
+    })
+    .options({ stripUnknown: true, allowUnknown: true });
+}

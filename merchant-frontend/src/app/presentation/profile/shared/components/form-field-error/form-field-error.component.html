@@ -1,0 +1,55 @@
+<div *ngIf="showErrors && formFieldErrors.length !== 0" class="input-error">
+
+    <span *ngFor="let error of formFieldErrors">
+
+        <ng-container [ngSwitch]="error">
+
+            <ng-template
+
+                *ngSwitchCase="'required'"
+
+                [ngTemplateOutlet]="fieldIsRequiredTemplate"
+
+                [ngTemplateOutletContext]="{label: errorMapping['required']}"></ng-template>
+
+            <ng-template
+
+                *ngSwitchCase="'fieldsThatMustMatchDoMatchError'"
+
+                [ngTemplateOutlet]="fieldsMustMatchTemplate"
+
+                [ngTemplateOutletContext]="{label: errorMapping['fieldsThatMustMatchDoMatchError']}"></ng-template>
+
+            <ng-template
+
+                *ngSwitchCase="'minlength'"
+
+                [ngTemplateOutlet]="fieldMusthBeAtleastNCharactersTemplate"
+
+                [ngTemplateOutletContext]="{label: errorMapping['minlength']}"></ng-template>
+
+        </ng-container>
+
+    </span>
+
+</div>
+
+<!-- error responses -->
+
+<ng-template #fieldIsRequiredTemplate let-label="label">
+
+    <span class="block-element">{{ label }}</span>
+
+</ng-template>
+
+<ng-template #fieldsMustMatchTemplate let-label="label">
+
+    <span class="block-element">{{ label }}</span>
+
+</ng-template>
+
+<ng-template #fieldMusthBeAtleastNCharactersTemplate let-label="label">
+
+    <span class="block-element">{{ label }}</span>
+
+</ng-template>

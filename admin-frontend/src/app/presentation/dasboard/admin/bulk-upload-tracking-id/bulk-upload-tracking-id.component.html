@@ -1,0 +1,66 @@
+<div class="bulk-upload-tracking-ids-wrapper">
+  <ngx-spinner
+    bdColor="rgba(0, 0, 0, 0.8)"
+    size="large"
+    color="#fff"
+    type="timer"
+    [fullScreen]="true"
+    ><p style="color: white">Loading...</p></ngx-spinner
+  >
+  <div mat-dialog-content>
+    <form>
+      <h3>Bulk Upload Tracking IDs</h3>
+      <mat-form-field>
+        <mat-label>Select Update Status</mat-label>
+        <mat-select
+          name="selectedUploadStatus"
+          [(ngModel)]="selectedUploadStatus"
+        >
+          <mat-option *ngFor="let status of statusList" [value]="status.value">
+            {{ status.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <app-country-dropdown
+        (selectedCountry)="getSelectedCountry($event)"
+        [fieldDisabled]="selectedUploadStatus !== createdStatus"
+      ></app-country-dropdown>
+
+      <mat-form-field>
+        <mat-label>Select Shipping Company</mat-label>
+        <mat-select
+          [disabled]="selectedUploadStatus !== createdStatus"
+          name="selectedShippingCompany"
+          [(ngModel)]="selectedShippingCompany"
+        >
+          <mat-option
+            *ngFor="let shippingCompany of shippingCompanies"
+            [value]="shippingCompany?.value"
+            >{{ shippingCompany.name }}</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+
+      <button
+        type="button"
+        class="btn btn-primary download-template-btn"
+        (click)="downloadTemplate()"
+        [disabled]="!selectedUploadStatus"
+      >
+        Download Template
+      </button>
+      <div class="custom-file">
+        <input
+          [disabled]="!selectedUploadStatus"
+          type="file"
+          class="custom-file-input"
+          accept=".csv"
+          (change)="confirmFileUpload($event)"
+          (click)="$event.target.value = null"
+        />
+        <label class="custom-file-label"></label>
+      </div>
+    </form>
+  </div>
+</div>

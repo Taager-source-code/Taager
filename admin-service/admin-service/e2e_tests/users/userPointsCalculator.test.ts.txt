@@ -1,0 +1,142 @@
+process.env.ROLLBAR_ACCESS_TOKEN = 'yallahabibi2';
+
+import mongoose from 'mongoose';
+import { connectToMongoDB, disconnectFromMongoDB } from '../mongo/mongoose.connector';
+import { MONGO_PORT, MongoDockerContainer } from '../mongo/docker.mongo';
+
+import order from '../../src/models/order.model';
+import userPoints from '../../src/userPoints/infrastructure/models/mongodb/userPoints.model';
+import { deliveredOrders } from '../../src/domain/order.testing.fixture';
+import { increaseUserPoints } from '../../src/services/orderStatus/userPointsCalculator.service';
+
+const constructCurrentDateAsString = () => {
+  const date = new Date();
+  const day = `0${date.getDate()}`.slice(-2);
+  const month = `0${date.getMonth() + 1}`.slice(-2);
+  return `${day}${month}${date.getFullYear()}`;
+};
+
+describe('Calculate user points', () => {
+  beforeAll(async () => {
+    const container = await MongoDockerContainer.getContainer();
+    const mongoUrl = `mongodb://${container.getHost()}:${container.getMappedPort(MONGO_PORT)}/testDB`;
+    await connectToMongoDB(mongoUrl);
+  });
+
+  test('Update/increment userPoints with userPoints existing for all users', async () => {
+    // Arrange
+    await order.insertMany(deliveredOrders);
+
+    const usersPoints = [
+      {
+        pointsCount: 3,
+        dateNumber: constructCurrentDateAsString(),
+        userId: '507f191e810c19729de860ea',
+      },
+      {
+        pointsCount: 7,
+        dateNumber: constructCurrentDateAsString(),
+        userId: '507f1f77bcf86cd799439011',
+      },
+    ];
+
+    await userPoints.insertMany(usersPoints);
+
+    // Act
+    await increaseUserPoints(deliveredOrders, 'delivered');
+
+    // Assert
+    const userPointsAfterUpdate = await userPoints.find({}).lean();
+
+    const userPointsCountAfterUpdate = userPointsAfterUpdate.map(({ pointsCount, userId }) => ({
+      pointsCount,
+      userId,
+    }));
+
+    expect(userPointsCountAfterUpdate).toHaveLength(2);
+
+    const userPointsCountToBeUpdated = [
+      {
+        pointsCount: 4,
+        userId: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
+      },
+      {
+        pointsCount: 8,
+        userId: new mongoose.Types.ObjectId('507f1f77bcf86cd799439011'),
+      },
+    ];
+
+    expect(userPointsCountAfterUpdate).toEqual(userPointsCountToBeUpdated);
+  });
+
+  test('Create userPoints with userPoints not existing for all users', async () => {
+    // Arrange
+    await order.insertMany(deliveredOrders);
+
+    // Act
+    await increaseUserPoints(deliveredOrders, 'delivered');
+
+    // Assert
+    const userPointsAfterUpdate = await userPoints.find({}).lean();
+
+    const userPointsCountAfterUpdate = userPointsAfterUpdate.map(({ pointsCount }) => ({
+      pointsCount,
+    }));
+
+    expect(userPointsCountAfterUpdate).toHaveLength(2);
+
+    const userPointsCountToBeUpdated = [{ pointsCount: 1 }, { pointsCount: 1 }];
+
+    expect(userPointsCountAfterUpdate).toEqual(userPointsCountToBeUpdated);
+  });
+
+  test('Create userPoints for users that dont have userPoints and Update/increment userPoints for users that have userPoints', async () => {
+    // Arrange
+    await order.insertMany(deliveredOrders);
+
+    const usersPoints = [
+      {
+        pointsCount: 3,
+        dateNumber: constructCurrentDateAsString(),
+        userId: '507f191e810c19729de860ea',
+      },
+    ];
+
+    await userPoints.insertMany(usersPoints);
+
+    // Act
+    await increaseUserPoints(deliveredOrders, 'delivered');
+
+    // Assert
+    const userPointsAfterUpdate = await userPoints.find({}).lean();
+
+    const userPointsCountAfterUpdate = userPointsAfterUpdate.map(({ pointsCount, userId }) => ({
+      pointsCount,
+      userId,
+    }));
+
+    expect(userPointsCountAfterUpdate).toHaveLength(2);
+
+    const userPointsCountToBeUpdated = [
+      {
+        userId: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
+        pointsCount: 4,
+      },
+      {
+        userId: new mongoose.Types.ObjectId('507f1f77bcf86cd799439011'),
+        pointsCount: 1,
+      },
+    ];
+
+    expect(userPointsCountAfterUpdate).toEqual(userPointsCountToBeUpdated);
+  });
+
+  afterEach(async () => {
+    await order.deleteMany({});
+    await userPoints.deleteMany({});
+  });
+
+  afterAll(() => {
+    disconnectFromMongoDB();
+  });
+});

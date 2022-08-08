@@ -1,0 +1,45 @@
+@import 'common.scss';
+
+:host {
+
+  .selected-country-tooltip {
+
+    display: flex;
+
+    align-items: center;
+
+    @include fluid-type(
+
+      $desktop-navbar-min-vw,
+
+      $desktop-navbar-max-vw,
+
+      $desktop-navbar-min-font-size,
+
+      $desktop-navbar-max-font-size,
+
+    );
+
+    &__icon {
+
+      margin-left: em-calc(16px);
+
+      width: em-calc(41px);
+
+    }
+
+    &__text {
+
+      margin: 0;
+
+      text-align: start;
+
+      color: $text-secondary;
+
+      font-size: em-calc(20px);
+
+    }
+
+  }
+
+}

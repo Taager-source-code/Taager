@@ -1,0 +1,27 @@
+import { BAD_REQUEST, OK } from 'http-status';
+import { Container } from 'typedi';
+import GetAnnouncements from '../../application/usecases/GetAnnouncements';
+import { Announcement } from '../../../common/infrastructure/db/models/Announcement';
+import { getAnnouncementRequestValidator } from '../validators/getAnnouncementRequestValidator';
+
+const container = Container.of();
+
+function handleSuccess(res, getAnnouncementsResponse: Announcement[]) {
+  res.status(OK).json({
+    msg: 'Announcements list found!',
+    data: getAnnouncementsResponse,
+  });
+}
+
+export const execute = async (req, res) => {
+  const { error, value: validateRequest } = getAnnouncementRequestValidator(req);
+  if (error) {
+    return res.status(BAD_REQUEST).json({
+      msg: error.details[0].message,
+    });
+  }
+  const getAnnouncements = container.get(GetAnnouncements);
+  const getAnnouncementsResponse = await getAnnouncements.execute(validateRequest.country);
+
+  return handleSuccess(res, getAnnouncementsResponse);
+};

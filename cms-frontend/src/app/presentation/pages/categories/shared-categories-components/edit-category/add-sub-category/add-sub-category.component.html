@@ -1,0 +1,23 @@
+<nb-card [nbSpinner]="loading" nbSpinnerSize="giant" nbSpinnerStatus="primary">
+  <nb-card-header class="card-header">
+    Add new in {{ parentCategory?.name?.englishName? parentCategory.name.englishName : 'Category' }}
+  </nb-card-header>
+  <form (ngSubmit)="onAddSubCategory()" [formGroup]="newSubCategoryForm">
+    <nb-card-body class="card-body">
+      <div class="card-body__form-input">
+        <label for="englishName">English Name</label>
+        <input nbInput type="text" name="englishName" formControlName="englishName" placeholder="English Name">
+      </div>
+      <div class="card-body__form-input">
+        <label for="arabicName">Arabic Name</label>
+        <input nbInput type="text" name="arabicName" formControlName="arabicName" placeholder="Arabic Name">
+      </div>
+    </nb-card-body>
+    <nb-card-footer class="card-footer">
+      <button class="card-footer__button" nbButton ghost type="button" (click)="onCloseDialog()">Cancel</button>
+      <button class="card-footer__button" nbButton status="primary" type="submit" [disabled]="newSubCategoryForm.invalid || loading">
+        Add
+      </button>
+    </nb-card-footer>
+  </form>
+</nb-card>

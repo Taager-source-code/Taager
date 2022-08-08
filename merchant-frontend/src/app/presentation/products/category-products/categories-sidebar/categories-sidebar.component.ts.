@@ -1,0 +1,33 @@
+import { Component, OnInit, Input } from '@angular/core';
+import { CommercialCategoryTreeNode } from 'src/app/presentation/shared/interfaces/commercial-categories.interface';
+
+
+@Component({
+  selector: 'app-categories-sidebar',
+  templateUrl: './categories-sidebar.component.html',
+  styleUrls: ['./categories-sidebar.component.scss']
+})
+export class CategoriesSidebarComponent implements OnInit {
+  @Input() selectedCategoryName: string;
+  @Input() selectedCategoryHierarchy: CommercialCategoryTreeNode[];
+  selectedCategoryNodes: {levelOne: CommercialCategoryTreeNode; levelTwo: CommercialCategoryTreeNode; levelThree: CommercialCategoryTreeNode};
+  levelTwoCategoryNodes: CommercialCategoryTreeNode[];
+
+  constructor( ) { }
+
+  ngOnInit(): void {
+    this.getSelectedCategoryNodes(this.selectedCategoryHierarchy);
+  }
+
+  getSelectedCategoryNodes(categoryHierachy: CommercialCategoryTreeNode[]): void {
+    this.selectedCategoryNodes = {
+      levelOne : categoryHierachy[categoryHierachy.length - 2],
+      levelTwo : categoryHierachy[categoryHierachy.length - 3],
+      levelThree : categoryHierachy[categoryHierachy.length - 4],
+    };
+    this.levelTwoCategoryNodes = this.selectedCategoryNodes.levelOne.children;
+  }
+
+}
+
+

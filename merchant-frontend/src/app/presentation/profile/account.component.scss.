@@ -1,0 +1,274 @@
+@import "common.scss";
+
+.container-div {
+  overflow-x: hidden;
+  font-size: 16px;
+
+  .title {
+    font-size: em-calc(32px);
+    font-weight: 800;
+    text-align: start;
+    color: black;
+  }
+
+  .order-tabs-container {
+    display: flex;
+    justify-content: flex-start;
+    margin: em-calc(32px 0);
+    .tab {
+      outline: none;
+      border: none;
+      background: none;
+      color: $dark-gray;
+      font-size: em-calc(16px);
+      font-weight: 700;
+      margin-left: em-calc(40px);
+
+      @media (max-width: 767px) {
+        font-size: em-calc(14px);
+        margin-left: em-calc(10px);
+      }
+    }
+    .selected-tab {
+      color: $primary-color;
+      border-bottom: em-calc(2px) solid;
+    }
+  }
+
+  .main {
+    direction: rtl;
+    width: 100%;
+    min-height: em-calc(900px);
+    margin-top: em-calc(36px);
+
+    @media (max-width: 767px) {
+      display: block;
+      min-height: em-calc(1000px);
+    }
+  }
+
+  .bottom-container {
+    direction: rtl;
+    border-radius: em-calc(6px);
+    border: em-calc(1px) solid #ddd;
+    display: flex;
+    flex-direction: column;
+    @media (max-width: 767px) {
+      margin-top: 20px;
+    }
+  }
+
+  .main-header {
+    display: flex;
+    width: 100%;
+    height: 25%;
+    min-height: em-calc(70px);
+    border-radius: em-calc(6px);
+    margin-left: em-calc(10px);
+    border-bottom: solid em-calc(1px) $border-color-medium-gray;
+
+    &-text-conatiner {
+      display: flex;
+      flex-direction: column;
+      align-self: center;
+      text-align: start;
+
+      .sub-header {
+        opacity: 0.5;
+        font-size: 1.3rem;
+        text-align: right;
+        color: $text-primary;
+        padding-top: em-calc(5px);
+      }
+    }
+  }
+
+  label {
+    opacity: 0.7;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    color: $text-primary;
+    direction: rtl;
+    text-align: right;
+    width: 100%;
+    margin-right: 20px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+  }
+
+  .upload-title {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    color: $text-primary;
+  }
+  .upload-text {
+    font-size: 16px;
+    color: $text-primary;
+    padding: 0;
+    @media (max-width: 767px) {
+      padding: em-calc(0 12px);
+    }
+  }
+
+  .profile-picture {
+    width: 28px;
+    height: 28px;
+    background-color: $secondary-color;
+    float: right;
+    border-radius: 10px;
+  }
+
+  .icon-1 {
+    width: 30px;
+    height: 30px;
+  }
+
+  input {
+    border-radius: 3px;
+    border: solid 1px $border-color-dark-gray;
+    width: 100%;
+    margin-right: 10px;
+    height: 35px;
+  }
+
+  .confirm-input {
+    border-radius: 3px;
+    border: solid 1px $border-color-dark-gray;
+    width: 100%;
+    margin-right: 10px;
+    padding: 0 5px;
+    height: 35px;
+    &:focus {
+      border-color: $border-color-primary;
+      outline: none;
+    }
+  }
+
+  .form-group {
+    margin-right: 10px;
+    width: 45%;
+    @media (max-width: 767px) {
+      margin-right: 10px;
+      width: 90%;
+    }
+  }
+
+  .horizontal-form-group {
+    display: flex;
+    @media (max-width: 767px) {
+      display: block;
+    }
+  }
+
+  .upload-picture {
+    width: 40%;
+    border-radius: 35.5px;
+    background-color: #eff0f4;
+    direction: rtl;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 10px;
+    display: flex;
+    margin: auto 24px 0;
+    @media (max-width: 767px) {
+      display: none;
+    }
+  }
+
+  .upload-picture-mobile {
+    border-radius: 35.5px;
+    background-color: #eff0f4;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+    display: none;
+    margin: 20px auto;
+    padding: 11px 20px;
+    @media (max-width: 767px) {
+      display: flex;
+    }
+  }
+
+  .btn-submit {
+    width: 179px;
+    height: 38px;
+    border-radius: 4px;
+    border: solid 1.2px #29b6ab;
+    background-color: #29b6ab;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    margin: 20px auto;
+    &:hover {
+      cursor: pointer;
+      opacity: 0.7;
+    }
+  }
+
+  .main-header-with-button {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: solid 1px $border-color-medium-gray;
+  }
+
+  .btn-referrals {
+    width: em-calc(100px);
+    border-radius: em-calc(4px);
+    font-size: em-calc(14px);
+    font-weight: bold;
+    text-align: center;
+    color: $text-white;
+    background-color: $secondary-color;
+    margin: auto em-calc(20px);
+    display: block;
+    @media (max-width: 767px) {
+      display: none;
+    }
+  }
+
+  .btn-referrals-mobile {
+    display: none;
+    @media (max-width: 767px) {
+      display: block;
+      width: 40%;
+      height: 30px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      color: $text-white;
+      margin-left: 30%;
+      margin-right: 30%;
+      margin-top: 10px;
+      background-color: $secondary-color;
+    }
+  }
+  .referrals-main {
+    display: flex;
+    width: 100%;
+
+    .subdiv {
+      width: 45%;
+      height: 200px;
+      background-color: whitesmoke;
+      margin: 20px auto;
+      .mini-title {
+        font-size: 20px;
+        margin-top: 10px;
+        text-align: right;
+        margin-right: 20px;
+        color: dimgray;
+      }
+      .referrals-title {
+        font-size: 30px;
+        text-align: center;
+        margin-top: 20px;
+      }
+    }
+  }
+}
+
+

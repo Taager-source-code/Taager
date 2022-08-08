@@ -1,0 +1,9 @@
+<div class="success-message-wrapper">
+
+  <img src="assets/img/rewards-program-icons/Check.gif" alt="" />
+
+  <p>{{ message }}</p>
+
+  <button (click)="onClose()">انهاء</button>
+
+</div>

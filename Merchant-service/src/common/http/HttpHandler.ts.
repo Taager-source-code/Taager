@@ -1,0 +1,99 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import * as core from 'express-serve-static-core';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from 'http-status';
+
+import { HttpProcessor } from './HttpProcessor';
+import { Constructable } from 'typedi/types/types/constructable.type';
+import { Container } from 'typedi';
+import Logger from '../../shared-kernel/infrastructure/logging/general.log';
+
+async function handle<T extends HttpProcessor>(processorClass: Constructable<T>, req, res) {
+  const processor = Container.of().get(processorClass);
+  //validate the request
+  const validationResult = processor.schema.validate(processor.getValueToValidate(req));
+  if (validationResult.error) {
+    return res.status(BAD_REQUEST).json({
+      description: validationResult.error.message,
+    });
+  }
+  // start execute the http processor
+  try {
+    const result = await processor.execute(req, validationResult.value);
+
+    if ('data' in result) {
+      const data = result.data;
+      return res.status(result.status).json(data);
+    }
+
+    if ('errorCode' in result)
+      return res.status(result.status).json({
+        errorCode: result.errorCode,
+        description: result.description,
+        message: result.message,
+      });
+  } catch (err) {
+    Logger.error(`Error in httpHandler: ${(err as Error).stack}`);
+    const message = (err as Error).message;
+    return res.status(INTERNAL_SERVER_ERROR).json({
+      description: message,
+      message: `Something went wrong, please contact support!`,
+    });
+  }
+}
+
+export const registerPost = <T extends HttpProcessor>(
+  path: string,
+  processor: Constructable<T>,
+  router: core.Router,
+  ...middlewares: ((req, res, next) => void)[]
+) => {
+  router.post(path, middlewares, async (req, res, next) => {
+    return await handle(processor, req, res);
+  });
+};
+
+export const registerGet = <T extends HttpProcessor>(
+  path: string,
+  processor: Constructable<T>,
+  router: core.Router,
+  ...middlewares: ((req, res, next) => void)[]
+) => {
+  router.get(path, middlewares, async (req, res, next) => {
+    return await handle(processor, req, res);
+  });
+};
+
+export const registerPut = <T extends HttpProcessor>(
+  path: string,
+  processor: Constructable<T>,
+  router: core.Router,
+  ...middlewares: ((req, res, next) => void)[]
+) => {
+  router.put(path, middlewares, async (req, res, next) => {
+    return await handle(processor, req, res);
+  });
+};
+
+export const registerPatch = <T extends HttpProcessor>(
+  path: string,
+  processor: Constructable<T>,
+  router: core.Router,
+  ...middlewares: ((req, res, next) => void)[]
+) => {
+  router.patch(path, middlewares, async (req, res, _next) => {
+    return await handle(processor, req, res);
+  });
+};
+
+export const registerDelete = <T extends HttpProcessor>(
+  path: string,
+  processor: Constructable<T>,
+  router: core.Router,
+  ...middlewares: ((req, res, next) => void)[]
+) => {
+  router.delete(path, middlewares, async (req, res, next) => {
+    return await handle(processor, req, res);
+  });
+};
+
+

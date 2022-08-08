@@ -1,0 +1,97 @@
+<div class="order-status-form">
+  <h4 mat-dialog-title>Mergeable Orders into {{ OrderObj["orderID"] }}</h4>
+  <div mat-dialog-content>
+    <div *ngIf="errorMessages.length > 0" class="top-actions">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Validation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let error of errorMessages">
+            <td style="color: red">
+              product "{{ error.id }} - {{ error.name }}" : is common in the
+              following orders {{ error.orderId }} with different prices
+              {{ error.price }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">Action</th>
+          <th scope="col">Order Id</th>
+          <th scope="col">Order Status</th>
+          <th scope="col">Order Created Date</th>
+          <th scope="col">Order Notes</th>
+          <th scope="col">Receiver Name</th>
+          <th scope="col">Phone Number</th>
+          <th scope="col">Province</th>
+          <th scope="col">Street Name</th>
+
+          <th scope="col">Cash On Delivery</th>
+          <th scope="col">Profit</th>
+          <th scope="col">Products</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders; let i = index">
+          <td>
+            <mat-checkbox
+              *ngIf="
+                order.orderID != OrderObj['orderID'] &&
+                order.status == 'order_received'
+              "
+              [(ngModel)]="order.checked"
+              (change)="selectedOrdersValue($event, order)"
+              [value]="order._id"
+            ></mat-checkbox>
+          </td>
+          <th scope="row">{{ order.orderID }}</th>
+          <td>{{ order.status }}</td>
+          <th scope="row">{{ order.createdAt }}</th>
+          <th scope="row">{{ order.notes }}</th>
+          <th scope="row">{{ order.receiverName }}</th>
+          <th scope="row">{{ order.phoneNumber }}</th>
+          <th scope="row">{{ order.province }}</th>
+          <th scope="row">{{ order.streetName }}</th>
+          <th scope="row">{{ order.cashOnDelivery }}</th>
+          <th scope="row">{{ order.profit }}</th>
+
+          <th scope="row">
+            <div
+              *ngFor="let product of order.productsList"
+              class="table-element row no-gutters"
+            >
+              <div>
+                <input
+                  [(ngModel)]="product.name"
+                  style="width: 350px"
+                  disabled
+                />
+                <input
+                  [(ngModel)]="product.qty"
+                  style="width: 100px"
+                  disabled
+                />
+              </div>
+            </div>
+          </th>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div mat-dialog-actions>
+    <button
+      mat-raised-button
+      [disabled]="clicked"
+      color="primary"
+      (click)="mergeOrders()"
+    >
+      merge selected orders
+    </button>
+  </div>
+</div>

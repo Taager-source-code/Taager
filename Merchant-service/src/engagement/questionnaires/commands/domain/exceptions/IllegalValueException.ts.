@@ -1,0 +1,25 @@
+export class MaxAllowedAnswerCantBeNegativeException extends Error {
+  value: number;
+  constructor(value: number) {
+    super(`Illegal value: MaxAllowedAnswers can't have negative value : ${value}`);
+    this.value = value;
+  }
+}
+
+export class ScoreCapCantBeNegativeException extends Error {
+  value: number;
+  constructor(value: number) {
+    super(`Illegal value: ScoreCap can't have negative value : ${value}`);
+    this.value = value;
+  }
+}
+
+export class ScoreCantBeNegativeException extends Error {
+  value: number;
+  constructor(value: number) {
+    super(`Illegal value: Score can't have negative value : ${value}`);
+    this.value = value;
+  }
+}
+
+

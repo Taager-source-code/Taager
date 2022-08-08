@@ -1,0 +1,45 @@
+import { Service } from 'typedi';
+import Env from '../../../../Env';
+import CacheManager from '../../../../shared-kernel/infrastructure/cache/base-cache';
+import { Category } from '../../../common/infrastructure/db/models/categoryModel';
+import { CacheType } from '../../../../shared-kernel/infrastructure/cache/base-cache/cacheModel';
+
+@Service({ global: true })
+export class CategoryCache {
+  private cache;
+  private ttlInHoursForCache = 30 * 60;
+  private maxItemsInCache = 500;
+  private allowStaleItemsInCache = false;
+
+  constructor() {
+    const memoryCacheConfigs = {
+      ttl: this.ttlInHoursForCache,
+      max: this.maxItemsInCache,
+      stale: this.allowStaleItemsInCache,
+      updateAgeOnGet: Env.CACHE_UPDATE_ITEMS_ONGET || false,
+    };
+
+    this.cache = CacheManager.resolve({
+      options: memoryCacheConfigs,
+      type: CacheType.Memmory,
+    });
+  }
+
+  getByCountry(country: string): Category[] {
+    return this.cache.get(country);
+  }
+
+  setByCountry(country: string, categories: Category[]): void {
+    this.cache.set(country, categories);
+  }
+
+  getAll(): Category[] {
+    return this.cache.get('all');
+  }
+
+  setAll(categories: Category[]): void {
+    this.cache.set('all', categories);
+  }
+}
+
+

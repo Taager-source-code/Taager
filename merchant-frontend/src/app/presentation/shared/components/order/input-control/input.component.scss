@@ -1,0 +1,39 @@
+@import 'common.scss';
+
+label {
+
+  margin-bottom: 0;
+
+}
+
+.form-control {
+
+  height: 45px;
+
+  border-radius: 10px;
+
+}
+
+.input-error {
+
+  margin-bottom: 0;
+
+  border-color: $border-color-danger;
+
+}
+
+.input-error:focus {
+
+  border-width: 2px;
+
+}
+
+@media (max-width: 768px) {
+
+  input {
+
+    height: 40px;
+
+  }
+
+}

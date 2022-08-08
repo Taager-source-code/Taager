@@ -1,0 +1,205 @@
+<div class="background">
+
+  <div [ngClass]="{'container-custom-mob': isMobile,'container-custom': !isMobile}">
+
+  <!-- <div class="row justify-content-md-center card-wrapper"> -->
+
+    <div>
+
+      <div class="title">إنشاء حساب جديد</div>
+
+      <div class="sub-title">انت في اول الطريق الي تحقيق حلمك و تقدر دلوقتي تشوف المنتجات وتبدأ تبيع اللي يناسبك و تحقق ارباح و نجاحات كتير </div>
+
+      <div [ngClass]="{'btns-mob': isMobile,'btns d-flex justify-content-center align-items-center': !isMobile}">
+
+        <button [disabled]="isLoading" (click)="signInWithGoogle()" class="btn btn-auth text-center" [ngClass]="{'btn-mob': isMobile}" type="submit">
+
+          <img class="icon" src="../../../../assets/img/google-i.png">
+
+          تسجيل بواسطة جوجل
+
+        </button>
+
+      </div>
+
+      <div class="card main">
+
+        <div *ngIf="errorMessage && !isLoading" class="alert alert-danger form-error-message">
+
+          {{ errorMessage }}
+
+        </div>
+
+        <loader [loading]="isLoading"></loader>
+
+        <div class="card-content" *ngIf="!isLoading">
+
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+            <div class="form-group">
+
+              <label>
+
+                الأسم بالكامل
+
+              </label>
+
+              <input class="form-control" type="text" placeholder="أدخل الأسم بالكامل" formControlName="fullName" />
+
+              <div *ngIf="fullName.invalid && submitted">
+
+                <div *ngIf="fullName.errors.required" class="input-error">
+
+                  الإسم بالكامل مطلوب
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="form-group">
+
+              <label>
+
+                البريد الألكترونى
+
+              </label>
+
+              <input class="form-control" type="text" placeholder="أدخل البريد الالكترونى" formControlName="email" />
+
+              <div *ngIf="email.invalid && submitted">
+
+                <div *ngIf="email.errors.email" class="input-error">
+
+                  هذا البريد الإلكتروني غير صحيح
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="form-group">
+
+              <label>
+
+                رقم الموبايل
+
+              </label>
+
+              <input class="form-control" type="text" placeholder="أدخل رقم الموبايل" formControlName="phoneNum" />
+
+              <div *ngIf="phoneNum.invalid && submitted">
+
+                <div *ngIf="phoneNum.errors.required" class="input-error">
+
+                  رقم الموبايل مطلوب
+
+                </div>
+
+                <div *ngIf="phoneNum.errors.pattern" class="input-error">
+
+                  هذا الرقم غير صحيح
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="form-group">
+
+              <label>
+
+                اختيار كلمة المرور
+
+              </label>
+
+              <input class="form-control" type="password" placeholder="أدخل كلمة السر" formControlName="password" />
+
+              <div *ngIf="password.invalid && submitted">
+
+                <div *ngIf="password.errors.required" class="input-error">
+
+                  كلمة المرور مطلوبة
+
+                </div>
+
+                <div *ngIf="password.errors.minlength" class="input-error">
+
+                  كلمة المرور يجب ألا تقل عن ٩ حروف
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="form-group">
+
+              <label>
+
+                تأكيد كلمة المرور
+
+              </label>
+
+              <input class="form-control" type="password" placeholder="أدخل كلمة المرور" formControlName="confirmPassword" />
+
+              <div *ngIf="registerForm.errors" class="input-error">
+
+                كلمة المرور لا تتطابق
+
+              </div>
+
+            </div>
+
+            <div class="form-group">
+
+              <label>
+
+               كود الإحالة (غير ضروري)
+
+              </label>
+
+              <input class="form-control" type="text" placeholder="أدخل كود الإحالة" formControlName="referredBy" />
+
+              <div>
+
+                <div *ngIf="referredBy.errors" class="input-error">
+
+                  كود الإحالة غير صحيح
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <button class="btn btn-register" [ngClass]="{'btn-register-mob': isMobile}" type="submit">
+
+              تسجيل حساب جديد
+
+            </button>
+
+            <div class="foot-div">
+
+            <p class="foot-label">لديك حساب بالفعل؟ </p>
+
+            <p class="foot-label-2" (click)="navigateToSignIn()">تسجيل الدخول</p>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+

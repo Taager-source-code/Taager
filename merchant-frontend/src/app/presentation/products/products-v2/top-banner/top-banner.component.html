@@ -1,0 +1,19 @@
+<div class="top-banner" *ngIf="announcementsList.length > 0">
+
+  <carousel [height]="'100%'" [cellWidth]="'100%'" [cellsToShow]="1" [dots]="true" [loop]="true" [autoplay]="true" [lightDOM]="true" [arrows]="showNavigationArrows" [pauseOnHover]="!isMobile">
+
+    <div class="carousel-cell" *ngFor="let item of announcementsList; let index=index">
+
+      <img class="banner-image" src="{{item.img}}" *ngIf="!item.link">
+
+      <a *ngIf="item.link" [href]="item.link">
+
+        <img class="banner-image" src="{{item.img}}" appHoverStyle>
+
+      </a>  
+
+    </div>
+
+  </carousel>
+
+</div>

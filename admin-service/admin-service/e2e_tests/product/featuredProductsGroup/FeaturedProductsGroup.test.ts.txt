@@ -1,0 +1,220 @@
+import dotenv from 'dotenv';
+dotenv.config();
+process.env.SECRET = 'yallahabibi';
+process.env.ROLLBAR_ACCESS_TOKEN = 'yallahabibi2';
+
+import request from 'supertest';
+import * as mongooseConnector from '../../mongo/mongoose.connector';
+import * as dockerMongo from '../../mongo/docker.mongo';
+import * as expressServer from '../../expressServer/expressServer';
+import FeaturedProductsGroupModel from '../../../src/models/featuredProductsGroup.model';
+import User from '../../../src/models/user.model';
+import Product from '../../../src/models/product.model';
+import CountryModel from '../../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import { countryFixture } from '../../fixtures/countryFixture';
+import { ADMIN_1 } from '../../fixtures/users/adminFixtures';
+import UserRoles from '../../../src/models/userRoles.model';
+
+describe('/api/province', () => {
+  let app: any = null;
+  let accessToken: string;
+
+  const createUser = async () => {
+    await User.create(ADMIN_1);
+    await UserRoles.create({ role: 'admin' });
+  };
+
+  const createProduct = async () => {
+    await Product.create({
+      _id: '612e572dfcacc80013922708',
+      productName: 'some product name',
+      productPrice: 200,
+      prodPurchasePrice: 200,
+      productProfit: 100,
+      productQuantity: 1,
+      productDescription: 'some description',
+      prodID: 'prodId',
+      country: 'EGY',
+      Category: 'some category',
+      productPicture: 'http://some-product-image.com',
+      extraImage1: 'bla',
+      extraImage2: 'bla',
+      extraImage3: 'bla',
+      extraImage4: 'bla',
+      extraImage5: 'bla',
+      extraImage6: 'bla',
+      productAvailability: 'available',
+      orderCount: 0,
+      sellerName: 'sellerName',
+      attributes: [],
+    });
+  };
+
+  const login = async (app: any) => {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  };
+
+  const createCountries = async () => {
+    await CountryModel.insertMany(countryFixture);
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+
+    await createUser();
+    await createCountries();
+    await createProduct();
+    await login(app);
+  });
+
+  describe('/featuredProductsGroup', () => {
+    test('Should create featuredProductsGroup if no featuredProductsGroup exists, with no country in body', async () => {
+      // Arrange
+      const featuredProductsGroupType = 1;
+
+      const getFeaturedProductsGroupResponseBeforeCreate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Act
+      const createFeaturedProductsGroupResponse = await request(app)
+        .patch(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ products: [] });
+
+      // Assert
+      const getFeaturedProductsGroupResponseAfterCreate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(getFeaturedProductsGroupResponseBeforeCreate.statusCode).toEqual(404);
+      expect(getFeaturedProductsGroupResponseBeforeCreate.body.data).toEqual({});
+
+      expect(createFeaturedProductsGroupResponse.statusCode).toEqual(200);
+
+      expect(getFeaturedProductsGroupResponseAfterCreate.statusCode).toEqual(200);
+      expect(getFeaturedProductsGroupResponseAfterCreate.body.data.type).toEqual(1);
+      expect(getFeaturedProductsGroupResponseAfterCreate.body.data.country).toEqual('EGY');
+    });
+
+    test('Should create featuredProductsGroup if no featuredProductsGroup exists, with ARE in body', async () => {
+      // Arrange
+      const featuredProductsGroupType = 1;
+
+      const getFeaturedProductsGroupResponseBeforeCreate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Act
+      const createFeaturedProductsGroupResponse = await request(app)
+        .patch(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ products: [], country: 'ARE' });
+
+      // Assert
+      const getFeaturedProductsGroupResponseAfterCreate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(getFeaturedProductsGroupResponseBeforeCreate.statusCode).toEqual(404);
+      expect(getFeaturedProductsGroupResponseBeforeCreate.body.data).toEqual({});
+
+      expect(createFeaturedProductsGroupResponse.statusCode).toEqual(200);
+
+      expect(getFeaturedProductsGroupResponseAfterCreate.statusCode).toEqual(200);
+      expect(getFeaturedProductsGroupResponseAfterCreate.body.data.type).toEqual(1);
+      expect(getFeaturedProductsGroupResponseAfterCreate.body.data.country).toEqual('ARE');
+    });
+
+    test('Should update featuredProductsGroup if featuredProductsGroup exists, with no country in body', async () => {
+      // Arrange
+      const featuredProductsGroupType = 1;
+
+      await request(app)
+        .patch(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ products: [] });
+
+      const getFeaturedProductsGroupResponseBeforeUpdate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Act
+      const updateFeaturedProductsGroupResponse = await request(app)
+        .patch(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ products: ['612e572dfcacc80013922708'] });
+
+      // Assert
+      const getFeaturedProductsGroupResponseAfterUpdate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(getFeaturedProductsGroupResponseBeforeUpdate.statusCode).toEqual(200);
+      expect(getFeaturedProductsGroupResponseBeforeUpdate.body.data.type).toEqual(1);
+      expect(getFeaturedProductsGroupResponseBeforeUpdate.body.data.products.map((product) => product._id)).toEqual([]);
+
+      expect(updateFeaturedProductsGroupResponse.statusCode).toEqual(200);
+
+      expect(getFeaturedProductsGroupResponseAfterUpdate.statusCode).toEqual(200);
+      expect(getFeaturedProductsGroupResponseAfterUpdate.body.data.type).toEqual(1);
+      expect(getFeaturedProductsGroupResponseAfterUpdate.body.data.country).toEqual('EGY');
+      expect(getFeaturedProductsGroupResponseAfterUpdate.body.data.products.map((product) => product._id)).toEqual([
+        '612e572dfcacc80013922708',
+      ]);
+    });
+
+    test('Should update featuredProductsGroup if featuredProductsGroup exists, with SAU in body', async () => {
+      // Arrange
+      const featuredProductsGroupType = 1;
+
+      await request(app)
+        .patch(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ products: [], country: 'SAU' });
+
+      const getFeaturedProductsGroupResponseBeforeUpdate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Act
+      const updateFeaturedProductsGroupResponse = await request(app)
+        .patch(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ products: ['612e572dfcacc80013922708'], country: 'SAU' });
+
+      // Assert
+      const getFeaturedProductsGroupResponseAfterUpdate = await request(app)
+        .get(`/api/featuredProductsGroup/${featuredProductsGroupType}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(getFeaturedProductsGroupResponseBeforeUpdate.statusCode).toEqual(200);
+      expect(getFeaturedProductsGroupResponseBeforeUpdate.body.data.type).toEqual(1);
+      expect(getFeaturedProductsGroupResponseBeforeUpdate.body.data.products.map((product) => product._id)).toEqual([]);
+
+      expect(updateFeaturedProductsGroupResponse.statusCode).toEqual(200);
+
+      expect(getFeaturedProductsGroupResponseAfterUpdate.statusCode).toEqual(200);
+      expect(getFeaturedProductsGroupResponseAfterUpdate.body.data.type).toEqual(1);
+      expect(getFeaturedProductsGroupResponseAfterUpdate.body.data.country).toEqual('SAU');
+      expect(getFeaturedProductsGroupResponseAfterUpdate.body.data.products.map((product) => product._id)).toEqual([
+        '612e572dfcacc80013922708',
+      ]);
+    });
+  });
+
+  afterEach(async () => {
+    await FeaturedProductsGroupModel.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await Product.deleteMany({});
+    await mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

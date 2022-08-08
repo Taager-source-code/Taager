@@ -1,0 +1,47 @@
+<div
+
+  *ngIf="shippindDiscountPromotionFlag"
+
+  class="free-shipping-wrapper"
+
+  [ngStyle]="{ backgroundColor: promotionEntitled ? '#3ba34e17' : '' }"
+
+>
+
+  <p *ngIf="!promotionEntitled" class="free-shipping-unavailable">
+
+    {{ notPromotionEntitledText }}
+
+  </p>
+
+  <p *ngIf="promotionEntitled" class="free-shipping-available">
+
+    {{ promotionEntitledText }}
+
+  </p>
+
+  <div class="tooltip-wrapper">
+
+    <img
+
+      src="assets/img/Info.svg"
+
+      alt="Information"
+
+      class="free-shipping-information-icon"
+
+      appHoverStyle
+
+    />
+
+    <p class="free-shipping-tooltip">{{ tooltipText }}</p>
+
+  </div>
+
+</div>
+
+<p *ngIf="shippindDiscountPromotionFlag" class="mobile-tooltip">
+
+  {{ tooltipText }}
+
+</p>

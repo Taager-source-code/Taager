@@ -1,0 +1,25 @@
+import { Service } from 'typedi';
+import UserFeaturesRepo from '../../infrastructure/repositories/UserFeaturesRepo';
+import { MerchantMultiTenancyEnabledEventHandler } from '../../../engagement/activity/commands/application/usecases/MerchantMultiTenancyEnabledEventHandler';
+
+@Service({ global: true })
+export default class EnableMultiTenancy {
+  private userFeaturesRepo: UserFeaturesRepo;
+  private multiTenancyEnabledEventHandler: MerchantMultiTenancyEnabledEventHandler;
+
+  constructor(
+    userFeaturesRepo: UserFeaturesRepo,
+    multiTenancyEnabledEventHandler: MerchantMultiTenancyEnabledEventHandler,
+  ) {
+    this.userFeaturesRepo = userFeaturesRepo;
+    this.multiTenancyEnabledEventHandler = multiTenancyEnabledEventHandler;
+  }
+
+  async execute(taagerId: string): Promise<void> {
+    await this.userFeaturesRepo.enableFeature('multitenancy', taagerId);
+    await this.multiTenancyEnabledEventHandler.execute(taagerId);
+    return Promise.resolve();
+  }
+}
+
+

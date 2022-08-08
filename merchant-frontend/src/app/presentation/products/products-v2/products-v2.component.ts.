@@ -1,0 +1,228 @@
+import { Component, isDevMode, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+
+import { MultitenancyService } from 'src/app/presentation/shared/services/multitenancy.service';
+import { CarouselInterface, CategoryInterface, SubBannerDataInterface } from 'src/app/presentation/shared/interfaces/product.interafce';
+import {
+  ALL_PRODUCTS_CATEGORY,
+  CATEGORY_PRODUCTS_URL,
+  FEATURE_FLAGS,
+  MULTITENANCY_CONSTS
+} from 'src/app/presentation/shared/constants/index';
+import { CatalogService } from 'src/app/presentation/shared/services/catalog.service';
+import { LocalStorageService } from 'src/app/presentation/shared/services/local-storage.service';
+import { User } from 'src/app/presentation/shared/interfaces/user.interface';
+import {
+  PRODUCTS_LANDING_PAGE_CAROUSELS,
+  SUB_BANNERS_DATA,
+  TAAGER_RECOMMENDATIONS_GROUP
+} from 'src/app/presentation/shared/constants/products-landing-page';
+import { SORT_BY_CREATED_AT } from 'src/app/presentation/shared/constants/category-products';
+import { CategoryService } from 'src/app/presentation/shared/services/category.service';
+import { MixpanelService } from 'src/app/presentation/shared/services/mixpanel.service';
+import { CommercialCategoriesService } from '../../shared/services/commercial-categories.service';
+import { BaseCategoryModel } from 'src/app/core/domain/commercial-categories.model';
+import { TreeNode } from '../../shared/utilities/tree.utility';
+import { take } from 'rxjs/operators';
+import { GetFeatureFlagUsecase } from 'src/app/core/usecases/get-feature-flag.usecase';
+import { combineLatest } from 'rxjs';
+import { GetQuestionnaireEligibilityUseCase } from 'src/app/core/usecases/get-questionnaire-eligibility.usecase';
+import { KSA_QUESTIONNAIRE_NAME } from '../../shared/constants/questionnaire-name';
+import { ToastrService } from 'ngx-toastr';
+import { BannerQuestionnaireService } from '../../shared/services/banner-questionnaire.service';
+
+@Component({
+  selector: 'app-products-v2',
+  templateUrl: './products-v2.component.html',
+  styleUrls: ['./products-v2.component.scss'],
+  providers: [CommercialCategoriesService]
+})
+export class ProductsV2Component implements OnInit {
+  public user: User;
+  public categories: CategoryInterface[] = [];
+  public commercialCategories: TreeNode<BaseCategoryModel>[];
+  public areIconsLoaded = false;
+  public featuredProductsGroups: CarouselInterface[] = [];
+  public carouselsData: { topGroup: CarouselInterface[]; bottomGroup: CarouselInterface[] } = { topGroup: [], bottomGroup: [] };
+  public isCatalogDataLoaded = false;
+  public subBannersData: SubBannerDataInterface[];
+  public shouldShowSubBanners: boolean;
+  public commercialCategoriesFlag = false;
+  public ksaOnboardingFlag = false;
+  public isUserEligibleForQuestionnaire = false;
+
+  constructor(
+    private categoryService: CategoryService,
+    private mixpanelService: MixpanelService,
+    private localStorageService: LocalStorageService,
+    private router: Router,
+    private catalogService: CatalogService,
+    private multitenancyService: MultitenancyService,
+    private getFeatureFlagUseCase: GetFeatureFlagUsecase,
+    private commercialCategoriesService: CommercialCategoriesService,
+    private getQuestionnaireBannerEligibilityUseCase: GetQuestionnaireEligibilityUseCase,
+    private toastService: ToastrService,
+    private bannerQuestionnaireService: BannerQuestionnaireService
+  ) {
+    const bannerShow = this.bannerQuestionnaireService.getDeclineBannerValue();
+    bannerShow.subscribe((bannerStatus: boolean) => {
+      this.isUserEligibleForQuestionnaire = bannerStatus;
+    });
+  }
+
+  ngOnInit(): void {
+    this.getUserEligibilityForQuestionnaire();
+    this.setupCarrousselData();
+    this.getFeaturedGroups();
+    if (!isDevMode()) {
+      const commercialCategoriesFlag$ = this.getFeatureFlagUseCase.execute(FEATURE_FLAGS.COMMERCIAL_CATEGORIES_FLAG);
+      const ksaOnboardingFlag$ = this.getFeatureFlagUseCase.execute(FEATURE_FLAGS.KSA_ONBOARDING_FLAG);
+
+      combineLatest([commercialCategoriesFlag$, ksaOnboardingFlag$]).subscribe(
+        ([commercialCategoriesFlag, ksaOnboardingFlag]) => {
+          this.commercialCategoriesFlag = commercialCategoriesFlag;
+          this.ksaOnboardingFlag = ksaOnboardingFlag;
+          this.setUpFeaturedCategoriesCarousels();
+        }
+      );
+    } else {
+      this.commercialCategoriesFlag = true;
+      this.ksaOnboardingFlag = true;
+      this.setUpFeaturedCategoriesCarousels();
+    }
+
+    this.getProfileData();
+
+    this.getCatalogedProducts();
+  }
+
+  public getUserEligibilityForQuestionnaire(): void {
+    this.getQuestionnaireBannerEligibilityUseCase.execute(KSA_QUESTIONNAIRE_NAME).subscribe(
+      (res) => {
+        this.isUserEligibleForQuestionnaire = res.enabled;
+      },
+      (err) => {
+        this.toastService.error(err?.error?.msg);
+      }, () => { }
+    );
+  }
+
+  setupCarrousselData() {
+    this.carouselsData = {
+      topGroup: [
+        PRODUCTS_LANDING_PAGE_CAROUSELS.TAAGER_EXLUSIVES_CAROUSEL
+      ],
+      bottomGroup: [
+        PRODUCTS_LANDING_PAGE_CAROUSELS.BEST_SELLERS_CAROUSEL,
+        PRODUCTS_LANDING_PAGE_CAROUSELS.NEWEST_PRODUCTS_CAROUSEL,
+        PRODUCTS_LANDING_PAGE_CAROUSELS.ALL_PRODUCTS_CAROUSEL,
+      ]
+    };
+  }
+
+  getProfileData() {
+    this.user = this.localStorageService.getUser();
+  }
+
+  setCategoryIcons(): void {
+    this.categories.forEach(category => {
+      category.iconPath = `icon-category-icons-${category.name.replace(/ /gi, '-')}`;
+    });
+  }
+
+  setUpFeaturedCategoriesCarousels(): void {
+    if (this.commercialCategoriesFlag) {
+      this.setUpFeaturedCommercialCategoriesCarousels();
+    } else {
+      this.setUpFeaturedNonCommercialCategoriesCarousels();
+    }
+  }
+
+  setUpFeaturedCommercialCategoriesCarousels(): void {
+    this.commercialCategoriesService.getCommercialCategoriesTree().pipe(take(1))
+      .subscribe(
+        tree => {
+          this.commercialCategories = tree.root.children;
+          const featuredCategoriesCarousels = tree.root.children.filter(
+            category => category.value.featured
+          ).map(
+            category => (
+              {
+                title: category.value.name.arabicName,
+                categoryName: category.value.name.arabicName,
+                sorting: SORT_BY_CREATED_AT, categoryID: category.key
+              }));
+          this.carouselsData.bottomGroup.push(...featuredCategoriesCarousels);
+          this.setupCategoriesSubBanners();
+        });
+  }
+
+  setUpFeaturedNonCommercialCategoriesCarousels(): void {
+    this.categoryService.getCategories().pipe(take(1))
+      .subscribe(
+        res => {
+          this.categories = res.data;
+          const featuredCategoriesCarousels = this.categories
+            .filter(category => category.featured)
+            .map(category => ({ title: category.text, categoryName: category.text, sorting: SORT_BY_CREATED_AT, }));
+          this.carouselsData.bottomGroup.push(...featuredCategoriesCarousels);
+          this.setCategoryIcons();
+          this.setupCategoriesSubBanners();
+        });
+  }
+
+  goToCategories() {
+    const queryString = {
+      q: '',
+      category: ALL_PRODUCTS_CATEGORY,
+      currentPage: 1,
+      items: 12,
+      sorting: SORT_BY_CREATED_AT,
+    };
+    this.router.navigate([CATEGORY_PRODUCTS_URL], { queryParams: queryString });
+  }
+
+  setupCategoriesSubBanners() {
+    if (this.commercialCategoriesFlag) {
+      const allCategoriesIds = this.commercialCategories.map(category => category.key);
+      this.subBannersData = SUB_BANNERS_DATA;
+      this.subBannersData = this.subBannersData.map(subBanner => {
+        const id = this.commercialCategories.filter(category => category.value.name.arabicName === subBanner.categoryName)[0].key;
+        return { ...subBanner, categoryId: id };
+      });
+      this.shouldShowSubBanners = this.subBannersData.every(subBanner => allCategoriesIds.includes(subBanner.categoryId));
+    } else {
+      const allCategoriesNames = this.categories.map(category => category.text);
+      this.subBannersData = SUB_BANNERS_DATA;
+      this.shouldShowSubBanners = this.subBannersData.every(subBanner => allCategoriesNames.includes(subBanner.categoryName));
+    }
+  }
+
+  onRevertDesign() {
+    this.mixpanelService.track('go_to_product_v1');
+  }
+
+  getFeaturedGroups() {
+    const isMultitenancyEnabled = this.multitenancyService.isMultitenancyEnabled();
+    const selectedCountryIsoCode2 = this.multitenancyService.getCurrentCountry().isoCode2;
+    if ((!isMultitenancyEnabled) || (selectedCountryIsoCode2 === MULTITENANCY_CONSTS.EGYPT_ISOCODE_2)) {
+      this.featuredProductsGroups = [TAAGER_RECOMMENDATIONS_GROUP];
+      this.setUpFeaturedProductsGroupsCarousels();
+    }
+  }
+
+  setUpFeaturedProductsGroupsCarousels(): void {
+    this.carouselsData.topGroup.unshift(...this.featuredProductsGroups);
+  }
+
+  getCatalogedProducts(): void {
+    this.catalogService.getCatalogedProducts().subscribe(() => {
+      this.isCatalogDataLoaded = true;
+    }, () => {
+      this.isCatalogDataLoaded = true;
+    });
+  }
+
+}
+
+

@@ -1,0 +1,9 @@
+import { Service } from 'typedi';
+import userWallet from '../schemas/userWallet.model';
+
+@Service({ global: true })
+export default class WalletDao {
+  findUserWallet = query => userWallet.find(query).exec();
+}
+
+

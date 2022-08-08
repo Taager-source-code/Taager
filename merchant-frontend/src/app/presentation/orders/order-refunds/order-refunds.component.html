@@ -1,0 +1,111 @@
+<div mat-dialog-content>
+
+    <h4 mat-dialog-title>استرجاع</h4>
+
+    <form [formGroup]="refundOrderForm">
+
+    <mat-form-field>
+
+        <mat-label>اختر المنتج المراد استرجاعه</mat-label>
+
+        <mat-select formControlName="product" (selectionChange)="onProductChange($event)" required>
+
+          <mat-option *ngFor="let item of products" [value]='item'>
+
+            <img width="30px" height="30px" [src]="item.productPicture">
+
+              {{item.productName}}</mat-option>
+
+        </mat-select>
+
+    </mat-form-field>
+
+      <mat-form-field appearance="none">
+
+        <label class="matLabel">برجاء تحديد الكمية</label>
+
+        <div class="inline-div">
+
+            <label (click)="addQuantity()">+</label>
+
+            <input formControlName="productQty" matInput class="qty-input">
+
+            <label (click)="removeQuantity()">-</label>
+
+        </div>
+
+      </mat-form-field>
+
+      <mat-form-field>
+
+        <mat-label>اختر سبب طلب الاسترجاع</mat-label>
+
+        <mat-select formControlName="issueReason" required>
+
+          <mat-option [value]="1">المنتج لا يعمل</mat-option>
+
+          <mat-option [value]="2">منتج خاطئ</mat-option>
+
+          <mat-option [value]="3">المنتج مستخدم</mat-option>
+
+          <mat-option [value]="4">عيب فى المنتج</mat-option>
+
+          <mat-option [value]="5">مشكلة في البطارية</mat-option>
+
+          <mat-option [value]="6">نقص فى محتويات الشحنة</mat-option>
+
+          <mat-option [value]="7">لا يوجد مشكلة</mat-option>
+
+        </mat-select>
+
+      </mat-form-field>
+
+      <div class="upload">
+
+        <mat-label>برجاء رفع فيديو يوضح المشكلة بشكل عملي</mat-label>
+
+        <button (click)="OpenFile(true)"  class="btn btn-upload">رفع الفيديو</button>
+
+<input type="file" maxSize="15360" style="display:none" accept="video/*" class="form-control-file" id="formControlVideo"
+
+ (change)="onSendFile($event,true)"/>
+
+       </div>
+
+      <div class="upload">
+
+        <mat-label>برجاء رفع صورة بوليصة الشحن / صورة البار كود الموجود علي المنتج</mat-label>
+
+        <button (click)="OpenFile(false)"  class="btn btn-upload">رفع الصورة</button>
+
+<input type="file" maxSize="15360" style="display:none" accept="image/*" class="form-control-file" id="formControlImage"
+
+ (change)="onSendFile($event,false)"/>
+
+       </div>
+
+       <mat-form-field class="upload" appearance="none">
+
+        <label class="matLabel">اكتب الرقم المراد التحويل عليه ( فودافون, اورانج, اتصالات كاش)</label>
+
+           <input formControlName="phoneNum" matInput>
+
+       </mat-form-field>
+
+       <mat-form-field appearance="none">
+
+        <label class="matLabel">إضافة أي ملاحظات لتوضيح المشكلة</label>
+
+        <textarea formControlName="notes" matInput></textarea>
+
+        </mat-form-field>
+
+    </form>
+
+        <div mat-dialog-actions>
+
+            <button mat-raised-button [disabled]="clicked" class="btn-submit" (click)="submit()">ارسال الطلب</button>
+
+        </div>
+
+</div>

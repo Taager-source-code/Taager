@@ -1,0 +1,365 @@
+process.env.SECRET = 'yallahabibi';
+import request from 'supertest';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import ProvinceModel from '../../src/order-management/common/infrastructure/db/schemas/ProvinceSchema';
+import CountryModel from '../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import { countryFixture } from '../fixtures/countryFixture';
+import {
+  connectDefaultConnectionToMongoDB,
+  disconnectDefaultFromMongoDB,
+} from '../../src/shared-kernel/infrastructure/config/mongoose';
+
+const province = {
+  _id: '507f191e810c19729de860ad',
+  location: 'province',
+  branch: 'Giza',
+  shippingRevenue: 25,
+  shippingCost: 40,
+  minETA: 2,
+  maxETA: 3,
+  isActive: true,
+  country: 'ARE',
+  __v: 0,
+  createdAt: '2021-11-15T14:10:31.593Z',
+  greenZones: [],
+  redZones: [],
+  updatedAt: '2021-11-15T14:10:31.593Z',
+};
+
+const egyProvinces = [
+  {
+    _id: '507f191e810c19729de860ae',
+    location: 'province',
+    branch: 'Giza',
+    shippingRevenue: 25,
+    shippingCost: 40,
+    minETA: 2,
+    maxETA: 3,
+    isActive: true,
+    country: 'EGY',
+    __v: 0,
+    createdAt: '2021-11-15T14:10:31.593Z',
+    greenZones: [],
+    redZones: [],
+    updatedAt: '2021-11-15T14:10:31.593Z',
+  },
+  {
+    _id: '507f191e810c19729de860ab',
+    location: 'province',
+    branch: 'Alex',
+    shippingRevenue: 25,
+    shippingCost: 40,
+    minETA: 2,
+    maxETA: 3,
+    isActive: true,
+    country: 'EGY',
+    __v: 0,
+    createdAt: '2021-11-15T14:10:31.593Z',
+    greenZones: [],
+    redZones: [],
+    updatedAt: '2021-11-15T14:10:31.593Z',
+  },
+];
+
+describe('/api/province', () => {
+  let app: any = null;
+
+  const createProvinces = async () => {
+    const provinces = [
+      {
+        _id: '507f191e810c19729de860ac',
+        location: 'province',
+        branch: 'Cairo',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        country: 'SAU',
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      },
+      {
+        _id: '507f191e810c19729de860ad',
+        location: 'province',
+        branch: 'Giza',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        country: 'ARE',
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      },
+      {
+        _id: '507f191e810c19729de860ae',
+        location: 'province',
+        branch: 'Giza',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        country: 'EGY',
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      },
+      {
+        _id: '507f191e810c19729de860ab',
+        location: 'province',
+        branch: 'Alex',
+        shippingRevenue: 25,
+        shippingCost: 40,
+        minETA: 2,
+        maxETA: 3,
+        isActive: true,
+        country: 'EGY',
+        __v: 0,
+        createdAt: '2021-11-15T14:10:31.593Z',
+        greenZones: [],
+        redZones: [],
+        updatedAt: '2021-11-15T14:10:31.593Z',
+      },
+    ];
+
+    await ProvinceModel.insertMany(provinces);
+  };
+  const createCountries = async () => {
+    await CountryModel.insertMany(countryFixture);
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await connectDefaultConnectionToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+
+    await createProvinces();
+    await createCountries();
+  });
+
+  describe('/getProvinces', () => {
+    test('Should get ARE provinces with country header being set to ARE', async () => {
+      // Arrange
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'testUser',
+          password: '123456789',
+          phoneNum: '01234567891',
+          email: 'test@gmail.com',
+        });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        });
+
+      const accessToken = response.body.data;
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/getProvinces')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('country', 'ARE');
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual([province]);
+    });
+    test('Should get EGY provinces with country header not being set', async () => {
+      // Arrange
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'testUser',
+          password: '123456789',
+          phoneNum: '01234567891',
+          email: 'test@gmail.com',
+        });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        });
+
+      const accessToken = response.body.data;
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/getProvinces')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(egyProvinces);
+    });
+    test('Should get bad request error with country header being set improperly', async () => {
+      // Arrange
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'testUser',
+          password: '123456789',
+          phoneNum: '01234567891',
+          email: 'test@gmail.com',
+        });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        });
+
+      const accessToken = response.body.data;
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/getProvinces')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('country', 'COUNTRY_ISO_CODE_DOES_NOT_EXIST');
+
+      expect(countryResponse.statusCode).toEqual(400);
+    });
+  });
+
+  describe('/viewProvinces', () => {
+    test('Should get ARE provinces with country header being set to ARE', async () => {
+      // Arrange
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'testUser',
+          password: '123456789',
+          phoneNum: '01234567891',
+          email: 'test@gmail.com',
+        });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        });
+
+      const accessToken = response.body.data;
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/viewProvinces')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('country', 'ARE');
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual([province]);
+    });
+    test('Should get EGY provinces with country header not being set', async () => {
+      // Arrange
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'testUser',
+          password: '123456789',
+          phoneNum: '01234567891',
+          email: 'test@gmail.com',
+        });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        });
+
+      const accessToken = response.body.data;
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/viewProvinces')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(egyProvinces);
+    });
+    test('Should get bad request error with country header being set improperly', async () => {
+      // Arrange
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'testUser',
+          password: '123456789',
+          phoneNum: '01234567891',
+          email: 'test@gmail.com',
+        });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        });
+
+      const accessToken = response.body.data;
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/viewProvinces')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('country', 'COUNTRY_ISO_CODE_DOES_NOT_EXIST');
+
+      expect(countryResponse.statusCode).toEqual(400);
+    });
+    test(`Should get EGY provinces with country header set to small two letters 'eg'`, async () => {
+      // Arrange
+      await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'testUser',
+          password: '123456789',
+          phoneNum: '01234567891',
+          email: 'test@gmail.com',
+        });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          username: '01234567891',
+          password: '123456789',
+        });
+
+      const accessToken = response.body.data;
+
+      // Act
+      const countryResponse = await request(app)
+        .get('/api/province/viewProvinces')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('country', 'eg');
+
+      expect(countryResponse.statusCode).toEqual(200);
+      expect(countryResponse.body.data).toEqual(egyProvinces);
+    });
+  });
+
+  afterAll(async () => {
+    await disconnectDefaultFromMongoDB();
+    app = null;
+  });
+});
+
+

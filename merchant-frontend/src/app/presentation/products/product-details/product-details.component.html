@@ -1,0 +1,93 @@
+<div id="product-details" *ngIf="!isOrderNow && product && !productInvalid" class="container">
+
+  <div class="row">
+
+    <app-breadcrumbs [categoryHierachy]="categoryHierachy"></app-breadcrumbs>
+
+  </div>
+
+    <taager-product-preview 
+
+        [currentProduct]="product"
+
+        [currentVariantGroup]="variantGroup"
+
+        [productIsCataloged]="isCataloged"
+
+        (addToCart)="addToCart()"
+
+        (orderNow)="orderNow($event)"
+
+        (toggleIsCataloged)="onCatalogProduct()"
+
+        (variantChange)="goToVariantById($event)"
+
+        [currency]="currency"
+
+    ></taager-product-preview>
+
+   
+
+    <div class="best-seller col-12">
+
+        <div class="best-seller-title">
+
+            الأكثر مبيعاً
+
+        </div>
+
+        <div class="best-seller-category-bar d-flex" *ngIf="commercialCategoryFlag">
+
+            <button *ngFor="let category of bestSellerCategories" appHoverStyle class="best-seller-category-button" [ngClass]="{'best-seller-category-selected' : bestSellerCarouselData.categoryName === category.name.arabicName}" (click)="onSelectBestSellerCategory(category.name.arabicName)" >
+
+                {{category.name.arabicName}}
+
+            </button>
+
+        </div>
+
+        <div class="best-seller-category-bar d-flex" *ngIf="!commercialCategoryFlag">
+
+            <button *ngFor="let category of bestSellerCategories" appHoverStyle class="best-seller-category-button" [ngClass]="{'best-seller-category-selected' : bestSellerCarouselData.categoryName === category.text}" (click)="onSelectBestSellerCategory(category.text)" >
+
+                {{category.text}}
+
+            </button>
+
+        </div>
+
+        <section class="best-seller-carousel d-flex flex-column" *ngIf="!bestSellersLoading">
+
+            <app-products-carousel [isCatalogDataLoaded]="isCatalogDataLoaded" [carouselData]="bestSellerCarouselData"></app-products-carousel>
+
+        </section>
+
+        <section class="best-seller d-flex flex-column justify-content-center best-seller-loader" *ngIf="bestSellersLoading">
+
+            <loader [loading]="bestSellersLoading" size="sm" alt="bestSellersLoading" id="bestSellersLoading"></loader>
+
+        </section>
+
+    </div>
+
+</div>
+
+<div *ngIf="productInvalid" class="nonexistent-product d-flex flex-column justify-content-center align-items-center">
+
+    <p>هذا المنتج غير موجود</p>
+
+    <button class="back-to-main-button" [routerLink]="['/products-v2']" appHoverStyle>
+
+        الرجوع إلى قائمة المنتجات
+
+    </button>
+
+</div>
+
+<div class="order-now">
+
+    <app-order *ngIf="product && isOrderNow" [isOrderNow]="false" [orderFromProduct]="true" [products]="selectedProducts"
+
+    (submitted)="orderSubmitted($event)" (back)="reload()"></app-order>
+
+</div>

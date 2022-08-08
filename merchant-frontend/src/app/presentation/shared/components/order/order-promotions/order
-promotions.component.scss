@@ -1,0 +1,145 @@
+@import 'common.scss';
+
+:host {
+
+  .free-shipping-wrapper {
+
+    width: 100%;
+
+    display: flex;
+
+    font-size: 16px;
+
+    font-weight: 400;
+
+    padding: 10px 5px;
+
+    border-radius: 7px;
+
+    margin-bottom: 10px;
+
+    align-items: center;
+
+    background-color: $fill-light-gray;
+
+    .free-shipping-unavailable {
+
+      margin: 0;
+
+      text-align: start;
+
+      color: $text-secondary;
+
+      font-size: 16px;
+
+    }
+
+    .free-shipping-available {
+
+      margin: 0;
+
+      text-align: start;
+
+      color: $text-success;
+
+      font-size: 16px;
+
+    }
+
+    .tooltip-wrapper {
+
+      position:relative;
+
+      .free-shipping-information-icon {
+
+        margin-right: 5px;
+
+      }
+
+      .free-shipping-tooltip {
+
+        position: absolute;
+
+        top: -76px;
+
+        right: -265px;
+
+        width: 340px;
+
+        background-color: #0B1725;
+
+        color: #fff;
+
+        padding: 10px;
+
+        text-align: center;
+
+        border-radius: 10px;
+
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+        display: none;
+
+      }
+
+      .free-shipping-tooltip::after {
+
+        content: " ";
+
+        position: absolute;
+
+        top: 100%;
+
+        left: 58px;
+
+        margin-left: -5px;
+
+        border-width: 5px;
+
+        border-style: solid;
+
+        border-color: #0B1725 transparent transparent transparent;
+
+      }
+
+    }
+
+    .tooltip-wrapper:hover {
+
+      .free-shipping-tooltip {
+
+        display: block;
+
+      }
+
+    }
+
+  }
+
+  .mobile-tooltip {
+
+    display: none;
+
+  }
+
+  @media (max-width: 767px) {
+
+    .mobile-tooltip {
+
+      display: block;
+
+      text-align: right;
+
+      font-size: 16px;
+
+    }
+
+    .free-shipping-tooltip {
+
+      display: none !important;
+
+    }
+
+  }
+
+}

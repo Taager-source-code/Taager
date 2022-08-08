@@ -1,0 +1,11 @@
+export class TooManyAnswersError extends Error {
+  questionId: string;
+  constructor(questionId: string, maxAllowedAnswers: number, answersCount: number) {
+    super(
+      `Question with id=${questionId} has too many answers; maxAllowed=${maxAllowedAnswers}, provided=${answersCount}`,
+    );
+    this.questionId = questionId;
+  }
+}
+
+

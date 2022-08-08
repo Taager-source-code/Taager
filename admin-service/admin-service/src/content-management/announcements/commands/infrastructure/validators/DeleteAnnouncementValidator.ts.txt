@@ -1,0 +1,10 @@
+import joi from 'joi';
+
+export const validateDeleteAnnouncementRequest = (deleteAnnouncementRequest) => {
+  const schema = joi
+    .object({
+      id: joi.string().required(),
+    })
+    .options({ stripUnknown: true });
+  return schema.validate(deleteAnnouncementRequest);
+};

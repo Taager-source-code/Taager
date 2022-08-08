@@ -1,0 +1,123 @@
+<div class="container-div">
+
+  <p class="title">الطلبات</p>
+
+  <loader [loading]="loading"></loader>
+
+  <app-order-filters 
+
+    (searchTriggered)="onSearchClicked($event)"
+
+    [resetTriggered]="triggerFilterReset"
+
+    [isChildOrderTabActive]="activeOrdersTab === ordersTabs.CHILD_ORDERS_TAB"
+
+  ></app-order-filters>
+
+  <div class="tabs-container">
+
+    <div class="order-tabs-container">
+
+      <button 
+
+      *ngFor="let tab of ordersTabsArray"
+
+      (click)="orderTabClicked(tab)"
+
+      [ngClass]="{'selected-tab': (activeOrdersTab === tab)}"
+
+      class="tab" 
+
+      > {{tab}} </button>
+
+    </div>
+
+    <div class="excel-tooltip">
+
+    <button
+
+      class="btn btn-excel"
+
+      (click)="viewMyOrdersExtract()"
+
+    >
+
+      <img class="excel-i" src="../../../assets/img/excel-white.svg" />استخراج
+
+      ملف اكسل
+
+    </button>
+
+    <span class="tooltip-text">الحصول علي ملف اكسيل بناءً علي البحث او التصفية</span>
+
+  </div>
+
+  </div>
+
+  <div *ngIf="activeOrdersTab !== ordersTabs.CHILD_ORDERS_TAB">
+
+    <app-order-overview
+
+      *ngFor="let order of orders"
+
+      [order]="order"
+
+      (cancelOrderDialogClosed)="getOrders()"
+
+    ></app-order-overview>
+
+  </div>
+
+  <div *ngIf="activeOrdersTab === ordersTabs.CHILD_ORDERS_TAB">
+
+    <app-child-order-overview
+
+      *ngFor="let childOrder of childOrders; index as idx"
+
+      [childOrder]="childOrder"
+
+    ></app-child-order-overview>
+
+  </div>
+
+  <div class="row justify-content-center paginate">
+
+    <div *ngIf="showPagination" class="col-xs-6">
+
+      <div class="pagination-wrapper">
+
+        <pagination
+
+          [boundaryLinks]="showBoundaryLinks"
+
+          [totalItems]="noOfItems"
+
+          [(ngModel)]="currentPage"
+
+          [itemsPerPage]="maxItemPerPage"
+
+          [maxSize]="maxItemPerPage"
+
+          (pageChanged)="pageChanged($event)"
+
+          previousText=" "
+
+          nextText=" "
+
+          firstText="الأولي"
+
+          lastText="الأخيرة"
+
+        >
+
+        </pagination>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+

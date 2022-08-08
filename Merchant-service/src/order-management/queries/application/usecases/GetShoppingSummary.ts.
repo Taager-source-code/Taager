@@ -1,0 +1,31 @@
+import CartRepository from '../../infrastructure/repositories/CartRepo';
+import CatalogRepo from '../../infrastructure/repositories/CatalogRepo';
+import GetShoppingSummaryRequest from '../models/GetShoppingSummaryRequest';
+
+export default class GetShoppingSummary {
+  private cartRepository: CartRepository;
+  private catalogRepository: CatalogRepo;
+
+  constructor(cartRepository: CartRepository, catalogRepository: CatalogRepo) {
+    this.cartRepository = cartRepository;
+    this.catalogRepository = catalogRepository;
+  }
+
+  public async execute(request: GetShoppingSummaryRequest) {
+    const numberOfAvailableProductsInCart = await this.cartRepository.getAvailableProductsInCartCount(
+      request.id,
+      request.country,
+    );
+    const numberOfAvailableProductsInCatalog = await this.catalogRepository.getAvailableProductsInCatalogCount(
+      request.tagerId,
+      request.country,
+    );
+
+    return {
+      cartSummary: numberOfAvailableProductsInCart,
+      catalogSummary: numberOfAvailableProductsInCatalog,
+    };
+  }
+}
+
+

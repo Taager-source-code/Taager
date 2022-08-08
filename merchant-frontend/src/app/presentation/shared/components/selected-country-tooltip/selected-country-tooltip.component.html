@@ -1,0 +1,19 @@
+<div class="selected-country-tooltip" *ngIf="multiTenancyFlag && selectedCountry">
+
+  <img 
+
+    class="selected-country-tooltip__icon"
+
+    src="assets/img/countries-dropdown-icons/{{ selectedCountry.isoCode2.toLowerCase() }}.svg" 
+
+    alt="{{ selectedCountry.isoCode2.replace('.svg', '') }}"
+
+  >
+
+  <p class="selected-country-tooltip__text">
+
+    {{ tooltipText }}{{ selectedCountry.arabicName }}
+
+  </p>
+
+</div>

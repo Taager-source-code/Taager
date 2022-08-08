@@ -1,0 +1,36 @@
+<mat-form-field class="full-width" *ngIf="type == undefined">
+  <mat-label>Select a Country</mat-label>
+  <mat-select
+    [required]="filterUse == undefined"
+    (selectionChange)="selectCountry($event)"
+    [value]="
+      !sharedService.selectedCountryIso3
+        ? sharedService.userCountryAccess[0]
+        : sharedService.selectedCountryIso3
+    "
+    [placeholder]="sharedService.selectedCountryIso3"
+    [disabled]="fieldDisabled"
+  >
+    <mat-option
+      *ngFor="let item of sharedService.userCountryAccess"
+      [value]="item"
+    >
+      {{ getCountryEnglishName(item) }}</mat-option
+    >
+  </mat-select>
+</mat-form-field>
+<mat-form-field appearance="fill" *ngIf="type == 'multi-select'">
+  <mat-label>Select Countries</mat-label>
+  <mat-select
+    multiple
+    (selectionChange)="selectMultipleCountries($event)"
+    [value]="selectedCountries"
+  >
+    <mat-option
+      *ngFor="let item of countriesList"
+      [value]="item.countryIsoCode3"
+    >
+      {{ getCountryEnglishName(item.countryIsoCode3) }}</mat-option
+    >
+  </mat-select>
+</mat-form-field>

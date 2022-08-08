@@ -1,0 +1,17 @@
+<button mat-button [matMenuTriggerFor]="countriesMenu" class="countries-dropdown-btn" *ngIf="selectedCountry">
+    <!-- <p class="countries-dropdown-btn__ship-to">Select Country:</p> -->
+    <div class="countries-dropdown-btn__selected-country">
+        <img [src]="sharedService.imgUrl+'/icons/countries-dropdown-icons/'+selectedCountry.isoCode2?.toLowerCase()+'.svg'"
+            alt="country's image" class="countries-dropdown-btn__selected-country__icon" />
+        <p class="countries-dropdown-btn__selected-country__name">
+            {{ selectedCountry.englishName }}
+        </p>
+    </div>
+    <img [src]="sharedService.imgUrl+'/icons/countries-dropdown-icons/chevron-down.svg'" alt="expand dropdown menu button" />
+</button>
+<mat-menu class="countries-mat-menu" #countriesMenu="matMenu" xPosition="before">
+    <button mat-menu-item *ngFor="let country of countries" class="country-btn" (click)="countrySelected(country)">
+        <img [src]="sharedService.imgUrl+'/icons/countries-dropdown-icons/'+country.isoCode2?.toLowerCase()+'.svg'" alt="{{ country.isoCode3 }} 's image" class="country-btn__icon" />
+        <span class="country-btn__name">{{ country.englishName }}</span>
+    </button>
+</mat-menu>

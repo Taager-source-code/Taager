@@ -1,0 +1,16 @@
+import { Service } from 'typedi';
+import { QuestionnaireModel } from '../../../../common/infrastructure/db/models/QuestionnaireModel';
+import QuestionnaireSchema from '../../../../common/infrastructure/db/schemas/QuestionnaireSchema';
+
+@Service({ global: true })
+export default class QuestionnaireQueryDao {
+  findByName(name: string): Promise<QuestionnaireModel | null> {
+    return QuestionnaireSchema.findOne({ name }).exec();
+  }
+
+  findAll(): Promise<QuestionnaireModel[]> {
+    return QuestionnaireSchema.find().exec();
+  }
+}
+
+

@@ -1,0 +1,78 @@
+<h1 mat-dialog-title></h1>
+<div mat-dialog-content>
+  <form>
+    <app-country-dropdown
+      (selectedCountry)="getSelectedCountry($event)"
+    ></app-country-dropdown>
+    <h3 class="mb-4">Announcement Images</h3>
+    <div *ngIf="savedImgArray.length > 0" class="product-gallery mb-3">
+      <gallery
+        id="announce"
+        [thumb]="false"
+        [counter]="true"
+        (indexChange)="galleryImageChanged($event)"
+        [imageSize]="'cover'"
+        #announce
+      >
+        <button
+          (click)="onDelete()"
+          class="btn btn-danger numbertext"
+          tabindex="-1"
+        >
+          Delete
+        </button>
+      </gallery>
+    </div>
+    <div
+      class="announcement-form-entry"
+      *ngFor="let field of formsArray; index as idx"
+    >
+      <div class="mb-1">
+        <input
+          [name]="field.name"
+          type="file"
+          class="form-control"
+          [id]="field.id"
+          (change)="onSendFile($event)"
+          accept=".jpg, .jpeg, .png, .webp, .svg, .mp4"
+          required
+          tabindex="-1"
+        />
+      </div>
+      <input
+        type="text"
+        class="form-control mb-1"
+        [name]="field.name + ' Link'"
+        [(ngModel)]="imgArray[idx].link"
+        placeholder="Enter link here"
+        tabindex="-1"
+      />
+      <div class="d-flex align-items-center">
+        <input
+          class="ml-1"
+          type="checkbox"
+          [name]="field.name + ' isMobile'"
+          value=""
+          [id]="'checkbox' + field.id"
+          [(ngModel)]="imgArray[idx].isMobile"
+        />
+        <label class="ml-1" [for]="'checkbox' + field.id">
+          This image is for mobile
+        </label>
+      </div>
+    </div>
+    <button type="button" class="btn mb-1" (click)="addImg()">
+      Add another Image
+    </button>
+  </form>
+</div>
+<div mat-dialog-actions>
+  <button
+    *ngIf="ready"
+    type="button"
+    class="btn btn-success"
+    (click)="onRegister()"
+  >
+    Add Announcements
+  </button>
+</div>

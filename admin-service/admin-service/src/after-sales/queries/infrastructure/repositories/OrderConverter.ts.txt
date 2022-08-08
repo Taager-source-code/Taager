@@ -1,0 +1,71 @@
+import Order, { CustomerDetails, OrderLine } from '../../application/models/Order';
+import { OrderDbo } from '../../../../order-management/common/infrastructure/db/models/OrderDbo';
+
+export default class OrderConverter {
+  static convert(orderDbo: OrderDbo, products?: Map<string, string>): Order {
+    return {
+      orderId: orderDbo.orderID,
+      status: orderDbo.status,
+      placedAt: orderDbo.assignedAt,
+      deliveredAt: orderDbo.deliveryDate,
+      cashOnDelivery: orderDbo.cashOnDelivery || 0,
+      customerDetails: this.getCustomerDetails(orderDbo),
+      shippingInfo: {
+        province: orderDbo.province,
+        zone: orderDbo.zone,
+        address: orderDbo.detailedAddress,
+      },
+      orderLines: this.convertOrderLines(orderDbo, products),
+    };
+  }
+
+  static convertOrderLines(orderDbo: OrderDbo, products?: Map<string, string>): OrderLine[] {
+    if (Array.isArray(orderDbo.orderLines) && orderDbo.orderLines.length) {
+      return orderDbo.orderLines.map((orderLineDbo) => {
+        return {
+          orderLineId: orderLineDbo.orderLineId,
+          productId: orderLineDbo.productId,
+          productName: products?.get(orderLineDbo.productId) || 'not found',
+          quantity: orderLineDbo.quantity,
+          totalPrice: orderLineDbo.totalPrice,
+          totalMerchantProfit: orderLineDbo.totalMerchantProfit,
+          direction: orderLineDbo.direction,
+          type: orderLineDbo.type,
+          status: orderLineDbo.status,
+          trackingNumber: orderLineDbo.trackingNumber,
+          shippingCompanyId: orderLineDbo.shippingCompanyId,
+          originalOrderLineId: orderLineDbo.originalOrderLineId,
+        };
+      });
+    }
+
+    if (Array.isArray(orderDbo.productIds) && orderDbo.productIds.length) {
+      return orderDbo.productIds.map((productId, index) => {
+        const orderLine: OrderLine = {
+          totalMerchantProfit: orderDbo.productProfits ? orderDbo.productProfits[index] : 0,
+          orderLineId: index + 1,
+          productId: productId,
+          productName: products?.get(productId) || 'not found',
+          quantity: orderDbo.productQuantities[index],
+          totalPrice: orderDbo.productPrices[index],
+          type: 'initial',
+          direction: 'forward',
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          status: orderDbo.status!,
+          trackingNumber: orderDbo.shippingInfo.trackingNumber,
+          shippingCompanyId: orderDbo.shippingInfo.company,
+        };
+        return orderLine;
+      });
+    }
+    return [];
+  }
+
+  private static getCustomerDetails(dbo: OrderDbo): CustomerDetails {
+    return {
+      customerName: dbo.receiverName,
+      customerPhoneNum1: dbo.phoneNumber,
+      customerPhoneNum2: dbo.phoneNumber2,
+    };
+  }
+}

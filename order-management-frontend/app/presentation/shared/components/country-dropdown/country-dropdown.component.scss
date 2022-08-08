@@ -1,0 +1,63 @@
+@import './colors';
+.countries-dropdown-btn {
+  outline: none;
+  display: flex;
+  align-items: center;
+  padding: 5px 16px;
+  border-radius: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  border: none;
+  background: transparent !important;
+  ::ng-deep .mat-button-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  &__ship-to {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 0;
+    margin-left: 10px;
+    @media (max-width: 768px) {
+      font-size: 14px;
+    }
+  }
+  &__selected-country {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    &__icon {
+      margin-left: 10px;
+      @media (max-width: 768px) {
+        height: 44px;
+      }
+    }
+    &__name {
+      font-size: 16px;
+      font-weight: 700;
+      margin-left: 10px;
+      margin-bottom: 0;
+      color: $main-text;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      @media (max-width: 768px) {
+        max-width: 155px;
+        font-size: 14px;
+      }
+    }
+  }
+}
+.country-btn {
+  outline: none;
+  &__name {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 10px;
+    color: $main-text;
+  }
+}
+::ng-deep .cdk-overlay-container .countries-mat-menu {
+  margin-top: 5px;
+}

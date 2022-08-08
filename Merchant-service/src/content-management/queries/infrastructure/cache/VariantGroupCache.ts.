@@ -1,0 +1,29 @@
+import { Service } from 'typedi';
+import CacheManager from '../../../../shared-kernel/infrastructure/cache/base-cache';
+import { CacheType } from '../../../../shared-kernel/infrastructure/cache/base-cache/cacheModel';
+import { DefaultInMemoryCacheParameters } from '../../../../shared-kernel/infrastructure/cache/base-cache/cacheModel';
+import {
+  SearchVariantGroupsParameters,
+  SearchVariantGroupsResult,
+} from '../../application/models/variant/SearchVariantGroupsResult';
+
+@Service({ global: true })
+export class VariantGroupCache {
+  private cache;
+
+  constructor() {
+    this.cache = CacheManager.resolve({
+      options: DefaultInMemoryCacheParameters,
+      type: CacheType.Memmory,
+    });
+  }
+
+  set(query: SearchVariantGroupsParameters, result: SearchVariantGroupsResult) {
+    return this.cache.set(query, result);
+  }
+  get(query: SearchVariantGroupsParameters): SearchVariantGroupsResult {
+    return this.cache.get(query);
+  }
+}
+
+

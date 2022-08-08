@@ -1,0 +1,74 @@
+.top-section {
+  display: flex;
+  align-items: center;
+  &__back-button {
+    margin-right: 5px;
+    padding: 5px !important;
+    &__icon {
+      color: #0f1933;
+      width: 26px !important;
+      height: 26px !important;
+    }
+  }
+  &__title {
+    font-size: 25px;
+    margin-bottom: 0;
+    font-family: 'Taager-Bold';
+  }
+}
+.category-form-inputs {
+  display: flex;
+  align-items: center;
+  &__input-control {
+    display: flex;
+    flex-direction: column;
+  }
+  &__input-label {
+    font-size: 16px;
+  }
+  &__input {
+    height: 40px;
+    width: 220px;
+    line-height: 3;
+    padding: 0 10px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #dddddd;
+    font-family: 'Taager-Regular';
+  }
+}
+.category-form-inputs__input-control + .category-form-inputs__input-control {
+  margin-left: 20px;
+}
+.sub-categories-section {
+  &__title {
+    font-size: 18px;
+    font-family: 'Taager-Bold';
+  }
+  &__levels {
+    display: flex;
+    justify-content: space-between;
+    ngx-sub-category-level {
+      width: 48%;
+    }
+    .vertical-separator {
+      height: auto;
+      border-left: 1px dashed #dddddd;
+      &:last-of-type {
+        display: none;
+      }
+    }
+  }
+}
+.action-buttons-section {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+  &__submit-button {
+    margin-left: 10px;
+  }
+  &__cancel-button {
+    background: transparent !important;
+    border: 1px solid #0f1933 !important;
+  }
+}

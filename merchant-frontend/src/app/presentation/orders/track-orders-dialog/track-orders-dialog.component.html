@@ -1,0 +1,177 @@
+<section class="track-orders-dialog">
+
+    <mat-dialog-content>
+
+        <div class="row align-items-center">
+
+            <h5 class="text-center col-11 dialog-title">
+
+                تتبع طلبك
+
+            </h5>
+
+            <button mat-dialog-close class="btn dialog-close-button col-1 d-sm-none d-lg-block"><span>&times;</span></button>
+
+        </div> <!--header div -->
+
+        <div class="row px-2">
+
+            <div class="col-sm-12 col-md-6 col-lg-3">
+
+                <span class="order-info-title"> كود الطلب</span>
+
+                <span class="order-info-value">{{order.id}}</span>
+
+            </div>
+
+            <div
+
+            class="col-sm-12 col-md-6 col-lg-3"
+
+            *ngIf = "order.createdAt">
+
+                <span class="order-info-title"> تاريخ الطلب</span>
+
+                <span class="order-info-value">{{order.createdAt | date: dateFormat}}</span>
+
+            </div>
+
+            <div
+
+            class="col-sm-12 col-md-6 col-lg-3"
+
+            *ngIf = "order.confirmationDate">
+
+                <span class="order-info-title"> تاريخ التأكيد</span>
+
+                <span class="order-info-value">{{order.confirmationDate | date: dateFormat}}</span>
+
+            </div>
+
+            <div
+
+            class="col-sm-12 col-md-6 col-lg-3"
+
+            *ngIf = "order.deliveryDate">
+
+                <span class="order-info-title"> تاريخ التوصيل المتوقع</span>
+
+                <span class="order-info-value">{{order.deliveryDate | date: dateFormat}}</span>
+
+            </div>
+
+        </div> <!--order info div -->
+
+        <hr>
+
+        <div *ngFor="let orderStatus of orderStatuses; let i = index" >
+
+            <div class="row">
+
+                <div class="col-sm-2 col-lg-1 order-status-icon-div">
+
+                    <mat-icon
+
+                    svgIcon= {{orderStatus.icon}}
+
+                    class="order-status-icon"
+
+                    [ngClass]="{
+
+                        'order-status-icon__active' : orderProgress >= i + 1 && !orderStatus.canceledOrSuspended,
+
+                        'order-status-icon__warning' : orderProgress >= i + 1 && orderStatus.canceledOrSuspended}"> </mat-icon>
+
+                </div> <!--order status icon div-->
+
+                <div class="col-sm-8 col-lg-10">
+
+                    <p class="order-status-title">
+
+                        {{orderStatus.statusInArabic}}
+
+                    </p>
+
+                    <p
+
+                    *ngIf="!orderStatus.canceledOrSuspended,"
+
+                    class="order-status-date">
+
+                        {{orderStatus.updatedAt | date: dateTimeFormat}}
+
+                    </p>
+
+                    <p
+
+                    *ngIf="orderStatus.statusInEnglish === 'suspended' "
+
+                    class="order-status-text__warning">
+
+                        {{orderStatus.suspentionReason}}
+
+                    </p>
+
+                    <p
+
+                    *ngIf="orderStatus.statusInEnglish === 'customer_rejected'"
+
+                    class="order-status-text__warning">
+
+                        {{orderStatus.rejectionReason}}
+
+                    </p>
+
+                    <p
+
+                    *ngIf="orderStatus.statusInEnglish === 'taager_cancelled'"
+
+                    class="order-status-text__warning">
+
+                        {{orderStatus.notes}}
+
+                    </p>
+
+                    <p
+
+                    *ngIf="i > 0 && orderStatuses[i-1].failedAttemptNote"
+
+                    class="order-status-text__warning">
+
+                        {{orderStatuses[i-1].failedAttemptNote}}
+
+                    </p>
+
+                </div>  <!--order status text div-->
+
+                <div class="col-1 left-div">
+
+                    <div
+
+                    class="order-status-circle-indicator"
+
+                    [ngClass]="{
+
+                        'order-status-circle-indicator__active' : orderProgress >= i + 1 && !orderStatus.canceledOrSuspended,
+
+                        'order-status-circle-indicator__warning' : orderProgress >= i + 1 && orderStatus.canceledOrSuspended}">
+
+                        <span>&#10003;</span>
+
+                    </div>
+
+                    <div
+
+                    [ngClass]="{'vertical_dotted_line' : i < (orderStatuses.length - 1)}"
+
+                    class="vertical_dotted_line"></div>
+
+                </div>   <!--order progress indicator div-->
+
+            </div> <!--row div-->
+
+        </div>  <!--order status div-->
+
+</mat-dialog-content>
+
+</section>

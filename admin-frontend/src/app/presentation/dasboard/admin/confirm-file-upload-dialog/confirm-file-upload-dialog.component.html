@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>Confirm File Upload</h2>
+<mat-dialog-content>
+  <p class="large-text">
+    Are you sure you want to submit a total of
+    <b>{{ ordersData.length }}</b> Orders on
+    <b>{{ data.shippingCompany }}</b> shipping company
+    <span *ngIf="data.uploadType !== 'bulk_upload'">
+      with <b>{{ data.statusType }}</b> status
+    </span>
+    ?
+  </p>
+  <div class="btn-container float-right">
+    <button class="btn btn-outline-danger" (click)="cancel()">Cancel</button>
+    <button class="btn btn-outline-success" (click)="confirm()">Confirm</button>
+  </div>
+</mat-dialog-content>

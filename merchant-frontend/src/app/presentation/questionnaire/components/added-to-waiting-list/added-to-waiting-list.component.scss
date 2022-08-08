@@ -1,0 +1,61 @@
+@import "common.scss";
+
+$font-family: "Taager-Regular";
+
+.added-to-waiting-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  row-gap: 44px;
+  flex-direction: column;
+
+  &__section-one {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    row-gap: 19.54px;
+
+    &__instructions {
+      font-family: $font-family;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 31px;
+      text-align: center;
+      color: $dark-blue;
+      max-width: 863px;
+    }
+  }
+
+  &__section-two {
+    &__go-back-to-main-screen {
+      padding: 16px 173.21px 17px 172.79px;
+      background: $dark-blue;
+      border-radius: 10px;
+      cursor: pointer;
+      &:hover {
+        background-color: $dark-blue-hover;
+      }
+
+      &__text {
+        font-family: $font-family;
+        font-style: normal;
+        font-weight: 700;
+        font-size: 20px;
+        line-height: 22px;
+        text-align: center;
+        color: $white;
+      }
+    }
+  }
+  @media (max-width: 540px){
+    &__section-two {
+      &__go-back-to-main-screen {
+        padding: 20px 30px;
+      }
+    }
+  }
+}
+
+

@@ -1,0 +1,258 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import CountryModel from '../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import AnnouncementModel from '../../src/content-management/announcements/common/infrastructure/db/schemas/AnnouncementSchema';
+import { countryFixture } from '../fixtures/countryFixture';
+import User from '../../src/models/user.model';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import { FORBIDDEN } from 'http-status';
+
+describe('/api/announcement', () => {
+  let app: any = null;
+  let accessToken: string;
+  let userId: string;
+
+  const createCountries = async () => {
+    await CountryModel.insertMany(countryFixture);
+  };
+
+  const createUserRole = async () => {
+    await UserRoles.create({ role: 'admin' });
+  };
+
+  const createAnnouncements = async () => {
+    await AnnouncementModel.insertMany([
+      {
+        img: 'testImage1',
+        isMobile: false,
+        link: 'testLink1',
+        country: 'EGY',
+      },
+      {
+        img: 'testImage2',
+        isMobile: false,
+        link: 'testLink2',
+        country: 'EGY',
+      },
+      {
+        img: 'testImage3',
+        isMobile: true,
+        link: 'testLink3',
+        country: 'SAU',
+      },
+      {
+        img: 'testImage4',
+        isMobile: false,
+        link: 'testLink4',
+        country: 'ARE',
+      },
+    ]);
+  };
+
+  const createUser = async () => {
+    const user = await User.create(ADMIN_1);
+    userId = user._id;
+  };
+
+  const generateAccessToken = async (): Promise<string> => {
+    return await expressServer.loginAndGetAccessToken(app);
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+    await createUser();
+    await createAnnouncements();
+    await createCountries();
+    await createUserRole();
+    accessToken = await generateAccessToken();
+  });
+
+  describe('/getAnnouncements', () => {
+    test('Should get ARE announcements with country set to ARE in query parameter', async () => {
+      // Act
+      await expressServer.setUserAreRole(app, accessToken, userId);
+
+      const announcementResponse = await request(app)
+        .get('/api/announcement/getAnnouncements?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      //Assert
+      expect(announcementResponse.statusCode).toEqual(200);
+      expect(announcementResponse.body.data.length).toEqual(1);
+      expect(announcementResponse.body.data).toMatchObject([{ img: 'testImage4', link: 'testLink4', country: 'ARE' }]);
+    });
+
+    test('Should get EGY announcements with no country in query parameter', async () => {
+      // Act
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const announcementResponse = await request(app)
+        .get('/api/announcement/getAnnouncements')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(announcementResponse.statusCode).toEqual(200);
+      expect(announcementResponse.body.data.length).toEqual(2);
+      expect(announcementResponse.body.data).toMatchObject([
+        { img: 'testImage1', link: 'testLink1', country: 'EGY' },
+        { img: 'testImage2', link: 'testLink2', country: 'EGY' },
+      ]);
+    });
+
+    test('Getting ARE announcements if user has EGY permissions should be forbidden', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+      // Act
+      const announcementResponse = await request(app)
+        .get('/api/announcement/getAnnouncements?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(announcementResponse.statusCode).toEqual(FORBIDDEN);
+    });
+  });
+
+  describe('/createAnnouncement', () => {
+    test('Should create ARE announcement with country set to ARE in body', async () => {
+      // Act
+      await expressServer.setUserAreRole(app, accessToken, userId);
+
+      const createAnnouncementResponse = await request(app)
+        .post('/api/announcement/createAnnouncement')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          country: 'ARE',
+          img: 'testImg11',
+          link: 'testLink11',
+          isMobile: true,
+        });
+
+      const getAnnouncementResponse = await request(app)
+        .get('/api/announcement/getAnnouncements?country=ARE')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      //Assert
+      expect(createAnnouncementResponse.statusCode).toEqual(201);
+      expect(createAnnouncementResponse.body.msg).toEqual('announcement added!');
+      expect(getAnnouncementResponse.statusCode).toEqual(200);
+      expect(getAnnouncementResponse.body.data).toMatchObject([
+        { img: 'testImage4', link: 'testLink4', country: 'ARE' },
+        { img: 'testImg11', link: 'testLink11', country: 'ARE' },
+      ]);
+    });
+
+    test('Should create EGY announcement with no country in body', async () => {
+      // Act
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const createAnnouncementResponse = await request(app)
+        .post('/api/announcement/createAnnouncement')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          img: 'testImg22',
+          link: 'testLink22',
+          isMobile: true,
+        });
+
+      const getAnnouncementResponse = await request(app)
+        .get('/api/announcement/getAnnouncements')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ country: 'EGY' });
+
+      // Assert
+      expect(createAnnouncementResponse.statusCode).toEqual(201);
+      expect(createAnnouncementResponse.body.msg).toEqual('announcement added!');
+      expect(getAnnouncementResponse.statusCode).toEqual(200);
+      expect(getAnnouncementResponse.body.data).toMatchObject([
+        { img: 'testImage1', link: 'testLink1', country: 'EGY' },
+        { img: 'testImage2', link: 'testLink2', country: 'EGY' },
+        { img: 'testImg22', link: 'testLink22', country: 'EGY' },
+      ]);
+    });
+
+    test('Creating an announcements for country you dont have access to should be forbidden', async () => {
+      // Act
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const createAnnouncementResponse = await request(app)
+        .post('/api/announcement/createAnnouncement')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          country: 'ARE',
+          img: 'testImg22',
+          link: 'testLink22',
+          isMobile: true,
+        });
+
+      // Assert
+      expect(createAnnouncementResponse.statusCode).toEqual(FORBIDDEN);
+    });
+
+    test('Should give bad request error with wrong country in body', async () => {
+      // Act
+      const createAnnouncementResponse = await request(app)
+        .post('/api/announcement/createAnnouncement')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          country: 'USA',
+          img: 'testImg22',
+          link: 'testLink22',
+          isMobile: true,
+        });
+
+      // Assert
+      expect(createAnnouncementResponse.statusCode).toEqual(400);
+    });
+  });
+
+  describe(`/delete/:id`, () => {
+    test('Should delete a announcement from the DB', async () => {
+      // Arrange
+      await expressServer.setUserSauRole(app, accessToken, userId);
+
+      const getAnnouncementResponse = await request(app)
+        .get('/api/announcement/getAnnouncements?country=SAU')
+        .set('Authorization', `Bearer ${accessToken}`);
+      const announcementID = getAnnouncementResponse.body.data[0]._id;
+
+      //Act
+      const deleteAnnouncementResponse = await request(app)
+        .delete(`/api/announcement/delete/${announcementID}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const getAnnouncementAfterDeleting = await request(app)
+        .get('/api/announcement/getAnnouncements?country=SAU')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      //Assert
+      expect(getAnnouncementResponse.statusCode).toEqual(200);
+      expect(getAnnouncementResponse.body.data[0].country).toEqual('SAU');
+      expect(getAnnouncementResponse.body.data).toMatchObject([
+        { img: 'testImage3', link: 'testLink3', country: 'SAU' },
+      ]);
+      /*-------------------------------------------------------------------------*/
+      expect(deleteAnnouncementResponse.statusCode).toEqual(200);
+      expect(deleteAnnouncementResponse.body.msg).toEqual('Announcement deleted!');
+      /*-------------------------------------------------------------------------*/
+      expect(getAnnouncementAfterDeleting.statusCode).toEqual(200);
+      expect(getAnnouncementAfterDeleting.body.data.length).toEqual(0);
+      expect(getAnnouncementAfterDeleting.body.data).toMatchObject([]);
+    });
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

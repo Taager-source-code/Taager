@@ -1,0 +1,94 @@
+<h1 mat-dialog-title>Generate pick list</h1>
+<div class="d-flex align-items-center justify-content-between">
+  <form
+    (ngSubmit)="onGenerate()"
+    [formGroup]="generatePickListForm"
+    class="picklist-form"
+  >
+    <div mat-dialog-content>
+      <div
+        formGroupName="confirmationDate"
+        class="d-flex justify-content-between"
+      >
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>From</mat-label>
+          <input matInput [matDatepicker]="dateFrom" formControlName="from" />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="dateFrom"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #dateFrom></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>To</mat-label>
+          <input matInput [matDatepicker]="dateTo" formControlName="to" />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="dateTo"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #dateTo></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="d-flex justify-content-between">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option
+              *ngFor="let shippingStatus of shippingStatuses"
+              [value]="shippingStatus.value"
+            >
+              {{ shippingStatus.status }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>Shipping Company</mat-label>
+          <mat-select formControlName="shippingCompany">
+            <mat-option
+              *ngFor="let shippingCompany of shippingCompanies"
+              [value]="shippingCompany.value"
+            >
+              {{ shippingCompany.companyName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <div mat-dialog-actions>
+      <button
+        mat-button
+        class="generate-btn"
+        type="submit"
+        [disabled]="
+          generatePickListForm.invalid || requestStatus === 'Processing'
+        "
+      >
+        Generate
+      </button>
+    </div>
+  </form>
+  <section
+    class="
+      request-status-wrapper
+      d-flex
+      flex-column
+      align-items-center
+      justify-content-center
+    "
+    [ngClass]="{
+      'request-success': requestStatus === 'Success',
+      'request-processing': requestStatus === 'Processing',
+      'request-failed': requestStatus === 'Failed'
+    }"
+  >
+    <p class="request-status">
+      {{ requestStatus }}
+    </p>
+    <p *ngIf="requestStatus === 'Success'" class="request-status">
+      {{ sentOrdersCount }} orders sent
+      <br />
+      to the warehouse
+    </p>
+  </section>
+</div>

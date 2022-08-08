@@ -1,0 +1,9 @@
+export type OrdersQuery = {
+  page: number;
+  pageSize: number;
+  country: string;
+  orderId?: string;
+  customerPhoneNum?: string;
+  deliveryDate?: string;
+  status?: string;
+};

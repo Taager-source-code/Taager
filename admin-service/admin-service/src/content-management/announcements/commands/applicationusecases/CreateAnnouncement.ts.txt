@@ -1,0 +1,15 @@
+import { Service } from 'typedi';
+import AnnouncementRepo from '../../infrastructure/repositories/AnnouncementRepo';
+import { Announcement } from '../../../common/infrastructure/db/models/Announcement';
+
+@Service({ global: true })
+export default class CreateAnnouncement {
+  private announcementRepo: AnnouncementRepo;
+
+  constructor(announcementRepo: AnnouncementRepo) {
+    this.announcementRepo = announcementRepo;
+  }
+  execute(announcement: Announcement): Promise<Announcement> {
+    return this.announcementRepo.createAnnouncement(announcement);
+  }
+}

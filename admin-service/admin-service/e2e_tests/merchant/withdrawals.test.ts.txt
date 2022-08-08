@@ -1,0 +1,79 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import PaymentRequest from '../../src/merchant/common/infrastructure/db/schema/paymentRequest.model';
+import User from '../../src/models/user.model';
+import CountryModel from '../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import { countryFixture } from '../fixtures/countryFixture';
+
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import { instance, mock } from 'ts-mockito';
+import CreditEligibleAmountProducer from '../../src/merchant/commands/infrastructure/withdrawals/producers/CreditEligibleAmountProducer';
+import { Container } from 'typedi';
+
+describe('merchants', () => {
+  let app: any = null;
+  let accessToken: string;
+  let creditEligibleAmountProducerMock: CreditEligibleAmountProducer;
+
+  const createUser = async () => {
+    await User.create(ADMIN_1);
+    await UserRoles.create({ role: 'admin' });
+  };
+
+  function listPayments(app: any, accessToken: string, expectedStatus: string[], filter: any = {}) {
+    return request(app)
+      .post('/api/withdrawals/list')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        page: 1,
+        pageSize: 10,
+        status: expectedStatus,
+        ...filter,
+      });
+  }
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    creditEligibleAmountProducerMock = mock(CreditEligibleAmountProducer);
+    const creditEligibleAmountProducerInstance = instance(creditEligibleAmountProducerMock);
+    Container.set(CreditEligibleAmountProducer, creditEligibleAmountProducerInstance);
+
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+    app = expressServer.setupServer();
+    await createUser();
+    await CountryModel.insertMany(countryFixture);
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  });
+
+  describe('test withdrawals apis', () => {
+    test('list withdrawal with not found user should return empty withdrawals', async () => {
+      await listPayments(app, accessToken, [], { taagerId: 1234 })
+        .expect(200)
+        .expect((result) =>
+          expect(result.body).toMatchObject({
+            data: {
+              count: 0,
+              withdrawals: [],
+            },
+          }),
+        );
+    });
+  });
+
+  afterEach(async () => {
+    await PaymentRequest.deleteMany({});
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

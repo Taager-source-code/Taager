@@ -1,0 +1,15 @@
+.add-button-container {
+  padding: 0.5rem;
+}
+.add-category-button {
+  width: 100%;
+  padding: 20px;
+  margin-bottom: 15px;
+  background: #ecf8f7;
+  border-radius: 10px;
+  border: transparent;
+  &__text {
+    margin: 0;
+    color: #29b6ab;
+  }
+}

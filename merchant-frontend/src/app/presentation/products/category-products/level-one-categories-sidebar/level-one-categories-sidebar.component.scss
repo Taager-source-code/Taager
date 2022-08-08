@@ -1,0 +1,73 @@
+@import 'common.scss';
+
+:host {
+  .categories-sidebar {
+    font-size: 16px;
+    padding: 20px;
+    border-radius: 10px;
+    border: solid 1px $border-color-medium-gray;
+    background-color: var(--white);
+
+    .category {
+      cursor: pointer;
+      margin: 10px 0 0 0;
+      height: 30px;
+      text-decoration: none;
+
+      span {
+        font-size: 14px;
+        font-weight: 500;
+        font-stretch: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-align: right;
+        color: $text-secondary;
+      }
+
+      mat-icon {
+        width: 24px;
+        height: 24px;
+        margin: 3px 0 3px 13px;
+      }
+
+      mat-icon::ng-deep svg g {
+        path,rect {
+          fill: $fill-dark-gray;
+        }
+      }
+
+      @media (max-width: 900px) {
+        height: 220px;
+      }
+    }
+
+    .category_icon {
+      width: em-calc(32px);
+      height: em-calc(32px);
+      margin-left: em-calc(16px);
+      margin-bottom: 0.5em;
+    }
+
+    .category:hover, .selected-category {
+      span {
+        color: $text-light-green;
+      }
+      .category_icon {
+        filter: invert(59%) sepia(60%) saturate(489%) hue-rotate(126deg)
+          brightness(90%) contrast(90%);
+      }
+      mat-icon::ng-deep svg g {
+        path, rect {
+          fill: $primary-color !important;
+        }
+      }
+    }
+  }
+
+  .sidebar-title{
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+

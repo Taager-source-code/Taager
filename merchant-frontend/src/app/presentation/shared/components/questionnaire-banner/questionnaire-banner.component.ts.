@@ -1,0 +1,73 @@
+import { Component, OnInit, Output } from '@angular/core';
+
+import { ToastrService } from 'ngx-toastr';
+
+import { DeclineQuestionnaireUseCase } from 'src/app/core/usecases/post-decline-questionnaire';
+
+import { EventEmitter } from '@angular/core';
+
+import { KSA_QUESTIONNAIRE_NAME } from '../../constants/questionnaire-name';
+
+import {BannerQuestionnaireService} from 'src/app/presentation/shared/services/banner-questionnaire.service';
+
+import { MixpanelService } from '../../services/mixpanel.service';
+
+@Component({
+
+  selector: 'app-questionnaire-banner',
+
+  templateUrl: './questionnaire-banner.component.html',
+
+  styleUrls: ['./questionnaire-banner.component.scss']
+
+})
+
+export class QuestionnaireBannerComponent implements OnInit {
+
+  constructor(
+
+    private declineQuestionnaireUseCase: DeclineQuestionnaireUseCase,
+
+    private toastService: ToastrService,
+
+    private bannerQuestionnaireService: BannerQuestionnaireService,
+
+    private mixpanelService: MixpanelService,
+
+  ) { }
+
+  ngOnInit(): void {
+
+  }
+
+  public declineSurvey(): void {
+
+    this.declineQuestionnaireUseCase.execute(KSA_QUESTIONNAIRE_NAME).subscribe(
+
+      (res)=>{
+
+        this.toastService.success('تم رفض الاستبيان');
+
+       }, (err)=>{
+
+        this.toastService.error(err?.error?.msg);
+
+      }, ()=> {
+
+       this.bannerQuestionnaireService.setDeclineBannerValue(false);
+
+       this.mixpanelService.track('ksa_banner_decline_click');
+
+      }
+
+    );
+
+  }
+
+  public trackQuestionnaire(){
+
+    this.mixpanelService.track('ksa_banner_questionnaire_click');
+
+  }
+
+}

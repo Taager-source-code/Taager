@@ -1,0 +1,35 @@
+import MigrationChangelog from './migrationChangelog';
+import Logger from '../shared-kernel/infrastructure/logging/general.log';
+
+class MigrationExecutor {
+  async migrate(name, filePath) {
+    const migrationChangelog = await MigrationChangelog.findOne({
+      name,
+    })
+      .lean(true)
+      .exec();
+
+    if (!migrationChangelog) {
+      Logger.info(`Migration ${name} Started`);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      await require(filePath).up();
+      await MigrationChangelog.create({ name });
+      Logger.info(`${name} migrated successfully`, { name });
+    }
+  }
+
+  async migrateAll() {
+    await Promise.all([
+      this.migrate('catalogsCountryUpdate', './scripts/1639318339583-catalogsCountryUpdate'),
+      this.migrate('cartsCountryUpdate', './scripts/1639462926000-cartsCountryUpdate'),
+      this.migrate('ordersCountryUpdate', './scripts/1639510974000-orders-country'),
+      this.migrate('ordersIssuesCountryUpdate', './scripts/1640253122000-order-issues-country'),
+      this.migrate('walletsAndWithdrawalsCurrencyUpdate', './scripts/1640253122000-wallets-and-withdrawals-currency'),
+      this.migrate('addUAEMultitenancyFeatureDoc', './scripts/1658915548000-add-uae-multitenancy-doc'),
+    ]);
+  }
+}
+
+export = MigrationExecutor;
+
+

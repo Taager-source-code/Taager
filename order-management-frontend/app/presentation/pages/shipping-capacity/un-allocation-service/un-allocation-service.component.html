@@ -1,0 +1,23 @@
+<div class="allocation-container">
+    <div class="sidebar-title"> Un Allocation For Orders</div>
+    <hr>
+    <div class="allocation-service-status">
+        <div class="row">
+            <div class="col-6">
+                <button class="download-btn" nbButton status="primary" (click)="downloadOrderSheet()">
+                    <nb-icon icon="file-text-outline"></nb-icon>Download Order Sheet
+                </button>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-3">
+                <p class="upload-label">Upload file:</p>
+            </div>
+            <div class="col-9">
+                <ejs-uploader #unAllocationUpload [autoUpload]='true' allowedExtensions='.csv'
+                    (change)="onFileSelect($event.target)"></ejs-uploader>
+            </div>
+        </div>
+    </div>
+</div>

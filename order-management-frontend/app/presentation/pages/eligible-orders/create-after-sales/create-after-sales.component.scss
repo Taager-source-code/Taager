@@ -1,0 +1,106 @@
+@import 'colors';
+.ng-invalid.ng-touched,
+.ng-invalid.ng-touched::ng-deep .select-button {
+  border-color: $error;
+}
+.header {
+  font-size: 18px;
+  margin: 16px 0 10px;
+  color: $text-light-grey;
+}
+nb-toggle::ng-deep .toggle-label {
+  margin: 4px 0;
+}
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+/* Firefox */
+input[type='number'] {
+  appearance: textfield;
+}
+.request-details {
+  margin-top: 16px;
+  display: flex;
+  gap: 50px;
+  &__type,
+  &__quantity,
+  &__add-shipping-cost,
+  &__type-select,
+  &__quantity-input {
+    width: 250px;
+  }
+  &__type-select::ng-deep .select-button {
+    background-color: $white !important;
+  }
+  &__title {
+    margin: 0 0 10px;
+    color: $text-dark-grey;
+  }
+}
+.replacement-products {
+    padding: 20px;
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    margin-top: 16px;
+    width: 630px;
+  &__title {
+    margin-bottom: 10px;
+    color: $text-dark-grey;
+  }
+  &__input-group {
+    display: flex;
+    gap: 20px;
+  }
+  &__input {
+    width: 250px;
+    min-width: 0;
+    margin-bottom: 5px;
+  }
+  &__delete-input {
+    padding: 0 !important;
+    width: 40px;
+    height: 40px;
+  }
+}
+.customer-edit-info {
+  margin: 16px 0 10px;
+  display: flex;
+  align-items: center;
+  &__title {
+    width: 200px;
+    margin-bottom: 0;
+    color: $text-dark-grey;
+  }
+}
+.customer-information {
+  width: 500px;
+  border: 1px solid $grey-medium;
+  padding: 20px;
+  border-radius: 5px;
+  &__title {
+    width: 200px;
+    margin-bottom: 0;
+    color: $text-dark-grey;
+  }
+  &__field,
+  &__edit-info {
+    display: flex;
+    align-items: center;
+    &:not(:last-of-type) {
+      margin-bottom: 10px;
+    }
+  }
+  &__input, &__select::ng-deep button {
+    width: 250px;
+    min-width: 0;
+  }
+}
+.action-buttons {
+  gap: 20px;
+  display: flex;
+  margin: 16px 0;
+  justify-content: flex-end;
+}

@@ -1,0 +1,35 @@
+import { Component, OnInit, Input } from '@angular/core';
+import { MixpanelService } from 'src/app/presentation/shared/services/mixpanel.service';
+import { MultitenancyService } from 'src/app/presentation/shared/services/multitenancy.service';
+
+@Component({
+  selector: 'app-mini-product-card',
+  templateUrl: './mini-product-card.component.html',
+  styleUrls: ['./mini-product-card.component.scss']
+})
+export class MiniProductCardComponent implements OnInit {
+  @Input() product: any;
+  currency: string;
+  constructor(
+    private mixpanelService: MixpanelService,
+    private multitenancyService: MultitenancyService,
+  ) { }
+
+  ngOnInit(): void {
+    this.currency = this.multitenancyService.isMultitenancyEnabled() ? this.multitenancyService.getCurrentCountry().currency.arabicName : 'Ø¬Ù†ÙŠÙ‡ Ù…ØµØ±ÙŠ';
+  }
+
+  goToProduct() {
+    this.mixpanelService.track('Go_to_product', {
+      'Product Name': this.product.productName,
+      'Product ID': this.product.prodID,
+      'Product Availability': this.product.productAvailability,
+      'Product Price': this.product.productPrice,
+      'Product Profit': this.product.productProfit,
+      'Interface Version': 'v2',
+    });
+  }
+
+}
+
+

@@ -1,0 +1,21 @@
+<a
+  class="mini-card-container d-flex justify-content-start"
+  [routerLink]="['/product-details', product._id]"
+  [queryParams]="{productName: product.productName}"
+>
+  <img class="card-img" width="100%" height="100%" [src]="product.productPicture"/>
+  <div>
+    <div class="product-title">
+      {{product.productName}}
+    </div>
+    <div class="product-price">
+      {{product.productPrice}} <span>{{currency}}</span>
+    </div>
+    <div class="product-profit">
+      <span>Ø§Ù„Ø±Ø¨Ø­:</span> {{product.productProfit}}
+    </div>
+  </div>
+
+</a>
+
+

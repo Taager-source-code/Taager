@@ -1,0 +1,483 @@
+<loader size="lg" *ngIf="pageLoading" [loading]="pageLoading"></loader>
+
+<div *ngIf="!pageLoading" class="container">
+
+  <div *ngIf="cartStepperFlag">
+
+    <div *ngIf="products.length" class="cart-step-container">
+
+        <div class="cart-step">
+
+          <img class="cart-step-image cart-step-image--active" [src]="order ? doneIcon : cartIcon ">
+
+          <p   class="cart-step-phase cart-step-phase--active">العربة</p>
+
+          <img src="../../../assets/img/cart-icons/Vector.svg" class="cart-arrow">
+
+        </div>
+
+        <div class="cart-step">
+
+          <img [ngClass]="{'cart-step-image--active' : order}" src="../../../assets/img/cart-icons/Customer-details.svg" class="cart-step-image" >
+
+          <p class="cart-step-phase" [ngClass]="{'cart-step-phase--active' : order}">تفاصيل العميل</p>
+
+          <img [src]="order ? arrowActivePath : arrowNotActivePath" class="cart-arrow">
+
+        </div>
+
+        <div class="cart-step">
+
+          <img src="../../../assets/img/cart-icons/Done.svg" class="cart-step-image">
+
+          <p class="cart-step-phase">إنهاء</p>
+
+        </div>
+
+    </div>
+
+  </div>
+
+  <div class="d-flex container__service-unaivalibility">
+
+    <ng-container *ngTemplateOutlet="(getPlaceOrderAvailabilityUseCase.execute() | async) === false && (selectedCountry.isoCode2 === 'EG' ? egyptMessageTemplate : ksaMessageTemplate)"></ng-container>
+
+    <ng-template #egyptMessageTemplate>
+
+      <ng-template
+
+        [ngTemplateOutlet]="messageContentTemplate"
+
+        [ngTemplateOutletContext]="{message: 'تاجر لن تستقبل طلبات من 4 يوليو من الساعه  11:59 مساء حتى 10  يوليو الساعه 9 صباحا'}"></ng-template>
+
+    </ng-template>
+
+    <ng-template #ksaMessageTemplate>
+
+      <ng-template
+
+        [ngTemplateOutlet]="messageContentTemplate"
+
+        [ngTemplateOutletContext]="{message: 'تاجر لن تستقبل طلبات من 4 يوليو من الساعه 11:59 مساء حتى 14 يوليو الساعه 9 صباحا '}"></ng-template>
+
+    </ng-template>
+
+    <ng-template #messageContentTemplate let-message="message">
+
+      <p class="container__service-unaivalibility-message">{{ message }}</p>
+
+    </ng-template>
+
+  </div>
+
+  <div *ngIf="!order && products.length > 0 && !bulkOrders">
+
+    <p class="cart-title">
+
+      العربة<span class="cart-count">({{total.count}} منتج)</span>
+
+    </p>
+
+    <app-selected-country-tooltip></app-selected-country-tooltip>
+
+    <div class="row no-gutters main-wrapper">
+
+      <div class="col-12 col-lg-8 right-side">
+
+        <div class="top-actions">
+
+          <p class="selected-products-count">{{ selectedProducts.length }} منتجات تم تحديدهم</p>
+
+          <div class="top-actions-2">
+
+            <mat-checkbox [(ngModel)]="checked" (change)="checkUncheckAll()">
+
+              <span class="check-select-all">تحديد الكل
+
+              </span> </mat-checkbox>
+
+            <span class="delete-selected"
+
+              (click)="deleteSelected()">
+
+              احذف المختار
+
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="main-content">
+
+          <div class="row no-gutters table-header d-none d-md-flex">
+
+            <div class="col-md-12 table-header-names">
+
+              <div class="price-head" style="margin-left: -38px;"> الربح</div>
+
+              <div class="quantity-head" style="margin-left: -30px;">الكمية</div>
+
+              <div class="price-head-two">السعر</div>
+
+              <div class="product-head"> المنتج</div>
+
+            </div>
+
+          </div>
+
+          <div class=" table-content">
+
+            <div *ngFor="let product of products; let index = index" class="table-element row no-gutters" [ngClass]="{'disabled': !product.isAvailableToSeller}">
+
+              <div class="product-disabled-message">
+
+                <p>عذرًا، هذا المنتج غير متوفر حاليًا</p>
+
+                <button class="btn mat-raised-button discard d-flex justify-content-center"
+
+                    (click)="openDeleteConfirmDialog(product.id,product.sellerName)">حذف من العربة</button>
+
+              </div>
+
+              <div class="col-12 col-md-6 product-info">
+
+                <div class="checkbox-wrapper">
+
+                  <mat-checkbox [(ngModel)]="product.selected" (change)="isAllSelected()" disableRipple
+
+                    class="checkbox" [disabled]="!product.isAvailableToSeller"></mat-checkbox>
+
+                  <button class="btn mat-raised-button discard d-flex justify-content-center"
+
+                    (click)="openDeleteConfirmDialog(product.id,product.sellerName)"><img
+
+                      src="../../../assets/img/close.png" class="x-mark-icon"></button>
+
+                </div>
+
+                <div class="image-wrap" [routerLink]="['/product-details',product.id]"
+
+                  [queryParams]="{name: product.productName}">
+
+                  <img class="product-image" [src]="product.image">
+
+                </div>
+
+                <div class="product-name">
+
+                  <div class="product-name">
+
+                    <p class="name" [title]="product.productName" [routerLink]="['/product-details',product.id]"
+
+                      [queryParams]="{name: product.productName}">{{product.productName}}</p>
+
+                  </div>
+
+                  <div class="product-variants">
+
+                    <span *ngIf="product.productColor" class="color-variant">
+
+                      <span>اللون:&nbsp;</span>
+
+                      <span [ngStyle]="{backgroundColor: product.productColorHex}" class="color-ball"></span>
+
+                      <span>&nbsp;{{product.productColor}}</span>
+
+                    </span>
+
+                    <span *ngIf="product.productSize" class="size-variant">المقاس: {{product.productSize}}</span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div class="col-6 d-none d-md-flex price-info">
+
+                <div class="error-wrap">
+
+                  <input class="input-val" (change)="isValuesValid()" type="number" [(ngModel)]="product.newPrice"
+
+                    [value]="product.newPrice" (input)="countTotal()">
+
+                  <span class="value-message"
+
+                    *ngIf="product.newPrice < product.productPrice && totalSelectedQuatity < 10"> هذه القيمة اقل من
+
+                    المحدد لها</span>
+
+                  <span class="value-message"
+
+                    *ngIf="(product.productPrice - product.newPrice) > profitByProducts(product.productProfit, product.productPrice, product.newPrice, product.quantity) && totalSelectedQuatity <= 10">
+
+                    هذه القيمة اقل من المحدد لها</span>
+
+                </div>
+
+                <button class="btn mat-raised-button plus-btn" (click)="increment(product)">+</button>
+
+                <div class="profit-sub">
+
+                  <input class="quantity input-val2" style="width: 48px;" type="number" [min]="1"
+
+                    (change)="isValuesValid()" [value]="product.quantity" [(ngModel)]="product.quantity"
+
+                    (input)="countTotal()" (blur) = "onBlurQuantityInput(product)">
+
+                  <a (click)="enableZeroProfit()" *ngIf="product.quantity>=10 && product.selected"
+
+                    class="btn btn-outline-info enable-zero-profit profit-btn" type="button">خصم قيمة الربح ؟</a>
+
+                </div>
+
+                <button class="btn mat-raised-button minus-btn" (click)="decrement(product)">-</button>
+
+                <div class="profit">
+
+                  {{profitByProducts(product.productProfit, product.productPrice, product.newPrice, product.quantity)}}
+
+                </div>
+
+              </div>
+
+              <div class="col-12 d-md-none price-info">
+
+                <div class="info-wrap-mob">
+
+                  <div class="error-wrap">
+
+                    <input class="input-val" (change)="isValuesValid()" type="number" [(ngModel)]="product.newPrice"
+
+                      [value]="product.newPrice" (input)="countTotal()">
+
+                    <span class="value-message"
+
+                      *ngIf="product.newPrice < product.productPrice && totalSelectedQuatity < 10"> هذه القيمة اقل
+
+                      من
+
+                      المحدد لها</span>
+
+                    <span class="value-message"
+
+                      *ngIf="(product.productPrice - product.newPrice) > profitByProducts(product.productProfit, product.productPrice, product.newPrice, product.quantity) && totalSelectedQuatity <= 10">
+
+                      هذه القيمة اقل من المحدد لها</span>
+
+                  </div>
+
+                  <span>السعر</span>
+
+                </div>
+
+                <div class="info-wrap-mob">
+
+                  <input class="quantity input-val" type="number" (change)="isValuesValid()" [value]="product.quantity" (blur)="onBlurQuantityInput(product)"
+
+                    [(ngModel)]="product.quantity" [min]="1" (input)="countTotal()">
+
+                  <span>الكمية</span>
+
+                </div>
+
+                <div class="info-wrap-mob">
+
+                  <div class="profit">
+
+                    {{profitByProducts(product.productProfit, product.productPrice, product.newPrice, product.quantity)}}</div>
+
+                  <span>الربح</span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="checkout d-md-none sticky">
+
+              <button (click)="checkout()" [disabled]="!selectedProducts.length || (getPlaceOrderAvailabilityUseCase.execute() | async) === false"
+
+                class="btn mat-raised-button checkout-btn"> إطلب</button>
+
+              <div class="checkout-wrap">
+
+                <p class="total-cost d-flex justify-content-between">
+
+                  <span>سعر المنتجات </span>
+
+                  <span class="total-cost">{{total.price}} {{currency}}</span>
+
+                </p>
+
+                <p class="profit-value d-flex justify-content-between">
+
+                  <span>الربح الخاص بك </span>
+
+                  <span class="profit-value">{{total.profit}} {{currency}}</span>
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="col-2 d-lg-none"></div>
+
+      <div class="col-12 col-md-8 col-lg-4 left-side d-none d-md-block">
+
+        <div *ngIf="bulkOrderFeature" class="left-card">
+
+          <p class="card-title">سهلنا عليك طلبات الجملة!</p>
+
+          <p class="sub-card-title">حالياً تقدر تملى بيانات العملاء عن طريق تحميل ملف طلبات
+
+            الجملة و ملأ الخانات بداخله ثم تقوم بإعادة رفع الملف بعد التعديل</p>
+
+        </div>
+
+        <div *ngIf="bulkOrderFeature" class="left-buttons">
+
+          <button class="btn mat-raised-button button-left" (click)="downloadTemplate()" [disabled]="!(getPlaceOrderAvailabilityUseCase.execute() | async)"><svg
+
+              xmlns="http://www.w3.org/2000/svg" class="button-icon" viewBox="0 0 31.926 31.343">
+
+              <path id="Icon_simple-microsoftexcel" data-name="Icon simple-microsoftexcel"
+
+                d="M31.331,4.164h-10.7V6.143h3.153V9.274H20.636v1h3.153v3.135H20.636v1.026h3.153V17.4H20.636v1.188h3.153v2.972H20.636v1.188h3.153v2.989H20.636v2.18h10.7c.169-.051.31-.25.423-.6a2.917,2.917,0,0,0,.172-.846V4.525c0-.17-.059-.273-.172-.309A1.464,1.464,0,0,0,31.331,4.164ZM29.944,25.732H24.813V22.746h5.131v2.986Zm0-4.174H24.813V18.585h5.131Zm0-4.161H24.813V14.445h5.131V17.4Zm0-3.991H24.813V10.275h5.131v3.133h0Zm0-4.149H24.813V6.144h5.131V9.257ZM0,3.67V28.414l18.836,3.258V.328L0,3.681ZM11.165,22.388q-.108-.291-1.008-2.478c-.6-1.458-.958-2.307-1.063-2.549H9.06L7.04,22.17l-2.7-.182L7.542,16,4.609,10.015,7.363,9.87l1.82,4.684h.036l2.055-4.9,2.845-.18-3.388,6.478,3.492,6.609-3.058-.18Z"
+
+                transform="translate(0 -0.329)" fill="#fff" />
+
+            </svg>تنزيل ملف للطلبات
+
+            الجملة</button>
+
+          <label for="file-upload" class="button-right" [ngClass]="{'button-right--disabled':!(getPlaceOrderAvailabilityUseCase.execute() | async)}"><img src="../../../assets/img/uploa-img-icon.png"
+
+              class="button-icon" />رفع الملف بعد التعديل</label>
+
+          <input type="file" id="file-upload" (change)="onSendXLSXFile($event)" accept=".xlsx" required />
+
+        </div>
+
+        <div *ngIf="bulkOrderFeature && errorMessages.length>0" class="error-message">
+
+          <label style="color: red;"><img src="../../../assets/img/error.png" class="error-icon" />فشل التحميل بسبب
+
+            الأخطاء التالية:</label>
+
+        </div>
+
+        <div *ngIf="errorMessages.length>0" class="error-mesg-box">
+
+          <table class="table">
+
+            <thead>
+
+              <tr class="line-num-header">
+
+                <th scope="col">الصف</th>
+
+                <th scope="col">الخطأ</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              <tr class="table-row" *ngFor="let error of errorMessages">
+
+                <td>{{error.row}}</td>
+
+                <td style="color:black;">
+
+                  {{error.error}}<span style='color:red;'>({{error.label}})</span></td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+        <div class="left-wrapper">
+
+          <div class="your-cart">
+
+            <p class="your-text">تفاصيل الطلب</p>
+
+          </div>
+
+          <p class="cart-text">
+
+            <span>عدد المنتجات المحددة</span>
+
+            <span class="price">{{total.count}}</span>
+
+          </p>
+
+          <p class="cart-text">
+
+            <span>سعر المنتجات</span>
+
+            <span class="price">{{total.price}} {{currency}}</span>
+
+          </p>
+
+          <p class="cart-text">
+
+            <span>الربح الخاص بك</span>
+
+            <span class="profit profit-text">{{total.profit}} {{currency}}</span>
+
+          </p>
+
+          <div class="total-cost">
+
+            <span>المستحق للدفع</span>
+
+            <span>{{total.price}} {{currency}}</span>
+
+          </div>
+
+          <button (click)="checkout()" [disabled]="!selectedProducts.length || (getPlaceOrderAvailabilityUseCase.execute() | async) === false" class="btn mat-raised-button checkout-btn">
+
+            استكمال الطلب </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <app-order *ngIf="products && order" [isOrderNow]="false" [products]="selectedProducts"
+
+    (submitted)="orderSubmitted($event)" (back)="order = false"></app-order>
+
+  <app-bulk-orders *ngIf="bulkOrders" [orders]="importedOrders" (submitted)="orderSubmitted($event)"
+
+    (back)="bulkOrders = false"></app-bulk-orders>
+
+  <div id="empty-cart" class="d-flex flex-column justify-content-center align-items-center" *ngIf="products.length < 1">
+
+    <p>العربة فارغة</p>
+
+    <a [routerLink]="['/products-v2']" class="btn btn-outline-info shopping-button d-flex justify-content-center align-items-center" type="button"><span>تسوق</span></a>
+
+  </div>
+
+</div>
+
+

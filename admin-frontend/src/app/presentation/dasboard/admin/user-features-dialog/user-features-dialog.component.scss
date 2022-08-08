@@ -1,0 +1,85 @@
+import { Component, OnInit } from "@angular/core";
+import { MatDialogRef } from "@angular/material/dialog";
+import { ToastrService } from "ngx-toastr";
+import { FeatureService } from "../../services/feature.service";
+@Component({
+  selector: "app-user-features-dialog",
+  templateUrl: "./user-features-dialog.component.html",
+  styleUrls: ["./user-features-dialog.component.scss"],
+})
+export class UserFeaturesDialogComponent implements OnInit {
+  public feature = "";
+  public tagerIds = "";
+  public id = "";
+  public formsArray = [];
+  constructor(
+    private featureService: FeatureService,
+    private toastr: ToastrService,
+    public dialogRef: MatDialogRef<UserFeaturesDialogComponent>
+  ) {}
+  reset() {
+    this.id = "";
+    this.feature = "";
+    this.tagerIds = "";
+  }
+  newFeature() {
+    this.reset();
+  }
+  ngOnInit(): void {
+    this.getFeatures();
+  }
+  getFeatures(): void {
+    this.formsArray = [];
+    this.featureService.getFeatures().subscribe((res: any) => {
+      res.data.forEach((element) => {
+        this.formsArray.push({
+          id: element._id,
+          feature: element.feature,
+          tagerIds: element.tagerIds,
+        });
+      });
+    });
+  }
+  onEditFeature(event) {
+    let index = event.target.getAttribute("data-index");
+    this.feature = this.formsArray[index].feature;
+    this.tagerIds = this.formsArray[index].tagerIds;
+    this.id = this.formsArray[index].id;
+  }
+  editFeature() {
+    const featureInfo = {
+      feature: this.feature,
+      tagerIds: this.tagerIds,
+    };
+    this.featureService.updateFeature(this.id, featureInfo).subscribe(
+      (resp: any) => {
+        this.toastr.success("Feature updated");
+        this.getFeatures();
+      },
+      (err) => {
+        this.toastr.error(err.error.msg);
+      }
+    );
+  }
+  addFeature() {
+    if (this.id) {
+      this.editFeature();
+      this.reset();
+    } else {
+      const featureInfo = {
+        feature: this.feature,
+        tagerIds: this.tagerIds,
+      };
+      this.featureService.addFeature(featureInfo).subscribe(
+        (response: any) => {
+          this.toastr.success("Feature added");
+          this.reset();
+          this.getFeatures();
+        },
+        (err) => {
+          this.toastr.error(err.error.msg);
+        }
+      );
+    }
+  }
+}

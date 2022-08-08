@@ -1,0 +1,261 @@
+<div
+
+  id="category-products"
+
+  class="container"
+
+>
+
+  <div class="row">
+
+    <app-breadcrumbs [categoryHierachy]="categoryHierachy"></app-breadcrumbs>
+
+  </div>
+
+  <p class="page-title">
+
+    {{selectedCategoryName}}
+
+  </p>
+
+  <div class="grid mt-3">
+
+      <div class="row wrapper">
+
+        <div class="col-12 col-lg-3 col-md-3 item d-none  d-lg-block">
+
+            <app-level-one-categories-sidebar 
+
+              *ngIf="(isCategoriesLoaded && categoryHierarchyHasLessThanTwoLevels && commercialCategoriesFeatureFlag) || (filteredCategories && !commercialCategoriesFeatureFlag) "
+
+              [categoriesNodes]="levelOneCategoriesNodes"
+
+              [nonCommercialCategories]="filteredCategories"
+
+              [selectedCategory]="selectedCategoryName"
+
+              [queryParamsObject]="queryParamsObject"
+
+            ></app-level-one-categories-sidebar>
+
+            <app-categories-sidebar 
+
+              #categoriesSidebar
+
+              *ngIf="isCategoriesLoaded && !categoryHierarchyHasLessThanTwoLevels && commercialCategoriesFeatureFlag"
+
+              [selectedCategoryName]="pageTitle"
+
+              [selectedCategoryHierarchy]="categoryHierachy"
+
+            ></app-categories-sidebar>
+
+          <div>
+
+            <div class="mini-products-header" *ngIf="miniProductsOne.length">
+
+              منتجات تاجر الكسبانه
+
+            </div>
+
+            <app-mini-product-card *ngFor="let miniProduct of miniProductsOne" [product]="miniProduct"></app-mini-product-card>
+
+          </div>
+
+          <div>
+
+            <div class="mini-products-header" *ngIf="miniProductsTwo.length">
+
+              وصل حديثا
+
+            </div>
+
+            <app-mini-product-card *ngFor="let miniProduct of miniProductsTwo" [product]="miniProduct"></app-mini-product-card>
+
+          </div>
+
+        </div>
+
+        <div class="col-12 d-lg-none collapse-wrap" *ngIf="isCategoriesLoaded">
+
+          <button type="button" class="btn btn-primary collapse-category" (click)="isCollapsed = !isCollapsed"
+
+            [attr.aria-expanded]="!isCollapsed" aria-controls="collapseBasic" [ngClass]="{ 'opened' : !isCollapsed }">
+
+            {{pageTitle}}
+
+            <img class="collapse-icon" src="../../../assets/img/dropdown.svg">
+
+          </button>
+
+          <div id="collapseBasic" [collapse]="isCollapsed" [ngClass]="{'d-flex':!isCollapsed}" class="card category-list align-items-center">
+
+              <div appHoverStyle *ngFor="let category of levelOneCategoriesNodes">
+
+                <a 
+
+                  class="category-el d-flex"
+
+                  (click)="isCollapsed = true"
+
+                  [routerLink]="['/', 'products', 'category', category.key]"
+
+                  [queryParams]="{
+
+                    currentPage: 1,
+
+                    items: queryParamsObject.items,
+
+                    sorting: queryParamsObject.sorting
+
+                  }"
+
+                  [ngClass]="category.value.name.arabicName === selectedCategoryName ? 'selected' : ''"
+
+                >
+
+                  <img class="category-icon" src="{{ iconsBaseUrl }}commercial-categories/icons/{{category.value.icon}}">
+
+                  <p class="category-name">{{category.value.name.arabicName}}</p>
+
+                </a>
+
+              </div>
+
+          </div>
+
+        </div>
+
+        <div class="col-12 col-lg-9 col-md-12">
+
+          <app-subcategory-filter 
+
+            *ngIf="categoryHierachyHasFourlevels" 
+
+            [fourthLevelCategoriesList]="fourthLevelCategoriesList"
+
+          ></app-subcategory-filter>
+
+          <div class="d-flex flex-wrap justify-content-between" *ngIf="variantGroups.length || products.length">
+
+            <div class="category-heading">
+
+              <span>({{noOfItems}} نتيجة)</span>
+
+            </div>
+
+            <div class="d-flex justify-content-between flex-wrap" *ngIf="!featureGroupTitle">
+
+              <div class="btn-group" dropdown>
+
+                <span class="items-text">عرض</span>
+
+                <button id="button-animated" dropdownToggle type="button" class="btn btn-primary dropdown-toggle"
+
+                  aria-controls="dropdown-animated">
+
+                  <span class="selected-items-per-page">{{maxItemPerPage}} في الصفحة</span>
+
+                  <b class="fa fa-chevron-down" aria-hidden="true"></b>
+
+                </button>
+
+                <ul id="dropdown-animated" *dropdownMenu class="dropdown-menu" role="menu"
+
+                  aria-labelledby="button-animated">
+
+                  <li *ngFor="let pageFilterSize of pagesFilterSize" role="menuitem" class="dropdown-item" (click)="changeItemsOnPage(pageFilterSize)">{{pageFilterSize}}</li>
+
+                </ul>
+
+              </div>
+
+              <div class="btn-group" dropdown>
+
+                <span class="items-text"> ترتيب حسب</span>
+
+                <button id="button-animated" dropdownToggle type="button" class="btn btn-primary dropdown-toggle"
+
+                  aria-controls="dropdown-animated">
+
+                  <span class="selected-sorting">{{ sortedBy.text }}</span>
+
+                  <b class="fa fa-chevron-down" aria-hidden="true"></b>
+
+                </button>
+
+                <ul id="dropdown-animated" *dropdownMenu class="dropdown-menu" role="menu"
+
+                  aria-labelledby="button-animated">
+
+                  <li role="menuitem" class="dropdown-item" *ngFor="let sortingOption of sortingOptions" (click)="changeSorting(sortingOption.value)">{{ sortingOption.text }}</li>
+
+                </ul>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="row no-gutters">
+
+            <div *ngIf="!loading && products.length === 0 && variantGroups.length === 0; else showProducts" id="no-products">
+
+              <div class="col col-xs-12">
+
+                <span> لا يوجد منتجات</span>
+
+              </div>
+
+            </div>
+
+            <ng-template #showProducts>
+
+              <div *ngIf="loading" class="container loading-container d-flex flex-center">
+
+                <loader [loading]="loading" size="md" alt="loading" id="loading"></loader>
+
+              </div>
+
+              <div class="col-12 d-flex flex-wrap justify-content-flex-start" *ngIf="!loading && isCatalogDataLoaded">
+
+                  <app-product-card *ngFor="let variantGroup of variantGroups" [variantGroup]="variantGroup"></app-product-card>
+
+                  <app-product-card *ngFor="let product of products" [product]="product"></app-product-card>
+
+              </div>
+
+            </ng-template>
+
+          </div>
+
+          <div class="d-flex flex-column justify-content-center mb-5 mt-5 paginate">
+
+            <div *ngIf="showPagination">
+
+              <div class="pagination-wrapper d-flex justify-content-center">
+
+                <pagination [totalItems]="noOfItems" [(ngModel)]="currentPage" [itemsPerPage]="maxItemPerPage"
+
+                  [maxSize]="maxPageSize" (pageChanged)="pageChanged($event)" previousText=" " nextText=" ">
+
+                </pagination>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        
+
+      </div>
+
+  </div>
+
+</div>
+
+

@@ -1,0 +1,142 @@
+<div mat-dialog-content *ngIf="order">
+  <h4 mat-dialog-title>{{ getIssueType(data.orderIssue.issueType) }}</h4>
+  <mat-form-field>
+    <mat-label>Order Id</mat-label>
+    <input matInput [(ngModel)]="order.orderID" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Status</mat-label>
+    <input matInput [(ngModel)]="order.status" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Created At</mat-label>
+    <input matInput [(ngModel)]="order.createdAt" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Receiver Name</mat-label>
+    <input matInput [(ngModel)]="order.receiverName" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Phone Number</mat-label>
+    <input matInput [(ngModel)]="order.phoneNumber" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Phone Number 2</mat-label>
+    <input matInput [(ngModel)]="order.phoneNumber2" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Street Name</mat-label>
+    <input matInput [(ngModel)]="order.streetName" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Ø§Ù„Ù…Ø­Ø§ÙØ¸Ø©</mat-label>
+    <input matInput [(ngModel)]="order.province" disabled />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Cash On Delivery</mat-label>
+    <input matInput [(ngModel)]="order.cashOnDelivery" disabled />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Profit</mat-label>
+    <input matInput [(ngModel)]="order.orderProfit" disabled />
+  </mat-form-field>
+  <div>
+    <label>Product</label>
+    <div class="table-element row no-gutters">
+      <div>
+        <input
+          [(ngModel)]="data.orderIssue.product.productId"
+          style="width: 100px"
+          disabled
+        />
+        <input
+          [(ngModel)]="data.orderIssue.product.name"
+          style="width: 250px"
+          disabled
+        />
+        <input
+          [(ngModel)]="data.orderIssue.product.productQty"
+          style="width: 100px"
+          disabled
+        />
+      </div>
+    </div>
+  </div>
+  <br />
+  <mat-form-field *ngIf="issueReason">
+    <mat-label>Issue Reason</mat-label>
+    <input matInput [(ngModel)]="issueReason" disabled />
+  </mat-form-field>
+  <mat-form-field *ngIf="data.orderIssue.phoneNum">
+    <mat-label>Phone Num (Vodafone cash account)</mat-label>
+    <input matInput [(ngModel)]="data.orderIssue.phoneNum" disabled />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Notes</mat-label>
+    <input matInput [(ngModel)]="data.orderIssue.notes" disabled />
+  </mat-form-field>
+  <form [formGroup]="orderIssueForm">
+    <mat-form-field>
+      <mat-label>Decline Reasons</mat-label>
+      <textarea
+        matInput
+        type="text"
+        placeholder="Enter Decline Reasons"
+        formControlName="declineReasons"
+        required
+        [(ngModel)]="declineReasons"
+      ></textarea>
+    </mat-form-field>
+  </form>
+  <button
+    *ngIf="data.orderIssue.issueImage"
+    mat-raised-button
+    [disabled]="clicked"
+    (click)="downloadImage(data.orderIssue.issueImage, 'awb')"
+  >
+    download Image
+  </button>
+  <br />
+  <button
+    *ngIf="data.orderIssue.issueVideo"
+    mat-raised-button
+    [disabled]="clicked"
+    (click)="downloadImage(data.orderIssue.issueVideo, 'video')"
+  >
+    download Video
+  </button>
+  <br />
+  <br />
+</div>
+<div
+  *ngIf="
+    !data.orderIssue.resolved &&
+    !(data.orderIssue.status === 'merchant_cancelled')
+  "
+  mat-dialog-actions
+>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="clicked"
+    (click)="submit(true)"
+  >
+    Accept
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="isSubmitEnabled() || clicked"
+    (click)="submit(false)"
+  >
+    Decline
+  </button>
+</div>

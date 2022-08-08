@@ -1,0 +1,68 @@
+import { instance, mock, resetCalls, verify, when } from 'ts-mockito';
+
+import OrderRepo from '../../../../../../src/after-sales/queries/application/contracts/OrderRepo';
+import GetOrderById from '../../../../../../src/after-sales/queries/application/usecases/GetOrderById';
+import Order from '../../../../../../src/after-sales/queries/application/models/Order';
+import { OrderNotFound } from '../../../../../../src/after-sales/common/application/exceptions/OrderNotFound';
+
+const orderRepoMocked = mock<OrderRepo>();
+const getOrder = new GetOrderById(instance(orderRepoMocked));
+
+const orderId = '12454/1231';
+const orderModel: Order = {
+  orderId: orderId,
+  status: 'delivered',
+  cashOnDelivery: 150,
+  placedAt: new Date('2022-02-22'),
+  deliveredAt: new Date('2022-02-22'),
+  customerDetails: {
+    customerName: 'Hassan Ibrahim',
+    customerPhoneNum1: '+201152452145',
+    customerPhoneNum2: '+201152452145',
+  },
+  shippingInfo: {
+    province: 'cairo',
+    zone: {
+      name: 'Madinaty',
+      status: 'Green',
+    },
+    address: 'G 102 Building 12, apartment 12',
+  },
+  orderLines: [
+    {
+      orderLineId: 1,
+      productId: 'EG3414141',
+      productName: 'test_product1',
+      quantity: 3,
+      totalPrice: 50,
+      direction: 'forward',
+      type: 'after_sales',
+      status: 'created | pending_shipping_company | out_for_delivery | delivery_suspended | delivered | returned',
+      trackingNumber: '123456',
+      shippingCompanyId: 'EG_VHUBS',
+      originalOrderLineId: 2,
+      totalMerchantProfit: 10,
+    },
+  ],
+};
+
+describe('GetOrderById', () => {
+  beforeEach(() => {
+    resetCalls(orderRepoMocked);
+  });
+
+  test('Should get the after sales order by given id', async () => {
+    when(orderRepoMocked.getById(orderId)).thenResolve(orderModel);
+
+    const orderResponse = await getOrder.execute(orderId);
+
+    verify(orderRepoMocked.getById(orderId)).once();
+    expect(orderResponse).toEqual(orderModel);
+  });
+
+  test('Should return OrderNotFound exception if not found', async () => {
+    when(orderRepoMocked.getById(orderId)).thenReturn(Promise.resolve(null));
+
+    await expect(getOrder.execute(orderId)).rejects.toThrow(OrderNotFound);
+  });
+});

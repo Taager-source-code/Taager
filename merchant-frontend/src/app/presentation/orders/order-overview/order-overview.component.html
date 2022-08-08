@@ -1,0 +1,329 @@
+<div *ngIf="order && !isMobile" class="main">
+
+  <div class="title">
+
+      <div class="code-title">كود الطلب </div>
+
+      <div class="code-value"> {{order.orderID}} </div>
+
+      <div class="date-title">حالة الطلب</div>
+
+      <button class="btn status-badge" [ngClass]="{'received': statusStage === 'received','delivered': statusStage === 'delivered','cancelled': statusStage === 'cancelled','pending': statusStage === 'pending'}">{{returnOrderStatus(order.status)}}</button>
+
+      <div *ngIf="!draft" class="date-title">تاريخ الطلب </div>
+
+      <div *ngIf="!draft" class="date-value">{{convertDate(order.createdAt)}}</div>
+
+      <div *ngIf="!draft && order.confirmationDate" class="date-title">تاريخ التأكيد</div>
+
+      <div *ngIf="!draft && order.confirmationDate" class="date-value">{{convertDate(order.confirmationDate)}}</div>
+
+  </div>
+
+  <div class="details-container">
+
+      <div class="details">
+
+          <div class="inline-div">
+
+          <div class="unit">
+
+              <div class="lab-title">اسم العميل</div>
+
+              <div class="lab-value">{{order.receiverName}}</div>
+
+          </div>
+
+          <div class="unit">
+
+              <div class="lab-title">رقم الموبايل</div>
+
+              <div class="lab-value">{{order.phoneNumber}}</div>
+
+          </div>
+
+          <div class="unit">
+
+              <div class="lab-title">المحافظة</div>
+
+              <div class="lab-value">{{order.province}}</div>
+
+          </div>
+
+          <div class="unit">
+
+              <div class="lab-title">المبلغ الإجمالي</div>
+
+              <div class="lab-value">{{order.cashOnDelivery}} {{multitenancyFlag? orderCountry.currency.arabicName : 'جنيه'}}</div>
+
+          </div>
+
+          <div class="unit">
+
+              <div class="lab-title">ربح الطلب</div>
+
+              <div class="lab-value">{{order.orderProfit}} {{multitenancyFlag? orderCountry.currency.arabicName : 'جنيه'}}</div>
+
+          </div>
+
+      </div>
+
+      <div class="inline-div">
+
+      <div class="unit">
+
+          <div class="lab-title">العنوان</div>
+
+          <div class="lab-value">{{order.streetName}}</div>
+
+      </div>
+
+      <div *ngIf="multitenancyFlag" class="unit">
+
+          <div class="lab-title">شحن الي</div>
+
+          <div class="lab-value">{{ orderCountry.arabicName }} </div>
+
+      </div>
+
+      <div class="unit">
+
+          <div class="lab-title">الملاحظات</div>
+
+          <div class="lab-value">{{order.notes || "لا توجد ملاحظات" }} </div>
+
+      </div>
+
+      <div *ngIf="order.status === 'order_received' || order.status === 'suspended'" class="unit">
+
+          <div class="lab-title">ملاحظات محاولة تأكيد الطلب</div>
+
+          <div class="lab-value">{{order.failedAttemptNote}} </div>
+
+      </div>
+
+      <div *ngIf="order.status === 'delivery_suspended' || order.status === 'cancel'" class="unit">
+
+          <div class="lab-title">سبب  تعليق التسليم</div>
+
+          <div class="lab-value">{{matchDeliverySuspendedReason(order.deliverySuspendedReason)}} </div>
+
+      </div>
+
+      </div>
+
+      </div>
+
+      <div class="status">
+
+          <button class="btn btn-viewOrder" (click)="onItemsDetails(order)">عرض الاوردر</button>
+
+          <button type="button" class="btn btn-message" (click)="onTrackOrderActivity(order)">
+
+              تتبع الطلب</button>
+
+          <button *ngIf="!draft && order.shippingInfo && shippmentTrackingExists" class="btn btn-message" (click)="reloadShipmentStatus()">تتبع شحنة</button>
+
+          <button *ngIf="!draft" class="btn btn-message" (click)="openChatModel(order)">ارسال رسالة</button>
+
+          <button *ngIf="order.status === 'order_received'" class="btn btn-cancel" (click)="changeOrderStatus(order)">إلغاء</button>
+
+          <button *ngIf="checkChildOrders(order.status)" class="btn btn-message" (click)="onChildOrdersDetails()">الاستبدالات و الاسترجاعات</button>
+
+          <button *ngIf="order.hasIssue === true" class="btn btn-cancel" (click)="cancelOrderIssue(order)">إلغاء مشكلة الطلب</button>
+
+          <button *ngIf="!draft" class="btn btn-message" (click)="rateOrder()">تقييم الطلب</button>
+
+      </div>
+
+  </div>
+
+  <div *ngIf="order.hasIssue" class="aftersale-container">
+
+      <div class="order-issue">يتم العمل علي حل مشكلة هذا الطلب</div>
+
+  </div>
+
+  <div *ngIf="order.hasIssue === false && !(order.resolved && statusStage === 'delivered')" class="aftersale-container">
+
+      <div class="order-issue" [ngClass]="{'rejected': order.resolved === false}">{{orderIssueMessage}}</div>
+
+  </div>
+
+  <div *ngIf="statusStage === 'delivered' && !order.hasIssue" class="aftersale-container">
+
+      <div class="inline-div">
+
+          <div class="lab-value">توجد مشكلة في طلبك؟ </div>
+
+      </div>
+
+      <div class="inline-div">
+
+          <button class="btn btn-return" (click)="openOrderReplacements(order)">استبدال منتج</button>
+
+          <button *ngIf="showAdditon" class="btn btn-return btn-complete" (click)="openOrderCompletion(order)">استكمال شحنة ناقصة</button>
+
+          <button class="btn btn-return btn-replace" (click)="openOrderRefunds(order)">استرجاع</button>
+
+          <button class="btn btn-policy" (click)="openRefundPolicy()">سياسة الاسترجاع و الاستبدال</button>
+
+      </div>
+
+  </div>
+
+  <p *ngIf="order.errorMessage" class="bulk-order-error">
+
+    {{order.errorMessage}}
+
+  </p>
+
+</div>
+
+<div *ngIf="order && isMobile" class="main">
+
+  <div class="title">
+
+      <div class="code-title">كود الطلب </div>
+
+      <div class="code-value"> {{order.orderID}} </div>
+
+      <button class="btn status-badge" [ngClass]="{'received': statusStage === 'received','delivered': statusStage === 'delivered','cancelled': statusStage === 'cancelled','pending': statusStage === 'pending'}">{{returnOrderStatus(order.status)}}</button>
+
+  </div>
+
+  <div class="details-container">
+
+      <div class="details-mobile">
+
+          <div class="inline-div">
+
+          <div class="unit-mobile">
+
+              <div class="lab-title">اسم العميل</div>
+
+              <div class="lab-value">{{order.receiverName}}</div>
+
+          </div>
+
+          <div class="unit-mobile-1">
+
+              <div class="lab-title">المحافظة</div>
+
+              <div class="lab-value">{{order.province}}</div>
+
+          </div>
+
+      </div>
+
+      <div class="inline-div">
+
+          <div class="unit-mobile-1">
+
+              <div class="lab-title">المبلغ الإجمالي</div>
+
+              <div class="lab-value">{{order.cashOnDelivery}}  {{multitenancyFlag? orderCountry.currency.arabicName : 'جنيه'}}</div>
+
+          </div>
+
+          <div class="unit-mobile-1">
+
+              <div class="lab-title">ربح الطلب</div>
+
+              <div class="lab-value">{{order.orderProfit}}  {{multitenancyFlag? orderCountry.currency.arabicName : 'جنيه'}}</div>
+
+          </div>
+
+          <div class="unit-mobile-1">
+
+              <div class="lab-title">رقم الموبايل</div>
+
+              <div class="lab-value">{{order.phoneNumber}}</div>
+
+          </div>
+
+      </div>
+
+      <div class="inline-div">
+
+      <div [ngClass]="{'unit-mobile': !multitenancyFlag, 'unit-mobile-1': multitenancyFlag}">
+
+          <div class="lab-title">العنوان</div>
+
+          <div class="lab-value">{{order.streetName}}</div>
+
+      </div>
+
+      <div *ngIf="multitenancyFlag" class="unit-mobile-1">
+
+          <div class="lab-title">شحن الي</div>
+
+          <div class="lab-value">{{ orderCountry.arabicName }} </div>
+
+      </div>
+
+      <div class="unit-mobile-1">
+
+          <div class="lab-title">الملاحظات</div>
+
+          <div class="lab-value">{{order.notes || "لا توجد ملاحظات" }} </div>
+
+      </div>
+
+      </div>
+
+      <button class="btn btn-viewOrder" (click)="onItemsDetails(order)">عرض الاوردر</button>
+
+      <button type="button" class="btn btn-message" (click)="onTrackOrderActivity(order)">
+
+          تتبع الطلب</button>
+
+      <button *ngIf="!draft && order.shippingInfo && shippmentTrackingExists" class="btn btn-message" (click)="reloadShipmentStatus()">تتبع شحنة</button>
+
+          <button *ngIf="!draft"  class="btn btn-message" (click)="openChatModel(order)">ارسال رسالة</button>
+
+          <button  *ngIf="order.status === 'order_received'" class="btn btn-cancel" (click)="changeOrderStatus(order)">إلغاء</button>
+
+          <button *ngIf="checkChildOrders(order.status)" class="btn btn-message" (click)="onChildOrdersDetails()">الاستبدالات و الاسترجاعات</button>
+
+          <button *ngIf="!draft"  class="btn btn-message mb-3" (click)="rateOrder()">تقييم الطلب</button>
+
+      </div>
+
+  </div>
+
+  <div *ngIf="order.hasIssue" class="aftersale-container">
+
+    <div class="order-issue">يتم العمل علي حل مشكلة هذا الطلب</div>
+
+</div>
+
+<div *ngIf="order.hasIssue === false && !(order.resolved && statusStage === 'delivered')" class="aftersale-container">
+
+    <div class="order-issue" [ngClass]="{'rejected': order.resolved === false}">{{orderIssueMessage}}</div>
+
+</div>
+
+<div *ngIf="statusStage === 'delivered' && !order.hasIssue" class="aftersale-container">
+
+    <div class="inline-div">
+
+        <div class="lab-value">توجد مشكلة في طلبك؟ </div>
+
+    </div>
+
+    <div class="inline-div">
+
+        <button class="btn btn-return-mob" (click)="openOrderReplacements(order)">استبدال</button>
+
+        <button *ngIf="showAdditon" class="btn btn-return-mob btn-complete" (click)="openOrderCompletion(order)">استكمال</button>
+
+        <button class="btn btn-return-mob btn-replace" (click)="openOrderRefunds(order)">استرجاع</button>
+
+    </div>
+
+    <button class="btn btn-policy-mob" (click)="openRefundPolicy()">سياسة الاسترجاع و الاستبدال</button>
+
+</div>
+
+</div>

@@ -1,0 +1,69 @@
+import { Service } from 'typedi';
+import { OrderDbo } from '../../../../../order-management/common/infrastructure/db/models/OrderDbo';
+import OrderModel from '../../../../../models/order.model';
+import { Product } from '../../../../../interfaces/ProductModel';
+import ProductModel from '../../../../../models/product.model';
+import { OrdersQuery } from '../../../OrdersQuery';
+import moment, { Moment } from 'moment';
+import { FilterQuery } from 'mongoose';
+import {
+  DELIVERED,
+  DELIVERY_IN_PROGRESS,
+  orderStatusesAll,
+  orderStatusesDelivered,
+  orderStatusesInProgress,
+} from '../../../application/models/OrderStatuses';
+
+@Service({ global: true })
+export default class OrderDao {
+  async getById(orderId: string): Promise<OrderDbo | null> {
+    return OrderModel.findOne({ orderID: orderId }).lean().exec();
+  }
+
+  async getOrderLineProducts(productIds: string[]): Promise<Product[]> {
+    return ProductModel.find({ prodID: { $in: productIds } })
+      .lean()
+      .exec();
+  }
+
+  async getOrders(orderQuery: OrdersQuery): Promise<{ orders: OrderDbo[]; count: number }> {
+    const options: FilterQuery<any> = {};
+    options.country = orderQuery.country;
+
+    if (orderQuery.deliveryDate) {
+      const momentStart: Moment = moment(orderQuery.deliveryDate, 'YYYY-MM-DD', true);
+      const start: Date = momentStart.startOf('day').toDate();
+      const end: Date = momentStart.add(1, 'days').startOf('day').toDate();
+      options.deliveryDate = { $gte: start, $lt: end };
+    }
+
+    if (orderQuery.status === DELIVERED) {
+      options.status = { $in: orderStatusesDelivered };
+    } else if (orderQuery.status === DELIVERY_IN_PROGRESS) {
+      options.status = { $in: orderStatusesInProgress };
+    } else {
+      options.status = { $in: orderStatusesAll };
+    }
+
+    if (orderQuery.orderId) options.orderID = orderQuery.orderId;
+    if (orderQuery.customerPhoneNum)
+      options.$or = [{ phoneNumber: orderQuery.customerPhoneNum }, { phoneNumber2: orderQuery.customerPhoneNum }];
+
+    const total: number = await OrderModel.find(options).countDocuments().exec();
+
+    const page: number = orderQuery.page || 1;
+    const limit: number = orderQuery.pageSize || 100;
+    const skip = (page - 1) * limit;
+
+    const ordersFetched: OrderDbo[] = await OrderModel.find(options, { orderLines: 0 })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .lean()
+      .exec();
+    return {
+      orders: ordersFetched,
+      count: total,
+    };
+  }
+}

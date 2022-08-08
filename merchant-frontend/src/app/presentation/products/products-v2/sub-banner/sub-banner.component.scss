@@ -1,0 +1,21 @@
+.sub-banner {
+
+  width: 100%;
+
+  display: block;
+
+  margin-top: 25px;
+
+  @media (max-width: 767px) {
+
+    margin-top: 20px;
+
+  }
+
+  &__image {
+
+    width: 100%;
+
+  }
+
+}

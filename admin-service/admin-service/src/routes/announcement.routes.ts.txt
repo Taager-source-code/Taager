@@ -1,0 +1,46 @@
+// region requires
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+import isAllowedUser from '../middlewares/allowed-user';
+import * as GetAnnouncementsController from '../content-management/announcements/queries/infrastructure/controllers/GetAnnouncementsController';
+import * as CreateAnnouncementController from '../content-management/announcements/commands/infrastructure/controllers/CreateAnnouncementController';
+import * as DeleteAnnouncementController from '../content-management/announcements/commands/infrastructure/controllers/DeleteAnnnouncementController';
+import * as UploadAnnouncementImageController from '../content-management/announcements/commands/infrastructure/controllers/UploadAnnouncementImageController';
+import UserCountriesAccessBodyMiddleware from '../middlewares/UserCountriesAccessBodyMiddleware';
+import UserCountriesAccessQueryParamMiddleware from '../middlewares/UserCountriesAccessQueryParamMiddleware';
+
+// endregion
+
+const router = express.Router();
+
+router.get(
+  '/getAnnouncements',
+  isAuthenticated,
+  UserCountriesAccessQueryParamMiddleware,
+  errorHandler(GetAnnouncementsController.execute),
+);
+
+router.post(
+  '/createAnnouncement',
+  isAuthenticated,
+  CountryMiddleware,
+  UserCountriesAccessBodyMiddleware,
+  isAllowedUser,
+  errorHandler(CreateAnnouncementController.execute),
+);
+
+router.post('/addImage', isAuthenticated, isAllowedUser, errorHandler(UploadAnnouncementImageController.execute));
+
+router.delete(
+  '/delete/:id',
+  isAuthenticated,
+  // This doesn't seem to work that well. Country is never checked
+  // CountryMiddleware,
+  // UserCountriesAccessMiddleware,
+  isAllowedUser,
+  errorHandler(DeleteAnnouncementController.execute),
+);
+
+export = router;

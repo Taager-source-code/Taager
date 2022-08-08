@@ -1,0 +1,114 @@
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import compression from 'compression';
+import status from 'http-status';
+import dotenv from 'dotenv';
+import 'reflect-metadata';
+import promBundle from 'express-prom-bundle';
+
+dotenv.config();
+
+import YAML from 'yamljs';
+const swaggerDocument = YAML.load('./swagger/swagger.yaml');
+
+import swaggerUi from 'swagger-ui-express';
+import Logger from './logging/general.log';
+import HttpLogger from './middlewares/HttpLogger';
+
+// Required to execute before routes are loaded
+require('newrelic');
+
+import routes from './routes';
+import countryRoutes from './routes/country.routes';
+import announcementRoutes from './routes/announcement.routes';
+import childOrderRoutes from './routes/childOrder.routes';
+import provinceRoutes from './routes/province.routes';
+import orderBatchRoutes from './routes/order-batch.routes';
+import notificationRoutes from './routes/notification.routes';
+import healthCheckRoute from './routes/healthcheck.routes';
+import categoryRoutes from './routes/categories.routes';
+import productsRoutes from './routes/ProductsRoutes';
+import orderRoutes from './routes/order.routes';
+import withdrawalsRoutes from './routes/WithdrawalsRoutes';
+import orderIssuesRoutes from './routes/OrderIssues.routes';
+import shippingRoutes from './routes/ShippingRoutes';
+import internalCategoryRoutes from './routes/InternalCategoriesRoutes';
+import commercialCategoryRoutes from './routes/CommercialCategoriesRoutes';
+import variantsRoutes from './routes/VariantRoutes';
+import afterSalesOrdersRoutes from './routes/AfterSalesOrdersRoutes';
+import merchantRoutes from './routes/MerchantsRoutes';
+
+const app = express();
+app.use(HttpLogger);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(
+  cors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  }),
+);
+app.use(helmet());
+app.use(compression());
+app.use(express.json({ limit: '50mb' }));
+app.use(
+  express.urlencoded({
+    extended: false,
+    limit: '50mb',
+  }),
+);
+app.disable('etag');
+
+const notApiPathRegexp = new RegExp('^((?!/api)).*$', 'g'); // Exclude everything not on /api path
+app.use(
+  promBundle({
+    buckets: [0.01, 0.05, 0.1, 0.15, 0.25, 0.5, 0.7, 1, 2, 3, 5, 10, 30, 60],
+    includePath: true,
+    includeMethod: true,
+    promClient: {
+      collectDefaultMetrics: {},
+    },
+    excludeRoutes: [notApiPathRegexp],
+    urlValueParser: { extraMasks: ['%', '202[0-9]-(?:[1-9]|1[012])-(?:0[1-9]|[12][0-9]|3[01])'] },
+  }),
+);
+
+app.use('/api', routes);
+app.use('/api/after-sales', afterSalesOrdersRoutes);
+app.use('/api/countries', countryRoutes);
+app.use('/api/province', provinceRoutes);
+app.use('/api/child-order', childOrderRoutes);
+app.use('/api/category', categoryRoutes);
+app.use('/api/order-batch', orderBatchRoutes);
+app.use('/api/announcement', announcementRoutes);
+app.use('/api/order-batch', orderBatchRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/', orderRoutes);
+app.use('/api/', withdrawalsRoutes);
+app.use('/api/', productsRoutes);
+app.use('/api/orderIssues', orderIssuesRoutes);
+app.use('/api/', shippingRoutes);
+app.use('/api/internal-categories', internalCategoryRoutes);
+app.use('/api/commercial-categories', commercialCategoryRoutes);
+app.use('/api/variants', variantsRoutes);
+app.use('/api/merchants', merchantRoutes);
+
+app.use('/healthcheck', healthCheckRoute);
+
+// Logic Error Handler
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err, req, res, _next) => {
+  Logger.error(`Error handler triggered: ${JSON.stringify(err)}`);
+  res.status(err.statusCode || status.INTERNAL_SERVER_ERROR).json({
+    msg: err.msg || status[status.INTERNAL_SERVER_ERROR],
+  });
+});
+
+// 404 Error Handler
+app.use((req, res) => {
+  res.status(status.NOT_FOUND).json({
+    msg: status[status.NOT_FOUND],
+  });
+});
+
+export = app;

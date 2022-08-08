@@ -1,0 +1,15 @@
+import { Service } from 'typedi';
+import UserFeaturesRepo from '../../infrastructure/repositories/UserFeaturesRepo';
+
+@Service({ global: true })
+export default class IsMultiTenancyUAEEnabled {
+  private userFeaturesRepo: UserFeaturesRepo;
+  constructor(userFeaturesRepo: UserFeaturesRepo) {
+    this.userFeaturesRepo = userFeaturesRepo;
+  }
+  execute(taagerId: string): Promise<boolean> {
+    return this.userFeaturesRepo.isFeatureEnabled('multitenancy_uae', taagerId);
+  }
+}
+
+

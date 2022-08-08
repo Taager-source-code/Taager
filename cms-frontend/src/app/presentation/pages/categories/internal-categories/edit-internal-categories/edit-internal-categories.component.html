@@ -1,0 +1,11 @@
+<ngx-edit-category
+  [editedCategory]="internalCategory"
+  [subCategoryLevels]="subCategoryLevels"
+  [categoryType]="categoryType"
+  (navigateBack)="onClickBackButton()"
+  (confirmEditCategoryEmitter)="onConfirmEditInternalCategory($event)"
+  (selectedSubCategoryChangedEmitter)="onSelectedSubCategoryChanged($event)"
+  (getSubCategoryLevelListEmitter)="getSubCategoryLevelList($event)"
+  (editSubCategoryEmitter)="onEditSubCategory($event)"
+  (subCategoryDeleteClickedEmitter)="onSubCategoryDeleteClicked($event)"
+></ngx-edit-category>

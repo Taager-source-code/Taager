@@ -1,0 +1,44 @@
+import { Service } from 'typedi';
+import { HttpError, HttpProcessor, HttpSuccess } from '../../../../common/http/HttpProcessor';
+import { OK, NOT_FOUND } from 'http-status';
+import joi, { Schema } from 'joi';
+import GetOrderById from '../../application/usecases/GetOrderById';
+import { OrderNotFound } from '../../../common/application/exceptions/OrderNotFound';
+import { Request } from 'express';
+
+@Service({ global: true })
+export class GetOrderController extends HttpProcessor {
+  private getOrder: GetOrderById;
+
+  constructor(getOrder: GetOrderById) {
+    super();
+    this.getOrder = getOrder;
+  }
+
+  getValueToValidate(req: Request): any {
+    return req.params;
+  }
+
+  async execute(validatedValue: any): Promise<HttpSuccess | HttpError> {
+    try {
+      const result = await this.getOrder.execute(validatedValue.params.id);
+      return {
+        status: OK,
+        data: result,
+      };
+    } catch (ex: unknown) {
+      if (ex instanceof OrderNotFound) {
+        return {
+          status: NOT_FOUND,
+          errorCode: '404',
+          description: ex.message,
+        };
+      }
+      throw ex;
+    }
+  }
+
+  schema: Schema = joi.object({
+    id: joi.string().required().min(1, 'utf-8'),
+  });
+}

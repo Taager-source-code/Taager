@@ -1,0 +1,18 @@
+import { Inject, Service } from 'typedi';
+import OrderRepo from '../contracts/OrderRepo';
+import OrderRepoImpl from '../../infrastructure/repositories/OrderRepoImpl';
+import { OrdersQuery } from '../../OrdersQuery';
+import GetOrdersQueryResult from '../models/GetOrdersQueryResult';
+
+@Service({ global: true })
+export default class GetOrders {
+  private orderRepo: OrderRepo;
+
+  constructor(@Inject(() => OrderRepoImpl) orderRepo: OrderRepo) {
+    this.orderRepo = orderRepo;
+  }
+
+  execute(ordersQuery: OrdersQuery): Promise<GetOrdersQueryResult> {
+    return this.orderRepo.getOrders(ordersQuery);
+  }
+}

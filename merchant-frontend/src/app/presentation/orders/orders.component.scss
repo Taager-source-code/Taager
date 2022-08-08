@@ -1,0 +1,362 @@
+@import "common.scss";
+
+.container-div {
+  overflow-x: hidden;
+  font-size: 16px;
+
+  button {
+    cursor: pointer;
+  }
+
+  .title {
+    font-size: em-calc(32px);
+    font-weight: 800;
+    text-align: start;
+    color: black;
+  }
+
+  .tabs-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: em-calc(20px);
+    .order-tabs-container {
+      display: flex;
+      justify-content: flex-start;
+      margin-right: em-calc(20px);
+      .tab {
+        outline: none;
+        border: none;
+        background: none;
+        color: $dark-gray;
+        font-size: em-calc(18px);
+        font-weight: 700;
+        margin-left: em-calc(40px);
+
+        @media (max-width: 767px){
+          font-size: em-calc(16px);
+          margin-left: em-calc(10px);
+        }
+        @media (max-width:1366px){
+          font-size: 15px;
+          margin-left: 18px;
+        }
+      }
+      .selected-tab {
+        color: $primary-color;
+        border-bottom: em-calc(2px) solid;
+      }
+    }
+  }
+
+  .btn-excel {
+    display: block;
+    height: 53px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px 0 $box-shadow-light;
+    background-color: $primary-color;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 40px;
+    text-align: right;
+    color: $text-white;
+    display: flex;
+    justify-content: center;
+    @media (max-width: 767px){
+     display: none;
+    }
+    @media (max-width:1366px){
+      min-width: 220px;
+      height: 45px;
+      font-size: 16px;
+     }
+    .excel-i {
+      width: 30px;
+      height: 30px;
+      margin-left: 10px;
+      border-radius: 10px;
+
+      @media (max-width:1366px){
+       width: 28px;
+       height: 32px;
+      }
+    }
+  }
+
+  .search-form {
+    display: flex;
+    position: relative;
+    bottom: 20px;
+
+    input {
+      border: none;
+      height: 44px;
+      font-size: 16px;
+    }
+    .fa-search {
+      color: $text-secondary;
+    }
+
+    .search-input {
+      display: flex;
+      background: var(--white);
+      border-radius: 6px;
+      align-items: center;
+      overflow: hidden;
+      width: 100%;
+
+      .search-icon {
+        padding: 0 20px;
+      }
+    }
+  }
+
+  .search-form input:focus {
+    box-shadow: none;
+  }
+
+  ::ng-deep .mat-form-field-flex > .mat-form-field-infix {
+    padding: 0.4em 0px !important;
+  }
+  ::ng-deep .mat-form-field-label-wrapper {
+    top: -1.5em;
+  }
+
+  ::ng-deep
+    .mat-form-field-appearance-outline.mat-form-field-can-float.mat-form-field-should-float
+    .mat-form-field-label {
+    transform: translateY(-1.1em) scale(0.75);
+    width: 133.33333%;
+  }
+
+  .input {
+    max-width: 32%;
+    flex-grow: 1;
+    background-color: $fill-white;
+    margin-right: 5px;
+
+    font-size: 15px !important;
+    height: 48px;
+  }
+
+  .btn-search {
+    width: 50%;
+    height: 40px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px 0 $box-shadow-light;
+    background-color: $secondary-color;
+    margin-right: 5px;
+    margin-top: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: center;
+    color: $text-white;
+  }
+
+  .btn-clear {
+    width: 50%;
+    height: 40px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px 0 $box-shadow-light;
+    background-color: $fill-white;
+    margin-right: 5px;
+    margin-left: 5px;
+    margin-top: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: center;
+    color: $text-primary;
+    border: solid 1.2px $border-color-secondary;
+  }
+
+  .paginate {
+    margin-top: 1.6rem !important;
+    margin-bottom: 3.6rem;
+  }
+
+  pagination::ng-deep {
+    .pagination-prev .page-link,
+    .pagination-next .page-link {
+      height: 100%;
+      border: solid 0.5px $border-color-dark-gray;
+      background-color: $fill-white;
+    }
+
+    .pagination-prev .page-link {
+      background: transparent url("/src/assets/img/next.svg") no-repeat center;
+      margin-right: 30px;
+      margin-left: 10px;
+      background-color: $fill-white;
+    }
+    .pagination-next .page-link {
+      background: transparent url("/src/assets/img/prev.svg") no-repeat center;
+      margin-left: 30px;
+      margin-right: 10px;
+      background-color: $fill-white;
+    }
+
+    .page-link {
+      color: $text-secondary;
+      border: solid 0.5px $border-color-dark-gray;
+      height: 100%;
+      width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-link:focus {
+      box-shadow: none;
+    }
+
+    .page-item.active .page-link {
+      border: solid 1px $border-color-dark-gray;
+      background-color: $secondary-color;
+      font-size: 14px;
+      font-weight: bold;
+      font-stretch: normal;
+      font-style: normal;
+      line-height: normal;
+      letter-spacing: normal;
+      text-align: center;
+      color: $text-white;
+    }
+
+    .pagination-first {
+      .page-link {
+        border-radius: 4px;
+        border: solid 0.5px $border-color-dark-gray;
+        background-color: $fill-white;
+        padding: 0px 30px;
+        font-size: 14px;
+        font-weight: normal;
+        font-stretch: normal;
+        font-style: normal;
+        line-height: normal;
+        letter-spacing: normal;
+        text-align: center;
+        color: $text-primary;
+      }
+      .page-link:hover {
+        border: solid 1px $border-color-dark-gray;
+        background-color: $secondary-color;
+        padding: 0px 30px;
+        color: $text-white;
+      }
+    }
+    .pagination-last {
+      .page-link {
+        border-radius: 4px;
+        border: solid 0.5px $border-color-dark-gray;
+        background-color: $fill-white;
+        padding: 0px 30px;
+        font-size: 14px;
+        font-weight: normal;
+        font-stretch: normal;
+        font-style: normal;
+        line-height: normal;
+        letter-spacing: normal;
+        text-align: center;
+        color: $text-primary;
+      }
+      .page-link:hover {
+        border: solid 1px $border-color-dark-gray;
+        background-color: $secondary-color;
+        padding: 0px 30px;
+        color: $text-white;
+      }
+    }
+    .pagination-page {
+      background-color: $fill-white;
+    }
+
+    .pagination {
+      height: 40px;
+    }
+
+    .pagination-page:nth-child(2) {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .pagination-page:nth-last-child(2) {
+      border-radius: 0 8px 8px 0;
+    }
+
+    @media (max-width: 375px) {
+      .pagination-prev .page-link {
+        margin-right: 10px;
+      }
+      .pagination-next .page-link {
+        margin-left: 10px;
+      }
+    }
+  }
+
+  .filter-form {
+    justify-content: space-around;
+    align-content: center;
+    direction: rtl;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px 0 rgb(0 0 0 / 10%);
+    .filter-row {
+      width: 99%;
+      height: 53px;
+      background-color: white;
+      margin-left: 8px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn {
+      margin-bottom: 9px;
+    }
+  }
+}
+
+.excel-tooltip{
+  position: relative;
+  display: inline-block;
+}
+
+.excel-tooltip .tooltip-text {
+  background-color: $secondary-color;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  height: 50px;
+  line-height: 1.39;
+  left: 1px;
+  padding: 0px 23px 0 21px;
+  position: absolute;
+  text-align: center;
+  top: 55px;
+  visibility: hidden;
+  width: 360px;
+  z-index: 1;
+}
+    
+.excel-tooltip:hover .tooltip-text {
+  visibility: visible;
+  padding-top: 15px;
+}
+
+.excel-tooltip .tooltip-text::after {
+  content: " ";
+  bottom: 100%;  /* At the top of the tooltip */
+  border-color: transparent transparent $border-color-secondary transparent;
+  border-style: solid;
+  border-width: 8px;
+  left: 20%;
+  margin-left: -8px;
+  position: absolute;
+}
+
+

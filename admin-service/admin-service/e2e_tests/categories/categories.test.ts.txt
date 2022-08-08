@@ -1,0 +1,364 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import request from 'supertest';
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import * as expressServer from '../expressServer/expressServer';
+import User from '../../src/models/user.model';
+import CountryModel from '../../src/shared-kernel/infrastructure/db/models/CountrySchema';
+import CategoryModel from '../../src/content-management/categories/common/infrastructure/db/schemas/CategorySchema';
+import { countryFixture } from '../fixtures/countryFixture';
+import { leatherEGY, mobileAccessoriesSAU, occasionsEGY, selfCareSAU, shoesARE } from '../fixtures/categoryFixture';
+import Product from '../../src/models/product.model';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import { CREATED, FORBIDDEN, NOT_FOUND, OK, UNPROCESSABLE_ENTITY } from 'http-status';
+import { ProductBuilder } from '../fixtures/product.fixture';
+import UserRoles from '../../src/models/userRoles.model';
+
+describe('/api/category', () => {
+  let app: any = null;
+  let accessToken: string;
+  let userId: string;
+
+  const createUser = async () => {
+    userId = (await User.create(ADMIN_1))._id;
+    await UserRoles.create({ role: 'admin' });
+  };
+
+  const createCountries = async () => {
+    await CountryModel.insertMany(countryFixture);
+  };
+
+  const createCategories = async () => {
+    await CategoryModel.insertMany([leatherEGY, occasionsEGY, selfCareSAU, shoesARE]);
+  };
+
+  const generateAccessToken = async (): Promise<string> => {
+    return await expressServer.loginAndGetAccessToken(app);
+  };
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    await mongooseConnector.connectToMongoDB(
+      `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`,
+    );
+
+    app = expressServer.setupServer();
+
+    await createUser();
+    await createCountries();
+    await createCategories();
+    accessToken = await generateAccessToken();
+  });
+
+  describe('/getCategories', () => {
+    test('get All Categories (in EGY) ordered by sorting count', async () => {
+      // Arrange
+      const validFilterCountry = 'EGY';
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const categoryResponse = await request(app)
+        .get(`/api/category/getCategories?country=${validFilterCountry}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(OK);
+      expect(categoryResponse.body.msg).toEqual('Categories list found!');
+      // Categories are sorted by sorting value ascending
+      // TODO: Zia - Assert better on sorting. don't depend on value passed onto expect function
+      expect(categoryResponse.body.data).toMatchObject([occasionsEGY, leatherEGY]);
+    });
+
+    test('Get categories without supplying country returns all categories', async () => {
+      // Act
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+      const categoryResponse = await request(app)
+        .get(`/api/category/getCategories/`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(OK);
+      expect(categoryResponse.body.msg).toEqual('Categories list found!');
+      // TODO: Assert better on sorting. don't depend on value passed onto expect function
+      expect(categoryResponse.body.data).toMatchObject([occasionsEGY, selfCareSAU, shoesARE, leatherEGY]);
+    });
+
+    test('Get categories for not-allowed country returns 401', async () => {
+      // Arrange
+      const areCountry = 'ARE';
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      // Act
+      const categoryResponse = await request(app)
+        .get(`/api/category/getCategories/?country=${areCountry}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(FORBIDDEN);
+    });
+  });
+
+  describe('/addCategory', () => {
+    test('add category should return 201', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const newCategory = {
+        name: 'name1',
+        text: 'text1',
+        sorting: 123,
+        country: 'EGY',
+      };
+
+      // Act
+      const categoryResponse = await request(app)
+        .post('/api/category/addCategory')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newCategory);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(CREATED);
+      expect(categoryResponse.body.msg).toEqual('Category added!');
+    });
+
+    test('add category for non allowed country should return 401', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const newCategory = {
+        name: 'name1',
+        text: 'text1',
+        sorting: 123,
+        country: 'ARE',
+      };
+
+      // Act
+      const categoryResponse = await request(app)
+        .post('/api/category/addCategory')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(newCategory);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(FORBIDDEN);
+    });
+
+    test('add category without country should succeed', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+
+      const categoryWithoutName = {
+        text: 'text1',
+        name: 'name1',
+        sorting: 123,
+      };
+
+      // Act
+      const categoryResponse = await request(app)
+        .post('/api/category/addCategory')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(categoryWithoutName);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(CREATED);
+      expect(categoryResponse.body.msg).toEqual('Category added!');
+    });
+
+    test('add category without name should return validation error', async () => {
+      // Arrange
+      const categoryWithoutName = {
+        text: 'text1',
+        sorting: 123,
+      };
+
+      // Act
+      const categoryResponse = await request(app)
+        .post('/api/category/addCategory')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(categoryWithoutName);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(UNPROCESSABLE_ENTITY);
+      expect(categoryResponse.body.msg).toEqual('"name" is required');
+    });
+  });
+
+  describe('/updateCategory', () => {
+    test('update category should return 200', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+      const updatedCategoryObject = {
+        name: 'Occasions',
+        text: 'Ø£Ø¹ÙŠØ§Ø¯ Ùˆ Ù…Ù†Ø§Ø³Ø¨Ø§Øª',
+        sorting: 21,
+        featured: true,
+        country: 'EGY',
+      };
+
+      // Act
+      // TODO: Zia - Insert category via /addCategory endpoint
+      const insertedCategory = await CategoryModel.create(mobileAccessoriesSAU);
+      const categoryResponse = await request(app)
+        .patch(`/api/category/updateCategory/${insertedCategory.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatedCategoryObject);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(OK);
+      expect(categoryResponse.body.msg).toEqual('Category updated successfully');
+      // Assert on actual item in Db since no API call to filter by ID
+      // TODO: Zia - get Category data back via an API call
+      const updatedCategoryFromDb = await CategoryModel.findById(insertedCategory.id).exec();
+      expect(updatedCategoryFromDb).toMatchObject(updatedCategoryObject);
+    });
+
+    test('update category should return 200', async () => {
+      // Arrange
+      await expressServer.setUserEgyRole(app, accessToken, userId);
+      const updatedCategoryObject = {
+        name: 'Occasions',
+        text: 'Ø£Ø¹ÙŠØ§Ø¯ Ùˆ Ù…Ù†Ø§Ø³Ø¨Ø§Øª',
+        sorting: 21,
+        featured: true,
+        country: 'ARE',
+      };
+
+      // Act
+      const categoryResponse = await request(app)
+        .patch(`/api/category/updateCategory/anyId`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatedCategoryObject);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(FORBIDDEN);
+    });
+
+    test('update non-existent category should return 404', async () => {
+      // Arrange
+      const updatedCategory = {
+        name: 'Occasions',
+        text: 'Ø£Ø¹ÙŠØ§Ø¯ Ùˆ Ù…Ù†Ø§Ø³Ø¨Ø§Øª',
+        sorting: 21,
+        featured: true,
+        country: 'EGY',
+      };
+      // need a valid MongoDB ID otherwise it throws a 500
+      const nonexistentCategoryID = '61a4cda52be5cd1aa67f76e3';
+
+      // Act
+      const categoryResponse = await request(app)
+        .patch(`/api/category/updateCategory/${nonexistentCategoryID}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatedCategory);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(NOT_FOUND);
+      expect(categoryResponse.body.msg).toEqual('Un-able to find required resource');
+    });
+
+    test('Update with malformed id should return 422', async () => {
+      // Arrange
+      const updatedCategory = {
+        name: 'Occasions',
+        text: 'Ø£Ø¹ÙŠØ§Ø¯ Ùˆ Ù…Ù†Ø§Ø³Ø¨Ø§Øª',
+        sorting: 21,
+        featured: true,
+        country: 'EGY',
+      };
+      const invalidCategoryID = '123456789';
+
+      // Act
+      const categoryResponse = await request(app)
+        .patch(`/api/category/updateCategory/${invalidCategoryID}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatedCategory);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(UNPROCESSABLE_ENTITY);
+      expect(categoryResponse.body.msg).toEqual(`Failed to update Category`);
+    });
+
+    test('Update with incomplete fields should return 422', async () => {
+      // Arrange
+      const updatedCategoryObject = {
+        name: 'Occasions',
+        sorting: 21,
+        featured: true,
+        country: 'EGY',
+      };
+
+      // Act
+      // TODO: Zia - Insert category via /addCategory endpoint
+      const insertedCategory = await CategoryModel.create(mobileAccessoriesSAU);
+      const categoryResponse = await request(app)
+        .patch(`/api/category/updateCategory/${insertedCategory.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatedCategoryObject);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(UNPROCESSABLE_ENTITY);
+      expect(categoryResponse.body.msg).toEqual('"text" is required');
+    });
+  });
+
+  describe('/deleteCategories', () => {
+    test('delete category should return 200', async () => {
+      // Act
+      // TODO: Zia - Insert category via /addCategory endpoint
+      const insertedCategory = await CategoryModel.create(mobileAccessoriesSAU);
+      const categoryResponse = await request(app)
+        .delete(`/api/category/delete/${insertedCategory.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(OK);
+      expect(categoryResponse.body.msg).toEqual('Category deleted!');
+      // Assert on actual item in Db since no API call to filter by ID
+      // TODO: Zia - get Category data back via an API call
+      const updatedCategoryFromDb = await CategoryModel.findById(insertedCategory.id).exec();
+      expect(updatedCategoryFromDb).toBeNull();
+    });
+
+    test('delete non-existent category should return 404', async () => {
+      // Arrange
+      // Has to be a valid MongoDB ID to not cause INTERNAL_SERVER_ERROR
+      const nonexistentCategoryID = '61a4cda52be5cd1aa67f76e3';
+
+      // Act
+      const categoryResponse = await request(app)
+        .delete(`/api/category/delete/${nonexistentCategoryID}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(NOT_FOUND);
+      expect(categoryResponse.body.msg).toEqual("This category doesn't exist anymore");
+    });
+
+    test('delete non-empty category with products should return 422', async () => {
+      // Arrange
+      const availableProduct = new ProductBuilder().available().build();
+
+      // Act
+      // TODO: Zia - Insert Category and Product via an Endpoint
+      const insertedCategory = await CategoryModel.create(mobileAccessoriesSAU);
+      availableProduct['Category'] = mobileAccessoriesSAU.name;
+      availableProduct['categoryId'] = insertedCategory.id;
+      await Product.insertMany([availableProduct]);
+      const categoryResponse = await request(app)
+        .delete(`/api/category/delete/${insertedCategory.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(categoryResponse.statusCode).toEqual(UNPROCESSABLE_ENTITY);
+      expect(categoryResponse.body.msg).toEqual("This category has products, and so can't be deleted");
+    });
+  });
+
+  afterAll(async () => {
+    await Product.deleteMany({});
+    await UserRoles.deleteMany({});
+    await mongooseConnector.disconnectFromMongoDB();
+    app = null;
+  });
+});

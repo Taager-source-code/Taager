@@ -1,0 +1,41 @@
+export class VariantGroupMissingError extends Error {
+  private id: any;
+  constructor(id) {
+    super('Variant group not found');
+    this.id = id;
+  }
+}
+
+export class VariantGroupUpdateConflictError extends Error {
+  constructor() {
+    super('Variant group could not be updated due to missing variants');
+  }
+}
+
+export class VariantGroupCategoryConflictError extends Error {
+  constructor() {
+    super('Variant group could not be added as Category is not in the same country');
+  }
+}
+
+export class VariantGroupCommercialCategoryCountryConflictError extends Error {
+  constructor() {
+    super('Variant group could not be added as commercial category/ies are not in the same country');
+  }
+}
+
+export class VariantGroupCommercialCategoryNotAllFoundConflictError extends Error {
+  private categoryIds: string[];
+  constructor(categoryIds: string[]) {
+    super(
+      `Variant group cannot be created since some of the attached commercial categories do not exist: ${categoryIds}`,
+    );
+    this.categoryIds = categoryIds;
+  }
+}
+
+export class VariantGroupProdIDConflictError extends Error {
+  constructor() {
+    super('Variant group could not be created/updated due to existing variant prodID');
+  }
+}

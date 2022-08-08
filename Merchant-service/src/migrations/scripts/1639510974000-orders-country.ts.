@@ -1,0 +1,9 @@
+import OrderModel from '../../order-management/common/infrastructure/db/schemas/order.model';
+
+export const up = async () => {
+  const filter: any = { country: { $exists: false } };
+  const update = { $set: { country: 'EGY' } };
+  await OrderModel.updateMany(filter, update, { timestamps: false });
+};
+
+

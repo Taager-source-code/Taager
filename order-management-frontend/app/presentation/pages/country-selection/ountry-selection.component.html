@@ -1,0 +1,20 @@
+<nb-layout> 
+    <nb-layout-column>
+        <div id="home-container">
+            <img src="https://app.dev.taager.com/assets/img/header-icons/taager-logo-2022.svg" alt="Taager logo" class="country-selector-logo">
+            <div class="row margin-adjust">
+                <div class="col-lg-12 center">
+                    <div id="illustration" class="position-abs">
+                        <img [src]="imgUrl+'/core-images/country-selection-monitor.png'" class="monitor-img" alt="monitor img" id="monitor">
+                    </div>
+                
+                </div>
+               <div class="col-lg-12 country-selector">
+                <h6>Select a country to manage the Order Automation</h6>
+                <country-dropdown></country-dropdown>
+               </div>
+              <button routerLink="/pages/batches" (click)="setSelectedCountry()" class="btn-style">Lets Go!</button>
+            </div>
+        </div>
+    </nb-layout-column>
+</nb-layout>

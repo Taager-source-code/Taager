@@ -1,0 +1,56 @@
+import { Inject, Service } from 'typedi';
+import QuestionnaireRepo from '../contracts/QuestionnaireRepo';
+import QuestionnaireAnswerRepo from '../contracts/QuestionnaireAnswerRepo';
+import QuestionnaireRepoImpl from '../../infrastructure/repositories/QuestionnaireRepoImpl';
+import QuestionnaireAnswerRepoImpl from '../../infrastructure/repositories/QuestionnaireAnswerRepoImpl';
+import { DISABLED, ENABLED, QuestionnaireAnswerStatus } from '../models/QuestionnaireAnswerStatus';
+import { QuestionnaireNotFoundError } from '../../../common/application/exceptions/QuestionnaireNotFoundError';
+import IsMultiTenancyEnabled from '../../../../../shared-kernel/application/usecases/IsMultiTenancyEnabled';
+
+@Service({ global: true })
+export default class IsQuestionnaireEnabled {
+  private questionnaireRepo: QuestionnaireRepo;
+  private questionnaireAnswerRepo: QuestionnaireAnswerRepo;
+  private isMultiTenancyEnabled: IsMultiTenancyEnabled;
+
+  constructor(
+    @Inject(() => QuestionnaireRepoImpl) questionnaireRepo: QuestionnaireRepo,
+    @Inject(() => QuestionnaireAnswerRepoImpl) questionnaireAnswerRepo: QuestionnaireAnswerRepo,
+    isMultiTenancyEnabled: IsMultiTenancyEnabled,
+  ) {
+    this.questionnaireRepo = questionnaireRepo;
+    this.questionnaireAnswerRepo = questionnaireAnswerRepo;
+    this.isMultiTenancyEnabled = isMultiTenancyEnabled;
+  }
+
+  async execute(questionnaireName: string, taagerId: string): Promise<QuestionnaireAnswerStatus> {
+    if (await this.isQuestionnaireMissing(questionnaireName)) {
+      throw new QuestionnaireNotFoundError(questionnaireName);
+    }
+
+    if (await this.isMultiTenancyEnabled.execute(taagerId)) {
+      return DISABLED;
+    }
+
+    if (await this.isQuestionnaireAnswered(questionnaireName, taagerId)) {
+      return DISABLED;
+    } else {
+      return ENABLED;
+    }
+  }
+
+  private async isQuestionnaireAnswered(questionnaireName: string, taagerId: string): Promise<boolean> {
+    const questionnaireAnswer = await this.questionnaireAnswerRepo.findByQuestionnaireNameAndTaagerId(
+      questionnaireName,
+      taagerId,
+    );
+    return questionnaireAnswer !== undefined && questionnaireAnswer !== null;
+  }
+
+  private async isQuestionnaireMissing(questionnaireName: string): Promise<boolean> {
+    const questionnaire = await this.questionnaireRepo.findByName(questionnaireName);
+    return questionnaire == undefined && questionnaire == null;
+  }
+}
+
+

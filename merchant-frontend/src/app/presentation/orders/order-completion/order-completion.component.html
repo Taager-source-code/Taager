@@ -1,0 +1,57 @@
+<div mat-dialog-content>
+
+    <h4 mat-dialog-title>استكمال</h4>
+
+    <form [formGroup]="completeOrderForm">
+
+    <mat-form-field>
+
+        <mat-label>اختر المنتج المناسب لاستكمال الطلب</mat-label>
+
+        <mat-select formControlName="product" (selectionChange)="onProductChange($event)" required>
+
+          <mat-option *ngFor="let item of products" [value]='item'>
+
+            <img width="30px" height="30px" [src]="item.productPicture">
+
+              {{item.productName}}</mat-option>
+
+        </mat-select>
+
+    </mat-form-field>
+
+      <mat-form-field appearance="none">
+
+        <label class="matLabel">برجاء تحديد الكمية</label>
+
+        <div class="inline-div">
+
+            <label (click)="addQuantity()">+</label>
+
+            <input matInput formControlName="productQty" class="qty-input">
+
+            <label (click)="removeQuantity()">-</label>
+
+        </div>
+
+      </mat-form-field>
+
+      
+
+       <mat-form-field appearance="none">
+
+        <label class="matLabel">اضافة اي ملاحظات لتوضيح المشكلة مع توضيح المنتجات المراد استكمالها للعميل ( في حالة العروض)</label>
+
+        <textarea formControlName="notes" matInput></textarea>
+
+        </mat-form-field>
+
+    </form>
+
+        <div mat-dialog-actions>
+
+            <button mat-raised-button [disabled]="clicked" (click)="submit()" class="btn-submit">ارسال الطلب</button>
+
+        </div>
+
+</div>

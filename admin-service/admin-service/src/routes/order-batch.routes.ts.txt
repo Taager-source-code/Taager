@@ -1,0 +1,104 @@
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import * as orderCtrl from '../controllers/order/order.controller';
+import CountryMiddleware from '../middlewares/CountryMiddleware';
+import { registerPatch } from '../common/http/HttpHandler';
+import { ConfirmOrderController } from '../order-management/commands/infrastructure/controllers/ConfirmOrderController';
+
+const router = express.Router();
+
+router.patch('/order/updateOrderStatusCustom', isAuthenticated, errorHandler(orderCtrl.updateOrderStatusCustom));
+
+registerPatch('/orders/:orderId/confirm', ConfirmOrderController, router, isAuthenticated);
+
+router.post(
+  '/order/viewOrdersWithStatus',
+  isAuthenticated,
+  CountryMiddleware,
+  errorHandler(orderCtrl.getOrdersWithStatus),
+);
+
+router.post('/order/viewAllOrders', isAuthenticated, CountryMiddleware, errorHandler(orderCtrl.viewOrders));
+
+router.get('/order/viewOrder/:id', isAuthenticated, errorHandler(orderCtrl.getOrderById));
+
+router.post('/order/failAttempt', isAuthenticated, errorHandler(orderCtrl.failAttempt));
+
+router.post('/order/viewOrdersWithIDs', isAuthenticated, errorHandler(orderCtrl.viewOrdersWithIDs));
+
+router.get('/order/getOrderAdminNotes', isAuthenticated, errorHandler(orderCtrl.getOrderAdminNotes));
+
+router.post(
+  '/order/getAllOrdersWithStatus',
+  isAuthenticated,
+  CountryMiddleware,
+  errorHandler(orderCtrl.getAllOrdersWithStatus),
+);
+
+router.post(
+  '/order/getAllOrdersWithUnreadMessages',
+  isAuthenticated,
+  CountryMiddleware,
+  errorHandler(orderCtrl.viewAllOrdersWithUnreadMessages),
+);
+
+router.post('/order/addOrderAdminNote', isAuthenticated, errorHandler(orderCtrl.addOrderAdminNote));
+
+router.post(
+  '/order/viewAllOrdersWithMessages',
+  isAuthenticated,
+  CountryMiddleware,
+  errorHandler(orderCtrl.viewAllOrdersWithMessages),
+);
+
+router.patch('/order/assignOrdersToAdmin', isAuthenticated, errorHandler(orderCtrl.assignOrdersToAdmin));
+
+router.patch('/order/updateOrderVerifiedStatus', isAuthenticated, errorHandler(orderCtrl.updateOrderVerifiedStatus));
+
+router.post('/order/getOrderActivityWithStatus', isAuthenticated, errorHandler(orderCtrl.getOrderActivityWithStatus));
+
+router.post('/order/markMessageAsRead', isAuthenticated, errorHandler(orderCtrl.markMessageAsRead));
+
+router.get('/order/getOrderMessages', isAuthenticated, errorHandler(orderCtrl.getOrderMessages));
+
+router.patch('/order/verify', isAuthenticated, errorHandler(orderCtrl.updateDeliveredOrderStatus));
+
+router.patch(
+  '/order/updateOrderProductPrices',
+  isAuthenticated,
+  CountryMiddleware,
+  errorHandler(orderCtrl.updateOrderProductPrices),
+);
+
+router.get('/order/viewAllOrdersExtract', isAuthenticated, errorHandler(orderCtrl.viewOrdersExtract));
+
+router.patch('/order/revertOrderStatus', isAuthenticated, errorHandler(orderCtrl.revertOrderStatus));
+
+router.patch('/order/unVerifyOrderStatus', isAuthenticated, errorHandler(orderCtrl.unVerifyOrderStatus));
+
+router.post('/order/addOrderMessage', isAuthenticated, errorHandler(orderCtrl.addOrderMessage));
+
+router.post('/order/updateOrderShipmentStatus', isAuthenticated, errorHandler(orderCtrl.updateOrderShipmentStatus));
+
+router.post(
+  '/order/getDeliveredBostaOrders',
+  isAuthenticated,
+  CountryMiddleware,
+  errorHandler(orderCtrl.getDeliveredBostaOrders),
+);
+
+router.post(
+  '/order/sendOrderChangeNotifications',
+  isAuthenticated,
+  errorHandler(orderCtrl.sendOrderChangeNotifications),
+);
+
+router.post('/order/mergeOrders', isAuthenticated, errorHandler(orderCtrl.mergeOrders));
+
+router.post('/order/createBostaLog', isAuthenticated, errorHandler(orderCtrl.createBostaLog));
+router.get('/order/active-aramex', isAuthenticated, errorHandler(orderCtrl.activeAramexOrders));
+
+router.patch('/order/inventoryReceivedItem', isAuthenticated, errorHandler(orderCtrl.markItemAsReceivedInOrder));
+
+export = router;

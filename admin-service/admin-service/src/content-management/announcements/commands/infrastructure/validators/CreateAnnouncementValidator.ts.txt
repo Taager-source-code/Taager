@@ -1,0 +1,13 @@
+import joi from 'joi';
+
+export const validateCreateAnnouncementRequest = (createAnnouncementRequest) => {
+  const schema = joi
+    .object({
+      img: joi.string().required(),
+      isMobile: joi.boolean().required(),
+      link: joi.string().allow('').trim(),
+      country: joi.string().trim().default(createAnnouncementRequest.country.countryIsoCode3),
+    })
+    .options({ stripUnknown: true });
+  return schema.validate(createAnnouncementRequest.body);
+};

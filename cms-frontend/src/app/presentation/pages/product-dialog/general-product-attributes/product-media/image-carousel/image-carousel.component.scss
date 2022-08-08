@@ -1,0 +1,61 @@
+.product-image-wrapper {
+  &__uploader {
+    background: #f5f5f5;
+    border: 1px dashed #aaaaaa;
+    box-sizing: border-box;
+    border-radius: 20px;
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    width: 100%;
+    scrollbar-color: #46b8b0;
+    overflow-x: auto;
+    &::-webkit-scrollbar-thumb {
+      background-color: #46b8b0;
+      border: 4px solid transparent;
+      border-radius: 8px;
+      background-clip: padding-box;
+    }
+    &::-webkit-scrollbar {
+      width: 16px;
+    }
+    .img-preview {
+      flex: none;
+      position: relative;
+      img.preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        object-fit: contain;
+      }
+      button.remove-img-btn {
+        position: absolute;
+        border: none;
+        background-color: transparent;
+        top: -10px;
+        right: -10px;
+      }
+    }
+    .upload-btn {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      align-items: center;
+      border: 1px dashed #aaaaaa;
+      text-align: center;
+      border-radius: 20px;
+      padding: 10px;
+      width: 120px;
+      height: 120px;
+      background: rgba(230, 229, 229, 0.57);
+      cursor: pointer;
+      flex-shrink: 0;
+      p {
+        font-size: 12px;
+      }
+      .hidden {
+        display: none;
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+import { Service } from 'typedi';
+import NotificationsRepo from '../../infrastructure/repositories/NotificationsRepo';
+import { GetMerchantNotificationsRequest } from '../models/GetMerchantNotificationsRequest';
+
+@Service({ global: true })
+export default class GetMerchantNotifications {
+  private notificationsRepo: NotificationsRepo;
+
+  constructor(notificationsRepo: NotificationsRepo) {
+    this.notificationsRepo = notificationsRepo;
+  }
+
+  async execute(request: GetMerchantNotificationsRequest) {
+    return this.notificationsRepo.getNotifications(request);
+  }
+}
+
+

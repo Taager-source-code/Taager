@@ -1,0 +1,10 @@
+import { GetProvincesResponse } from '../models/province/GetProvincesResponse';
+import { GetProvincesPaginatedRequest } from '../models/province/GetProvincesPaginatedRequest';
+import GetProvincesPaginatedResponse from '../models/province/GetProvincesPaginatedResponse';
+
+export interface ProvinceRepo {
+  getProvinces(country: string): Promise<GetProvincesResponse[]>;
+  getProvincesPaginated(getProvincesRequest: GetProvincesPaginatedRequest): Promise<GetProvincesPaginatedResponse>;
+}
+
+

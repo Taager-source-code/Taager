@@ -1,0 +1,1756 @@
+import * as mongooseConnector from '../mongo/mongoose.connector';
+import * as dockerMongo from '../mongo/docker.mongo';
+import User from '../../src/models/user.model';
+import Notification from '../../src/models/notification.model';
+import OrderActivity from '../../src/models/orderActivity.model';
+import OrderMessage from '../../src/models/orderMessage.model';
+import request from 'supertest';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import * as expressServer from '../expressServer/expressServer';
+import MigrationExecutor from '../../src/migrations/migrationExecutor';
+import { ADMIN_1 } from '../fixtures/users/adminFixtures';
+import { MERCHANT_1 } from '../fixtures/users/merchantFixtures';
+import UserRoles from '../../src/models/userRoles.model';
+import Order from '../../src/models/order.model';
+import OrderAdminNotes from '../../src/models/orderAdminNote.model';
+import OrderConversation from '../../src/models/orderConversation.model';
+import Province from '../../src/order-management/common/infrastructure/db/schemas/province';
+import { ORDER_1, ORDER_2, ORDER_3, ORDER_TO_BE_MERGED_1, ORDER_TO_BE_MERGED_2 } from '../fixtures/orderFixture';
+import { ORDER_ACTIVITY_1, ORDER_ACTIVITY_2 } from '../fixtures/orderActivitiesFixture';
+import { ORDER_MESSAGE_1 } from '../fixtures/orderMessagesFixture';
+import { PROVINCE_1 } from '../fixtures/provinceFixtures';
+import OrderConfirmedProducer from '../../src/order-management/commands/infrastructure/producers/orders/OrderConfirmedProducer';
+import { instance, mock } from 'ts-mockito';
+import { Container } from 'typedi';
+import CreditEligibleAmountProducer from '../../src/merchant/commands/infrastructure/withdrawals/producers/CreditEligibleAmountProducer';
+import OrderUnConfirmedProducer from '../../src/order-management/commands/infrastructure/producers/orders/OrderUnConfirmedProducer';
+import {
+  PENDING_SHIPPING_COMPANY,
+  REFUND_IN_PROGRESS,
+  REFUND_VERIFIED,
+} from '../../src/order-management/common/domain/models/OrderStatuses';
+import each from 'jest-each';
+const time = new Date();
+
+async function createProvinces() {
+  await Province.create(PROVINCE_1);
+}
+
+describe('/api/order', () => {
+  let app: any = null;
+  let accessToken: string;
+  let adminUserId: string;
+  let orderConfirmedProducerMock: OrderConfirmedProducer;
+  let creditEligibleAmountProducerMock: CreditEligibleAmountProducer;
+  let orderUnConfirmedProducerMock: OrderUnConfirmedProducer;
+
+  async function createUsers() {
+    const user = await User.create(ADMIN_1);
+    await User.create(MERCHANT_1);
+    adminUserId = user._id;
+    await UserRoles.create({ role: 'admin' });
+  }
+  async function login(app: any) {
+    accessToken = await expressServer.loginAndGetAccessToken(app);
+  }
+
+  beforeAll(async () => {
+    const container = await dockerMongo.MongoDockerContainer.getContainer();
+    const mongoUrl = `mongodb://${container.getHost()}:${container.getMappedPort(dockerMongo.MONGO_PORT)}/testDB`;
+    await mongooseConnector.connectToMongoDB(mongoUrl);
+
+    await new MigrationExecutor().migrateAll();
+
+    orderConfirmedProducerMock = mock(OrderConfirmedProducer);
+    creditEligibleAmountProducerMock = mock(CreditEligibleAmountProducer);
+    orderUnConfirmedProducerMock = mock(OrderUnConfirmedProducer);
+    const orderConfirmedProducerInstance = instance(orderConfirmedProducerMock);
+    const creditEligibleAmountProducerInstance = instance(creditEligibleAmountProducerMock);
+    const orderUnConfirmedProducerInstance = instance(orderUnConfirmedProducerMock);
+    Container.set(OrderConfirmedProducer, orderConfirmedProducerInstance);
+    Container.set(CreditEligibleAmountProducer, creditEligibleAmountProducerInstance);
+    Container.set(OrderUnConfirmedProducer, orderUnConfirmedProducerInstance);
+
+    app = expressServer.setupServer();
+  });
+
+  beforeEach(async () => {
+    await createUsers();
+  });
+
+  afterEach(async () => {
+    await User.remove({});
+    await Notification.remove({});
+    await Order.remove({});
+    await OrderActivity.remove({});
+    await OrderMessage.remove({});
+    await Province.remove({});
+  });
+
+  describe('PATCH /verify, Verify order apis', () => {
+    async function createOrders() {
+      ORDER_1.status = 'delivered';
+      // @ts-ignore
+      ORDER_1.deliveryDate = new Date(time.setDate(time.getDate() - 3));
+      ORDER_2.status = 'delivered';
+      // @ts-ignore
+      ORDER_2.deliveryDate = new Date(time.setDate(time.getDate() - 3));
+      await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('Verify order should verify all delivered orders three days ago', async () => {
+      // Arrange
+      await login(app);
+
+      // Act
+      const response = await request(app).patch(`/api/order/verify`).set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.msg).toEqual('Order(s) verified successfully');
+
+      // Arrange
+      const viewOrdersQuest = {
+        orderIdsArray: [ORDER_1.orderID, ORDER_2.orderID],
+      };
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithIDs')
+        .send(viewOrdersQuest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data[0].isOrderVerified).toBeTruthy();
+      expect(viewOrderResponse.body.data[1].isOrderVerified).toBeTruthy();
+    });
+
+    afterEach(() => {
+      ORDER_1.status = 'order_received';
+      ORDER_2.status = 'confirmed';
+      ORDER_1.deliveryDate = null;
+      ORDER_2.deliveryDate = null;
+    });
+  });
+
+  describe('PATCH /unVerifyOrderStatus, unVerify order apis', () => {
+    let insertedOrders: any;
+    async function createOrders() {
+      ORDER_1.isOrderVerified = true;
+      insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('unVerify order should succeed, irrespective of country', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        _id: insertedOrders[0]._id,
+        status: ORDER_1.status,
+        orderID: ORDER_1.orderID,
+      };
+
+      // Act
+      const response = await request(app)
+        .patch(`/api/order/unVerifyOrderStatus`)
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.msg).toEqual('Order unverified successfully');
+      expect(response.body.data).toEqual({});
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .get(`/api/order/viewOrder/${insertedOrders[0]._id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Order Found!');
+      expect(viewOrderResponse.body.data.isOrderVerified).toBeFalsy();
+    });
+  });
+
+  describe('POST /mergeOrders, Merge orders status apis', () => {
+    async function createOrders() {
+      await Order.insertMany([ORDER_TO_BE_MERGED_1, ORDER_TO_BE_MERGED_2]);
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+      await createProvinces();
+    });
+
+    test('Merge orders should succeed, irrespective of country', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        mergeIntoOrder: ORDER_TO_BE_MERGED_2,
+        mergeableOrders: [{ order: ORDER_TO_BE_MERGED_1 }, { order: ORDER_TO_BE_MERGED_2 }],
+        nonMergeableOrders: [ORDER_TO_BE_MERGED_2],
+      };
+
+      // Act
+      const response = await request(app)
+        .post(`/api/order/mergeOrders`)
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.msg).toEqual(`Orders merged successfully into order: ${requestBody.mergeIntoOrder.orderID}`);
+      expect(response.body.data).toEqual({});
+    });
+  });
+
+  describe('PATCH /revertOrderStatus, Revert an order status apis', () => {
+    let insertedOrders: any;
+    async function createOrders() {
+      ORDER_1.status = 'pending_shipping_company';
+      insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('Revert an order status should succeed, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        status: 'confirmed',
+        order: { _id: insertedOrders[0]._id, ...ORDER_1 },
+      };
+
+      // Act
+      const response = await request(app)
+        .patch(`/api/order/revertOrderStatus`)
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body).toEqual({});
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .get(`/api/order/viewOrder/${insertedOrders[0]._id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Order Found!');
+      expect(viewOrderResponse.body.data.status).toEqual('confirmed');
+    });
+
+    afterAll(() => {
+      ORDER_1.status = 'order_received';
+    });
+  });
+
+  describe('POST /sendOrderChangeNotifications, Send notifications on order status changes apis', () => {
+    let insertedOrders: any;
+    async function createOrders() {
+      insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('Send notifications on order status changes should succeed, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        order: [{ _id: insertedOrders[0]._id }],
+      };
+
+      // Act
+      const response = await request(app)
+        .post(`/api/order/sendOrderChangeNotifications`)
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.msg).toEqual('Some mails are not registered others sent successfully');
+    });
+  });
+
+  describe('POST /updateOrderShipmentStatus, Update order shipment status apis', () => {
+    let orderObjectId: any;
+    async function createOrders() {
+      const insertedOrder = await Order.insertMany([ORDER_1]);
+      orderObjectId = insertedOrder[0]._id;
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('Update order shipment status should succeed, irrespective of country', async () => {
+      // Arrange
+      await login(app);
+
+      const updateOrderShipmentStatusRequest = {
+        orderObjectId: orderObjectId,
+        shipmentStatus: 'delivered',
+        deliveryDate: '',
+      };
+
+      // Act
+      const response = await request(app)
+        .post(`/api/order/updateOrderShipmentStatus`)
+        .send(updateOrderShipmentStatusRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.msg).toEqual('Order shipment status updated!');
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .get(`/api/order/viewOrder/${orderObjectId}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Order Found!');
+      expect(viewOrderResponse.body.data.shipmentStatus).toEqual('delivered');
+    });
+  });
+
+  describe('POST /createBostaLog, Create a bosta log apis', () => {
+    test('Create a bosta log should succeed, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const createBostaLogRequest = {
+        orderID: '123/456',
+        payload: {},
+      };
+
+      // Act
+      const response = await request(app)
+        .post(`/api/order/createBostaLog`)
+        .send(createBostaLogRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(201);
+      expect(response.body.msg).toEqual('Bosta log created!');
+    });
+  });
+
+  describe('POST /getDeliveredBostaOrders, Get delivered bosta orders apis', () => {
+    async function createOrders() {
+      ORDER_1.shipmentStatus = 'delivered';
+      ORDER_2.shipmentStatus = 'delivered';
+      await Order.insertMany([ORDER_1, ORDER_2, ORDER_3]);
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+
+    test('get delivered bosta orders should succeed with all results, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        page: 1,
+        pageSize: 20,
+      };
+
+      // Act
+      const response = await request(app)
+        .post('/api/order/getDeliveredBostaOrders')
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.data).toMatchObject([ORDER_1, ORDER_2]);
+    });
+
+    test('get delivered bosta orders should succeed, country EGY in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        page: 1,
+        pageSize: 20,
+        country: 'EGY',
+      };
+
+      // Act
+      const response = await request(app)
+        .post('/api/order/getDeliveredBostaOrders')
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.data.length).toEqual(1);
+      expect(response.body.data).toMatchObject([ORDER_1]);
+    });
+
+    test('get delivered bosta orders should succeed, country ARE in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        page: 1,
+        pageSize: 20,
+        country: 'ARE',
+      };
+
+      // Act
+      const response = await request(app)
+        .post('/api/order/getDeliveredBostaOrders')
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.data.length).toEqual(1);
+      expect(response.body.data).toMatchObject([ORDER_2]);
+    });
+
+    test('get delivered bosta orders should return 400, wrong country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        page: 1,
+        pageSize: 20,
+        country: 'USA',
+      };
+
+      // Act
+      const response = await request(app)
+        .post('/api/order/getDeliveredBostaOrders')
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(400);
+    });
+
+    afterAll(() => {
+      ORDER_1.shipmentStatus = '';
+      ORDER_2.shipmentStatus = '';
+    });
+  });
+
+  // TODO: orderActivity needs to be discussed, does it need multi-tenancy
+  describe('POST /getOrderActivityWithStatus, Get order activity with status apis', () => {
+    async function createOrderActivities() {
+      await OrderActivity.insertMany([ORDER_ACTIVITY_1, ORDER_ACTIVITY_2]);
+    }
+
+    beforeEach(async () => {
+      await createOrderActivities();
+    });
+
+    test('get order activities should return activity for correct order with filter for orderObjectId, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        page: 1,
+        pageSize: 20,
+        filterObj: {
+          orderID: '123/456',
+        },
+      };
+
+      // Act
+      const response = await request(app)
+        .post('/api/order/getOrderActivityWithStatus')
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.data.map((order) => order._id)).toEqual([ORDER_ACTIVITY_1._id]);
+    });
+
+    test('get order activities should all orderActivity with no filter, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        page: 1,
+        pageSize: 20,
+      };
+
+      // Act
+      const response = await request(app)
+        .post('/api/order/getOrderActivityWithStatus')
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.data.length).toEqual(2);
+      expect(response.body.data[0]._id).toEqual(ORDER_ACTIVITY_1._id);
+      expect(response.body.data[1]._id).toEqual(ORDER_ACTIVITY_2._id);
+    });
+  });
+
+  describe('POST /markMessageAsRead, Mark message on order as read apis', () => {
+    let orderObjectId: any;
+    async function createOrders() {
+      const insertedOrder = await Order.insertMany([ORDER_1, ORDER_2]);
+      orderObjectId = insertedOrder[0]._id;
+    }
+    beforeEach(async () => {
+      await createOrders();
+    });
+    test('Mark message on order as read should succeed, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const requestBody = {
+        orderObjectId: orderObjectId,
+        type: 'admin',
+      };
+
+      // Act
+      const response = await request(app)
+        .post('/api/order/markMessageAsRead')
+        .send(requestBody)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.msg).toEqual('Order message status updated!');
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .get(`/api/order/viewOrder/${orderObjectId}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Order Found!');
+      expect(viewOrderResponse.body.data.isAdminRead).toBeTruthy();
+    });
+  });
+
+  describe('GET /getOrderMessages, Get order messages apis', () => {
+    async function createOrderMessages() {
+      await OrderMessage.insertMany([ORDER_MESSAGE_1]);
+    }
+
+    beforeEach(async () => {
+      await createOrderMessages();
+    });
+
+    test('Get order messages should succeed, irrespective of country', async () => {
+      // Arrange
+      await login(app);
+
+      const orderObjectId = '61482e40a992087686b00002';
+
+      // Act
+      const response = await request(app)
+        .get(`/api/order/getOrderMessages?orderObjectId=${orderObjectId}&&country=EGY`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(200);
+      expect(response.body.msg).toEqual('Orders found!');
+      expect(response.body.data.map((orderMessage) => orderMessage._id)).toEqual([ORDER_MESSAGE_1._id]);
+    });
+  });
+
+  describe('POST /addOrderMessage, Add a message to an order apis', () => {
+    test('Add a message to an order should succeed, no country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const addMessageRequest = {
+        orderObjectId: '61482e40a992087686b00002',
+        orderID: '123/456',
+        orderStatus: 'confirmed',
+        userId: '61482e40a992087686b00003',
+        adminId: '61482e40a992087686b00004',
+        userMessage: 'This is a message from the user',
+        adminMessage: 'This is my response to the user',
+      };
+
+      // Act
+      const response = await request(app)
+        .post(`/api/order/addOrderMessage`)
+        .send(addMessageRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(201);
+      expect(response.body.msg).toEqual('Order message sent!');
+    });
+
+    test('Add a message to an order should succeed, irrespective of country in body', async () => {
+      // Arrange
+      await login(app);
+
+      const addMessageRequest = {
+        orderObjectId: '61482e40a992087686b00002',
+        orderID: '123/456',
+        orderStatus: 'confirmed',
+        userId: '61482e40a992087686b00003',
+        adminId: '61482e40a992087686b00004',
+        userMessage: 'This is a message from the user',
+        adminMessage: 'This is my response to the user',
+        country: 'EGY',
+      };
+
+      // Act
+      const response = await request(app)
+        .post(`/api/order/addOrderMessage`)
+        .send(addMessageRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toEqual(201);
+      expect(response.body.msg).toEqual('Order message sent!');
+    });
+  });
+
+  describe('PATCH /updateOrderStatusCustom, Update order status apis', () => {
+    async function createOrder() {
+      await Order.create(ORDER_1);
+    }
+    beforeEach(async () => {
+      await createOrder();
+      await createProvinces();
+    });
+
+    test(
+      'updating status from order_received to confirmed with valid date should succeed, no country in body,' +
+        'EGY phone number',
+      async () => {
+        const updateStatusRequest = {
+          orders: [
+            {
+              isOrderVerified: false,
+              orderID: 'orderID_1',
+              orderProfit: 130,
+              orderedBy: 'taager_1',
+              status: 'order_received',
+              _id: '61482e40a992087686b00000',
+            },
+          ],
+          phoneNumber: '01234567891',
+          preferredDeliveryDate: '2050-10-30T00:00:00+00:00',
+          status: 'confirmed',
+          confirmedVia: 1,
+          zone: {
+            name: 'Ø¨ÙˆØ± Ø³Ø¹ÙŠØ¯',
+            status: 'green',
+          },
+          province: 'Ø¨ÙˆØ± Ø³Ø¹ÙŠØ¯',
+        };
+        await login(app);
+
+        // Act
+        const createResponse = await request(app)
+          .patch('/api/order/updateOrderStatusCustom')
+          .send(updateStatusRequest)
+          .set('Authorization', `Bearer ${accessToken}`);
+
+        // Assert
+        expect(createResponse.statusCode).toEqual(200);
+        expect(createResponse.body.msg).toEqual('Order(s) updated successfully');
+      },
+    );
+
+    test(
+      'updating status from order_received to confirmed should throw error, no province found,' + 'EGY phone number',
+      async () => {
+        const updateStatusRequest = {
+          orders: [
+            {
+              isOrderVerified: false,
+              orderID: 'orderID_1',
+              orderProfit: 130,
+              orderedBy: 'taager_1',
+              status: 'order_received',
+              _id: '61482e40a992087686b00000',
+            },
+          ],
+          phoneNumber: '01234567891',
+          preferredDeliveryDate: '2050-10-30T00:00:00+00:00',
+          status: 'confirmed',
+          confirmedVia: 1,
+          zone: {
+            name: 'Ø¨ÙˆØ± Ø³Ø¹ÙŠØ¯',
+            status: 'green',
+          },
+          province: 'not found province',
+        };
+        await login(app);
+
+        // Act
+        const createResponse = await request(app)
+          .patch('/api/order/updateOrderStatusCustom')
+          .send(updateStatusRequest)
+          .set('Authorization', `Bearer ${accessToken}`);
+
+        // Assert
+        expect(createResponse.statusCode).toEqual(400);
+      },
+    );
+
+    test(
+      'updating status from order_received to confirmed with valid date should succeed, no country in body,' +
+        'SAU phone number',
+      async () => {
+        const updateStatusRequest = {
+          orders: [
+            {
+              isOrderVerified: false,
+              orderID: 'orderID_1',
+              orderProfit: 130,
+              orderedBy: 'taager_1',
+              status: 'order_received',
+              _id: '61482e40a992087686b00000',
+            },
+          ],
+          phoneNumber: '966553648791',
+          preferredDeliveryDate: '2050-10-30T00:00:00+00:00',
+          status: 'confirmed',
+          confirmedVia: 1,
+          province: 'Ø¨ÙˆØ± Ø³Ø¹ÙŠØ¯',
+          zone: {
+            name: 'Ø¨ÙˆØ± Ø³Ø¹ÙŠØ¯',
+            status: 'green',
+          },
+        };
+        await login(app);
+
+        // Act
+        const createResponse = await request(app)
+          .patch('/api/order/updateOrderStatusCustom')
+          .send(updateStatusRequest)
+          .set('Authorization', `Bearer ${accessToken}`);
+
+        // Assert
+        expect(createResponse.statusCode).toEqual(200);
+        expect(createResponse.body.msg).toEqual('Order(s) updated successfully');
+      },
+    );
+
+    each([[REFUND_IN_PROGRESS], [REFUND_VERIFIED], [PENDING_SHIPPING_COMPANY]]).it(
+      'Updating status to %s, Should give 422 error',
+      async (toStatus: string) => {
+        const updateStatusRequest = {
+          orders: [
+            {
+              isOrderVerified: false,
+              orderID: 'orderID_1',
+              orderProfit: 130,
+              orderedBy: 'taager_1',
+              status: 'order_received',
+              _id: '61482e40a992087686b00000',
+            },
+          ],
+          phoneNumber: '966553648791',
+          preferredDeliveryDate: '2050-10-30T00:00:00+00:00',
+          status: toStatus,
+          confirmedVia: 1,
+          province: 'Ø¨ÙˆØ± Ø³Ø¹ÙŠØ¯',
+          zone: {
+            name: 'Ø¨ÙˆØ± Ø³Ø¹ÙŠØ¯',
+            status: 'green',
+          },
+        };
+        await login(app);
+
+        // Act
+        const createResponse = await request(app)
+          .patch('/api/order/updateOrderStatusCustom')
+          .send(updateStatusRequest)
+          .set('Authorization', `Bearer ${accessToken}`);
+
+        // Assert
+        expect(createResponse.statusCode).toEqual(422);
+        expect(createResponse.body.msg).toEqual('Can not update the order status');
+      },
+    );
+  });
+
+  describe('POST /viewOrdersWithStatus, View order apis', () => {
+    async function createOrder() {
+      ORDER_2.country = 'EGY';
+      await Order.insertMany([ORDER_1, ORDER_2, ORDER_3]);
+    }
+    beforeEach(async () => {
+      await createOrder();
+    });
+    test('Viewing order with status with confirmed, status should return All orders, no country in body ', async () => {
+      const viewStatusRequest = {
+        assignedOrders: false,
+        filterObj: {
+          assignedAdmin: null,
+          duplicateOrMergeable: null,
+          failedAttemptsCount: null,
+          fromDate: null,
+          orderId: null,
+          orderSource: null,
+          phoneNum: null,
+          province: null,
+          status: 'confirmed',
+          taggerId: null,
+          toDate: null,
+        },
+        page: 1,
+        pageSize: 25,
+        status: false,
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithStatus')
+        .send(viewStatusRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders found!');
+      expect(viewOrderResponse.body.data.length).toEqual(2);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_3, ORDER_2]);
+    });
+
+    test('Viewing order with status with confirmed status should only return the correct one, country EGY in body ', async () => {
+      const viewStatusRequest = {
+        assignedOrders: false,
+        filterObj: {
+          assignedAdmin: null,
+          duplicateOrMergeable: null,
+          failedAttemptsCount: null,
+          fromDate: null,
+          orderId: null,
+          orderSource: null,
+          phoneNum: null,
+          province: null,
+          status: 'confirmed',
+          taggerId: null,
+          toDate: null,
+        },
+        page: 1,
+        pageSize: 25,
+        status: false,
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithStatus')
+        .send(viewStatusRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_2]);
+    });
+
+    test('Viewing order with status with confirmed status should only return the correct one, country ARE in body ', async () => {
+      const viewStatusRequest = {
+        assignedOrders: false,
+        filterObj: {
+          assignedAdmin: null,
+          duplicateOrMergeable: null,
+          failedAttemptsCount: null,
+          fromDate: null,
+          orderId: null,
+          orderSource: null,
+          phoneNum: null,
+          province: null,
+          status: 'confirmed',
+          taggerId: null,
+          toDate: null,
+        },
+        page: 1,
+        pageSize: 25,
+        status: false,
+        country: 'ARE',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithStatus')
+        .send(viewStatusRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_3]);
+    });
+
+    test('Viewing order with status with wrong country in body, should return 400 ', async () => {
+      const viewStatusRequest = {
+        assignedOrders: false,
+        filterObj: {
+          assignedAdmin: null,
+          duplicateOrMergeable: null,
+          failedAttemptsCount: null,
+          fromDate: null,
+          orderId: null,
+          orderSource: null,
+          phoneNum: null,
+          province: null,
+          status: 'pending_shipping_company',
+          taggerId: null,
+          toDate: null,
+        },
+        page: 1,
+        pageSize: 25,
+        status: false,
+        country: 'USA',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithStatus')
+        .send(viewStatusRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(400);
+    });
+
+    test('Viewing order with status not present should return empty list', async () => {
+      const viewStatusRequest = {
+        assignedOrders: false,
+        filterObj: {
+          assignedAdmin: null,
+          duplicateOrMergeable: null,
+          failedAttemptsCount: null,
+          fromDate: null,
+          orderId: null,
+          orderSource: null,
+          phoneNum: null,
+          province: null,
+          status: 'pending_shipping_company',
+          taggerId: null,
+          toDate: null,
+        },
+        page: 1,
+        pageSize: 25,
+        status: false,
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithStatus')
+        .send(viewStatusRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders found!');
+      expect(viewOrderResponse.body.data).toMatchObject([]);
+    });
+
+    afterEach(async () => {
+      ORDER_2.country = 'ARE';
+      Order.remove({});
+    });
+  });
+
+  describe('POST /viewAllOrders, View order apis', () => {
+    async function createOrders() {
+      await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+    beforeEach(async () => {
+      await createOrders();
+    });
+    test('Viewing all orders should return all orders, no country in body', async () => {
+      const viewOrdersQuest = {
+        filter: {},
+        page: 1,
+        pageSize: 25,
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrders')
+        .send(viewOrdersQuest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data.length).toEqual(2);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_1, ORDER_2]);
+    });
+
+    test('Viewing all orders should return EGY orders, with country EGY in body', async () => {
+      const viewOrdersQuest = {
+        filter: {},
+        page: 1,
+        pageSize: 25,
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrders')
+        .send(viewOrdersQuest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_1]);
+    });
+
+    test('Viewing all orders should return ARE orders, with country ARE in body', async () => {
+      const viewOrdersQuest = {
+        filter: {},
+        page: 1,
+        pageSize: 25,
+        country: 'ARE',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrders')
+        .send(viewOrdersQuest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_2]);
+    });
+
+    test('Viewing all orders should return 400, with country wrong country in body', async () => {
+      const viewOrdersQuest = {
+        filter: {},
+        page: 1,
+        pageSize: 25,
+        country: 'USA',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrders')
+        .send(viewOrdersQuest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(400);
+    });
+  });
+
+  describe('GET /viewOrder/:id, View order apis', () => {
+    let orderObjectId: any;
+    async function createOrders() {
+      const insertedOrder = await Order.insertMany(ORDER_2);
+      orderObjectId = insertedOrder[0]._id;
+    }
+    beforeEach(async () => {
+      await createOrders();
+    });
+    test('Viewing order by id should return correct order, irrespective of country in query', async () => {
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .get(`/api/order/viewOrder/${orderObjectId}?country=EGY`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Order Found!');
+      expect(viewOrderResponse.body.data).toMatchObject(ORDER_2);
+    });
+  });
+
+  describe('POST /failAttempt, Update failed attempts for order', () => {
+    let orderObjectId: any;
+    async function createOrders() {
+      const insertedOrder = await Order.insertMany(ORDER_1);
+      orderObjectId = insertedOrder[0]._id;
+    }
+    test('updating failed attempt for order should return 200, irrespective of country in body ', async () => {
+      await createOrders();
+      await login(app);
+      const failAttemptRequest = {
+        orderID: orderObjectId,
+        count: 1,
+        note: 'Order failed',
+        country: 'EGY',
+      };
+
+      // Act
+      const failAttemptResponse = await request(app)
+        .post(`/api/order/failAttempt`)
+        .send(failAttemptRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(failAttemptResponse.statusCode).toEqual(200);
+      expect(failAttemptResponse.body.msg).toEqual('Order failed_attempts count updated successfully');
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .get(`/api/order/viewOrder/${orderObjectId}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Order Found!');
+      expect(viewOrderResponse.body.data.failedAttemptsCount).toEqual(1);
+      expect(viewOrderResponse.body.data.failedAttemptNote).toEqual(' 1-Order failed,');
+    });
+  });
+
+  describe('POST /viewOrdersWithIDs, View order with IDs apis', () => {
+    async function createOrders() {
+      await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+    test('View all orders using their Ids, irrespective of country', async () => {
+      const viewOrdersQuest = {
+        orderIdsArray: [ORDER_1.orderID, ORDER_2.orderID],
+      };
+
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithIDs')
+        .send(viewOrdersQuest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_1, ORDER_2]);
+    });
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  describe('GET /getOrderAdminNotes, View admin notes for an order', () => {
+    let orderCreateId: any;
+    async function createOrdersAndNotes() {
+      const orderCreated = await Order.insertMany(ORDER_1);
+      // @ts-ignore
+      orderCreateId = orderCreated[0]._id;
+      await OrderAdminNotes.create({
+        // @ts-ignore
+        orderObjectId: orderCreated._id,
+        orderID: ORDER_1.orderID,
+        orderStatus: ORDER_1.status,
+        adminNote: 'test note',
+        adminId: adminUserId,
+      });
+    }
+
+    beforeEach(async () => {
+      await createOrdersAndNotes();
+    });
+    test('View all orders admin notes, using their Id, irrespective of country', async () => {
+      await login(app);
+
+      // Act
+      const viewAdminNotes = await request(app)
+        .get(`/api/order/getOrderAdminNotes?getOrderAdminNotes=${orderCreateId}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewAdminNotes.statusCode).toEqual(200);
+      expect(viewAdminNotes.body.msg).toEqual('Orders found!');
+      expect(viewAdminNotes.body.data).toMatchObject([
+        {
+          orderID: ORDER_1.orderID,
+          orderStatus: ORDER_1.status,
+          adminNote: 'test note',
+          adminId: { _id: adminUserId.toString() },
+        },
+      ]);
+    });
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  describe('POST /addOrderAdminNote, Add admin notes for an order', () => {
+    let orderCreateId: any;
+    async function createOrders() {
+      const orderCreated = await Order.insertMany([ORDER_1, ORDER_2]);
+      // @ts-ignore
+      orderCreateId = orderCreated[0]._id;
+    }
+
+    beforeEach(async () => {
+      await createOrders();
+    });
+    test('Create new order Admin note, irrespective of country', async () => {
+      // Arrange
+      const createAdminNoteRequest = {
+        orderObjectId: orderCreateId,
+        orderID: ORDER_1.orderID,
+        orderStatus: ORDER_1.status,
+        adminId: adminUserId,
+        adminNote: 'Very important order',
+        country: 'ARE',
+      };
+      await login(app);
+
+      // Act
+      const createAdminNoteResponse = await request(app)
+        .post(`/api/order/addOrderAdminNote`)
+        .send(createAdminNoteRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(createAdminNoteResponse.statusCode).toEqual(201);
+      expect(createAdminNoteResponse.body.msg).toEqual('Order admin note sent!');
+    });
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  describe('POST /getAllOrdersWithStatus, retrieve orders', () => {
+    async function createOrder() {
+      ORDER_1.status = 'confirmed';
+      await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+    beforeEach(async () => {
+      await createOrder();
+    });
+    test('Retrieving order with status with confirmed status should return all when no country in body ', async () => {
+      const getOrderRequest = {
+        filterObj: {
+          extract: true,
+          status: 'confirmed',
+          toDate: '2030-12-21',
+          fromDate: '2021-12-20',
+        },
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/getAllOrdersWithStatus')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders found!');
+      expect(viewOrderResponse.body.data.length).toEqual(2);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_2, ORDER_1]);
+    });
+
+    test('Retrieving order with status with confirmed status should return ARE orders, when country ARE in body ', async () => {
+      const getOrderRequest = {
+        filterObj: {
+          extract: true,
+          status: 'confirmed',
+          toDate: '2030-12-21',
+          fromDate: '2021-12-20',
+        },
+        country: 'ARE',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/getAllOrdersWithStatus')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_2]);
+    });
+
+    test('Retrieving order with status with confirmed status should return 400, when wrong country in body ', async () => {
+      const getOrderRequest = {
+        filterObj: {
+          extract: true,
+          status: 'confirmed',
+          toDate: '2030-12-21',
+          fromDate: '2021-12-20',
+        },
+        country: 'USA',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/getAllOrdersWithStatus')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(400);
+    });
+
+    afterEach(async () => {
+      ORDER_1.status = 'order_received';
+      Order.remove({});
+    });
+  });
+
+  describe('POST /getAllOrdersWithUnreadMessages, retrieve orders with unread messages', () => {
+    async function createOrder() {
+      const insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+      const conservationCreated = await OrderConversation.create({
+        orderObjectId: insertedOrders[0]._id,
+      });
+      await Order.updateOne({ _id: insertedOrders[0]._id }, { ConversationId: conservationCreated._id });
+    }
+    beforeEach(async () => {
+      await createOrder();
+    });
+    test('Retrieving order with admin messages unread, no country in body ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/getAllOrdersWithUnreadMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders unread messages list found!');
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_1]);
+    });
+
+    test('Retrieving order with admin messages unread, ARE in body should return empty ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+        country: 'ARE',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/getAllOrdersWithUnreadMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders unread messages list found!');
+      expect(viewOrderResponse.body.data.length).toEqual(0);
+    });
+
+    test('Retrieving order with admin messages unread, EGY in body should return 1 ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/getAllOrdersWithUnreadMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders unread messages list found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_1]);
+    });
+
+    test('Retrieving order with admin messages unread, wrong country should return 400 ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+        country: 'USA',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/getAllOrdersWithUnreadMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(400);
+    });
+
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  describe('POST /viewAllOrdersWithMessages, retrieve orders with messages', () => {
+    async function createOrder() {
+      const insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+      const conservationCreated = await OrderConversation.insertMany([
+        {
+          orderObjectId: insertedOrders[0]._id,
+        },
+        { orderObjectId: insertedOrders[1]._id },
+      ]);
+      await Order.updateOne({ _id: insertedOrders[0]._id }, { ConversationId: conservationCreated[0]._id });
+      await Order.updateOne({ _id: insertedOrders[1]._id }, { ConversationId: conservationCreated[1]._id });
+    }
+    beforeEach(async () => {
+      await createOrder();
+    });
+    test('Retrieving order with admin messages read and unread, no country in body ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrdersWithMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_1, ORDER_2]);
+    });
+
+    test('Retrieving order with admin messages unread, EGY country in body ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrdersWithMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_1]);
+    });
+
+    test('Retrieving order with admin messages read , ARE country in body ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+        country: 'ARE',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrdersWithMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data.length).toEqual(1);
+      expect(viewOrderResponse.body.data).toMatchObject([ORDER_2]);
+    });
+
+    test('Retrieving order with admin messages read , return 400, wrong country in body ', async () => {
+      const getOrderRequest = {
+        page: 1,
+        pageSize: 25,
+        country: 'USA',
+      };
+      await login(app);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewAllOrdersWithMessages')
+        .send(getOrderRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(400);
+    });
+
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  describe('PATCH /assignOrdersToAdmin, assign orders to admin', () => {
+    let insertedOrders: any;
+    async function createOrder() {
+      insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+    beforeEach(async () => {
+      await createOrder();
+    });
+    test('Assigning orders to admin should succeed ', async () => {
+      const assignAdminRequest = {
+        orders: [{ _id: insertedOrders[0]._id }, { _id: insertedOrders[1]._id }],
+        admin: {
+          id: adminUserId,
+          name: ADMIN_1.fullName,
+          taagerId: 'testId',
+        },
+      };
+      await login(app);
+
+      // Act
+      const assignAdminResponse = await request(app)
+        .patch('/api/order/assignOrdersToAdmin')
+        .send(assignAdminRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(assignAdminResponse.statusCode).toEqual(200);
+      expect(assignAdminResponse.body.msg).toEqual(`2 Order(s) assigned successfully to ${ADMIN_1.fullName}`);
+    });
+
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  describe('PATCH /updateOrderVerifiedStatus, assign orders to admin', () => {
+    let insertedOrders: any;
+    async function createOrder() {
+      insertedOrders = await Order.insertMany([ORDER_1, ORDER_2]);
+    }
+    beforeEach(async () => {
+      await createOrder();
+    });
+    test('updating orders to verified should succeed ', async () => {
+      const verifiedOrdersRequest = {
+        orders: [
+          {
+            _id: insertedOrders[0]._id,
+            status: ORDER_1.status,
+            orderID: ORDER_1.orderID,
+          },
+        ],
+      };
+      await login(app);
+
+      // Act
+      const assignAdminResponse = await request(app)
+        .patch('/api/order/updateOrderVerifiedStatus')
+        .send(verifiedOrdersRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(assignAdminResponse.statusCode).toEqual(200);
+      expect(assignAdminResponse.body.msg).toEqual(`Order(s) verified successfully`);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithIDs')
+        .send({
+          orderIdsArray: [ORDER_1.orderID],
+        })
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data[0].isOrderVerified).toEqual(true);
+    });
+
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  describe('PATCH /updateOrderProductPrices, update order product prices', () => {
+    let insertedOrders: any;
+    async function createOrder() {
+      insertedOrders = await Order.insertMany(ORDER_1);
+    }
+    beforeEach(async () => {
+      await createOrder();
+    });
+    test('update product prices should update them ', async () => {
+      const updateProductPriceRequest = {
+        _id: insertedOrders[0]._id,
+        cashOnDelivery: 170,
+        productPrices: [110],
+        productProfits: [20],
+        profit: 20,
+        orderStatus: 'order_received',
+        productQuantities: [1],
+        orderId: 'orderID_1',
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      const assignAdminResponse = await request(app)
+        .patch('/api/order/updateOrderProductPrices')
+        .send(updateProductPriceRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(assignAdminResponse.statusCode).toEqual(200);
+      expect(assignAdminResponse.body.msg).toEqual(`Order products prices updated successfully`);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithIDs')
+        .send({
+          orderIdsArray: ['orderID_1'],
+        })
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data[0].cashOnDelivery).toEqual(170);
+      expect(viewOrderResponse.body.data[0].productPrices).toEqual([110]);
+      expect(viewOrderResponse.body.data[0].productProfits).toEqual([20]);
+      expect(viewOrderResponse.body.data[0].orderProfit).toEqual(20);
+    });
+    test('update product prices should be reject if cash on delivery exceed configured limit ', async () => {
+      const updateProductPriceRequest = {
+        _id: insertedOrders[0]._id,
+        cashOnDelivery: 60000,
+        productPrices: [110],
+        productProfits: [20],
+        profit: 20,
+        orderStatus: 'order_received',
+        productQuantities: [1],
+        orderId: 'orderID_1',
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      const assignAdminResponse = await request(app)
+        .patch('/api/order/updateOrderProductPrices')
+        .send(updateProductPriceRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(assignAdminResponse.statusCode).toEqual(409);
+      expect(assignAdminResponse.body.msg).toMatch(`Order Price exceeds the allowed limit!`);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithIDs')
+        .send({
+          orderIdsArray: ['orderID_1'],
+        })
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data[0].cashOnDelivery).toEqual(190);
+      expect(viewOrderResponse.body.data[0].productPrices).toEqual([100]);
+      expect(viewOrderResponse.body.data[0].productProfits).toEqual([20]);
+      expect(viewOrderResponse.body.data[0].orderProfit).toEqual(300);
+    });
+    test('update product prices should accept cash on delivery with float numbers', async () => {
+      const updateProductPriceRequest = {
+        _id: insertedOrders[0]._id,
+        cashOnDelivery: 150.5,
+        productPrices: [110],
+        productProfits: [20],
+        profit: 20,
+        orderStatus: 'order_received',
+        productQuantities: [1],
+        orderId: 'orderID_1',
+        country: 'EGY',
+      };
+      await login(app);
+
+      // Act
+      const assignAdminResponse = await request(app)
+        .patch('/api/order/updateOrderProductPrices')
+        .send(updateProductPriceRequest)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(assignAdminResponse.statusCode).toEqual(200);
+      expect(assignAdminResponse.body.msg).toEqual(`Order products prices updated successfully`);
+
+      // Act
+      const viewOrderResponse = await request(app)
+        .post('/api/order/viewOrdersWithIDs')
+        .send({
+          orderIdsArray: ['orderID_1'],
+        })
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assert
+      expect(viewOrderResponse.statusCode).toEqual(200);
+      expect(viewOrderResponse.body.msg).toEqual('Orders list found!');
+      expect(viewOrderResponse.body.data[0].cashOnDelivery).toEqual(150.5);
+      expect(viewOrderResponse.body.data[0].productPrices).toEqual([110]);
+      expect(viewOrderResponse.body.data[0].productProfits).toEqual([20]);
+      expect(viewOrderResponse.body.data[0].orderProfit).toEqual(20);
+    });
+
+    afterEach(async () => {
+      Order.remove({});
+    });
+  });
+
+  afterAll(() => {
+    mongooseConnector.disconnectFromMongoDB();
+  });
+});

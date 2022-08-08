@@ -1,0 +1,29 @@
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { CommercialCategoryTreeNode } from '../../interfaces/commercial-categories.interface';
+
+@Component({
+  selector: 'app-breadcrumbs',
+  templateUrl: './breadcrumbs.component.html',
+  styleUrls: ['./breadcrumbs.component.scss']
+})
+export class BreadcrumbsComponent implements OnInit, OnChanges {
+
+  @Input() categoryHierachy: CommercialCategoryTreeNode[];
+  navigationHeirarchyArray: CommercialCategoryTreeNode[];
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if(this.categoryHierachy) {
+      this.navigationHeirarchyArray = [...this.categoryHierachy];
+      this.navigationHeirarchyArray.pop();
+      this.navigationHeirarchyArray.reverse();
+    }
+  }
+
+}
+
+

@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>Create new survey</h2>
+<form class="question-group" *ngIf="!loading">
+  <mat-dialog-content>
+    <mat-form-field>
+      <mat-label>Survey name</mat-label>
+      <input
+        matInput
+        name="surveyName"
+        placeholder="Enter survey name"
+        [(ngModel)]="formData.surveyName"
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Inactive days</mat-label>
+      <input
+        matInput
+        type="number"
+        name="activeInDays"
+        placeholder="Maximum number of user inactive days allowed to get the survey"
+        [(ngModel)]="formData.activeInDays"
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Survey question</mat-label>
+      <input
+        matInput
+        name="surveyQuestion"
+        placeholder="Enter the survey question"
+        [(ngModel)]="formData.surveyQuestion"
+      />
+    </mat-form-field>
+    <mat-checkbox name="surveyEnabled" [(ngModel)]="formData.isEnabled">
+      Enable survey
+    </mat-checkbox>
+    <button
+      class="btn btn-success float-right"
+      (click)="onSubmitForm()"
+      type="button"
+      [disabled]="
+        !(
+          formData.surveyQuestion &&
+          formData.activeInDays &&
+          formData.surveyName
+        )
+      "
+    >
+      Publish survey
+    </button>
+  </mat-dialog-content>
+</form>
+<loader size="md" [loading]="loading"></loader>

@@ -1,0 +1,63 @@
+<section class="container no-search-results-container">
+
+  <section class="additional-search-section">
+
+    <ng-container *ngIf="!isInternetWorking; else noResult">
+
+      <p class="no-results-found-text">
+
+        لا يوجد اتصال بالإنترنت. يرجى التحقق من اتصالك بالإنترنت وحاول مرة أخرى
+
+      </p>
+
+    </ng-container>
+
+    <ng-template #noResult>
+
+      <img class="no-results-found-image" src="assets/img/no_results_found.svg" alt="No results found" />
+
+      <p class="no-results-found-text">
+
+        عذرًا، لا توجد نتائج بحث عن "{{ searchKey }}"
+
+      </p>
+
+      <p class="no-results-found-help-text">
+
+        يرجى التحقق من أخطاء الكتابة، أو استخدام مصطلحات عامة ثم إعادة المحاولة
+
+      </p>
+
+    </ng-template>
+
+  </section>
+
+  <hr *ngIf="this.categories" />
+
+  <app-request-unavailable-product *ngIf="this.categories" [categories]="categories">
+
+  </app-request-unavailable-product>
+
+  <hr *ngIf="!commercialCategoriesFeatureFlag" />
+
+  <section *ngIf="!commercialCategoriesFeatureFlag && this.categories" class="category-list-section">
+
+    <div class="category-list-title-overlay">
+
+      <p class="category-list-title">الفئات المتاحة</p>
+
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-flex-start mb-3">
+
+      <app-category-card *ngFor="let category of categories; let index = index"
+
+        [areIconsLoaded]="isCategoriesIconsLoaded" [category]="category" cardLocation="no-search-results">
+
+      </app-category-card>
+
+    </div>
+
+  </section>
+
+</section>

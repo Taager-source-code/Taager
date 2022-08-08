@@ -1,0 +1,52 @@
+@import "common.scss";
+
+a:hover {
+  text-decoration: underline;
+  color: $primary-color !important;
+}
+.sub-categories-list-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-height: 70vh;
+  min-width: 320px;
+  .show-all-button {
+    padding: 14px;
+    color: $primary-color;
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .sub-categories-list {
+    display: grid;
+    overflow-y: auto;
+    grid-template-rows: auto auto;
+    border-top: 1px solid $light-gray;
+    grid-template-columns: repeat(2, auto);
+    grid-gap: 20px 80px;
+    min-width: 25vw;
+    margin: em-calc(0 8px);
+    .level-two-subcategory {
+      padding: 15px;
+      &__name {
+        display: block;
+        text-align: right;
+        margin-bottom: 7px;
+        color: $secondary-color;
+        font-weight: 800;
+        font-size: 20px;
+      }
+      &__icon {
+        filter: brightness(0);
+      }
+    }
+    .level-three-subcategory__name {
+      color: $dark-gray;
+      text-align: right;
+      margin-bottom: 5px;
+      display: block;
+      font-size: 16px;
+    }
+  }
+}
+
+

@@ -1,0 +1,41 @@
+import joi from 'joi';
+
+export const validateOrderByCartRequest = orderByCart => {
+  const schema = joi
+    .object({
+      receiverName: joi
+        .string()
+        .required()
+        .trim(),
+      province: joi
+        .string()
+        .required()
+        .trim(),
+      district: joi.string().trim(),
+      streetName: joi
+        .string()
+        .required()
+        .trim(),
+      buildingNumber: joi.string(),
+      apartmentNumber: joi.string(),
+      phoneNumber: joi.string().required(),
+      phoneNumber2: joi
+        .string()
+        .allow('')
+        .optional(),
+      products: joi.array().required(),
+      productQuantities: joi.array().required(),
+      productIds: joi.array().required(),
+      productPrices: joi.array().required(),
+      notes: joi
+        .string()
+        .allow('')
+        .optional(),
+      orderSource: joi.object().optional(),
+      orderReceivedBy: joi.string().optional(),
+    })
+    .options({ allowUnknown: true, stripUnknown: true });
+  return schema.validate(orderByCart);
+};
+
+

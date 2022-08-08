@@ -1,0 +1,211 @@
+/* eslint-disable id-blacklist */
+
+import { Component, Inject, OnInit } from '@angular/core';
+
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+import { OrderService } from 'src/app/presentation/shared/services/order.service';
+
+import { ORDER_STATUSES } from 'src/app/presentation/shared/constants';
+
+import { orderInfo, orderStatus } from './track-orders.interfaces';
+
+import { dateFormat, dateTimeFormat } from 'src/app/presentation/shared/constants';
+
+import { IconsService } from 'src/app/presentation/shared/services/icons.service';
+
+@Component({
+
+  selector: 'app-track-orders-dialog',
+
+  templateUrl: './track-orders-dialog.component.html',
+
+  styleUrls: ['./track-orders-dialog.component.scss']
+
+})
+
+export class TrackOrdersDialogComponent implements OnInit {
+
+  order: orderInfo;
+
+  orderProgress = 0;
+
+  orderStatuses: orderStatus[] = [];
+
+  dateFormat = dateFormat;
+
+  dateTimeFormat = dateTimeFormat;
+
+  constructor(
+
+    private dialogRef: MatDialogRef<TrackOrdersDialogComponent>,
+
+    private orderService: OrderService,
+
+    @Inject(MAT_DIALOG_DATA) public data: any,
+
+    private iconsService: IconsService) {
+
+      this.order = this.createOrderObject(this.data.order);
+
+     }
+
+  ngOnInit(): void {
+
+    this.registerIcons();
+
+    this.getOrderActivity();
+
+  }
+
+  registerIcons(){
+
+    const icons = ['clipboard', 'checked', 'canceled', 'clock',
+
+    'delivery-truck', 'shipped', 'refund-request', 'refund-inprogress',
+
+    'replacement-request', 'replacement-inprogress', 'completion-request', 'completion-inprogress'];
+
+    icons.map(
+
+      (icon) => {
+
+        this.iconsService.addIconToRegistry(icon, `../assets/img/track-order-icons/${icon}.svg`);
+
+      }
+
+    );
+
+  }
+
+  getOrderActivity() {
+
+    this.orderService
+
+      .getOrderActivityWithStatus({
+
+        orderID: this.order.id
+
+      })
+
+      .subscribe((res) => {
+
+        this.orderProgress = res.data.length;
+
+        // the API embeds the status object inside a doc object incase the user wasn't an admin
+
+        let tempStatuses = res.data.map(item => item.doc || item);
+
+        if(this.orderProgress < 5
+
+          && tempStatuses.filter((r) => this.checkCanceledOrSuspended(r.orderStatus)).length === 0){
+
+                tempStatuses = this.appedDefaultStatuses(tempStatuses);
+
+        }
+
+        this.orderStatuses = this.createOrderStatusesArray(tempStatuses);
+
+    });
+
+  }
+
+  createOrderObject(order): orderInfo{
+
+    return {
+
+      id: order.orderID,
+
+      createdAt: order.createdAt,
+
+      confirmationDate: order.confirmationDate,
+
+      deliveryDate: order.deliveryDate
+
+    };
+
+  }
+
+  appedDefaultStatuses(tempStatuses){
+
+    for(let i = this.orderProgress ; i <5; i++ ){
+
+      tempStatuses.push({orderStatus: ORDER_STATUSES.DIRECT_FLOW_STATUSES_ARRAY[i], updatedAt: ''});
+
+    }
+
+    return tempStatuses;
+
+  }
+
+  createOrderStatusesArray(orderStatuses): orderStatus[]{
+
+    const orderStatusesArray: orderStatus[] = [];
+
+    orderStatuses.forEach( status => {
+
+      orderStatusesArray.push({
+
+        icon: this.mapStatustoIcon(status.orderStatus),
+
+        statusInEnglish: status.orderStatus,
+
+        statusInArabic:  this.mapStatusEnglishToArabic(status.orderStatus),
+
+        canceledOrSuspended:  this.checkCanceledOrSuspended(status.orderStatus),
+
+        updatedAt: status.updatedAt,
+
+        suspentionReason: this.mapNumbersToSuspendedReasons(status.suspendedReason) ,
+
+        rejectionReason: this.mapNumbersToCustomerRejectedReasons(status.customerRejectedReason) ,
+
+        notes: status.notes,
+
+        failedAttemptNote:  status.failedAttemptNote,
+
+      });
+
+    });
+
+    return orderStatusesArray;
+
+  }
+
+  mapStatustoIcon(recievedStatus): string{
+
+    const statusObject = ORDER_STATUSES.ALL_STATUSES.filter(
+
+      (status) => status.statusInEnglish === recievedStatus);
+
+    return statusObject.length === 0 ? '' : statusObject[0].statusIcon;
+
+  };
+
+  mapStatusEnglishToArabic(recievedStatus): string{
+
+    const statusObject = ORDER_STATUSES.ALL_STATUSES.filter(
+
+      (status) => status.statusInEnglish === recievedStatus);
+
+    return statusObject.length === 0 ? recievedStatus : statusObject[0].statusInArabic;
+
+  };
+
+  mapNumbersToSuspendedReasons = (number) => ORDER_STATUSES.SUSPENSION_REASONS_MAP.get(number) || '';
+
+  mapNumbersToCustomerRejectedReasons = (number) => ORDER_STATUSES.REJECTION_REASONS_MAP.get(number) || '';
+
+  checkCanceledOrSuspended(status): boolean{
+
+    return ORDER_STATUSES.SUSPENDED_CANCELED_STATUSES_ARRAY.includes(status);
+
+  }
+
+  closeDialog() {
+
+    this.dialogRef.close();
+
+  }
+
+}

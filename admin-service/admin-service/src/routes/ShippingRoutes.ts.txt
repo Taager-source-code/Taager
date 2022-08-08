@@ -1,0 +1,65 @@
+// region requires
+import express from 'express';
+import errorHandler from 'express-async-handler';
+import isAuthenticated from '../middlewares/auth';
+import * as shippingCtrl from '../controllers/shipping/shipping.controller';
+import { registerGet, registerPatch, registerPost, registerPut } from '../common/http/HttpHandler';
+import { UpdateVhubsShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateVhubsShipmentStatusController';
+import { UpdateBostaShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateBostaShipmentStatusController';
+import { CreateShipmentsFromSheetController } from '../shipping/command/infrastructure/controllers/CreateShipmentsFromSheetController';
+import { UpdateBulkShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateBulkShipmentStatusController';
+import { UpdateR2sShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateR2sShipmentStatusController';
+import { AsyncCreateShipmentsController } from '../shipping/command/infrastructure/controllers/AsyncCreateShipmentsController';
+import { UpdateSprintShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateSprintShipmentStatusController';
+import { UpdateLinkChainShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateLinkChainShipmentStatusController';
+import { DeleteShipmentsController } from '../shipping/command/infrastructure/controllers/DeleteShipmentsController';
+import { UpdateOpexShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateOpexShipmentStatusController';
+import { UpdateOTOShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateOTOShipmentStatusController';
+import { UpdateSalasaShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateSalasaShipmentStatusController';
+import { UpdateYFSShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateYFSShipmentStatusController';
+import { UpdateDiggipacksShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateDiggipacksShipmentStatusController';
+import { GetShippingCompaniesController } from '../shipping/queries/infrastructure/controllers/GetShippingCompaniesController';
+import { UpdateJTShipmentStatusController } from '../shipping/command/infrastructure/controllers/UpdateJTShipmentStatusController';
+
+const router = express.Router();
+router.post('/shipping/addOrderToBosta', isAuthenticated, errorHandler(shippingCtrl.addOrderToBosta));
+
+router.post('/shipping/getAWBFromBosta', isAuthenticated, errorHandler(shippingCtrl.getAWBFromBosta));
+router.post('/shipping/trackBostaOrder', isAuthenticated, errorHandler(shippingCtrl.trackBostaOrder));
+router.post('/shipping/aramex', isAuthenticated, errorHandler(shippingCtrl.addOrderToAramex));
+router.post('/shipping/aramex-track', isAuthenticated, errorHandler(shippingCtrl.trackOrderFromAramex));
+router.post('/shipping/vhubs', isAuthenticated, errorHandler(shippingCtrl.addShipmentToVHubs));
+router.post('/shipping/vhubs/importCities', isAuthenticated, errorHandler(shippingCtrl.importVHubCities));
+router.post('/shipping/vhubs/track', isAuthenticated, errorHandler(shippingCtrl.trackOrderFromVHubs));
+
+registerPost('/shipping/bosta/shipment-status', UpdateBostaShipmentStatusController, router);
+
+registerPost('/shipping/vhubs/shipment-status', UpdateVhubsShipmentStatusController, router);
+
+registerGet('/shipping/r2s/shipment-status', UpdateR2sShipmentStatusController, router);
+
+registerPost('/shipping/shipments', AsyncCreateShipmentsController, router, isAuthenticated);
+
+registerPatch('/shipping/shipments/revert', DeleteShipmentsController, router, isAuthenticated);
+
+registerGet('/shipping/sprint/shipment-status', UpdateSprintShipmentStatusController, router);
+
+registerPost('/shipping/shipments/bulk-sheet', CreateShipmentsFromSheetController, router, isAuthenticated);
+
+registerPut('/shipping/shipments/shipment-status', UpdateBulkShipmentStatusController, router, isAuthenticated);
+
+registerPost('/shipping/link-chain/shipment-status', UpdateLinkChainShipmentStatusController, router);
+
+registerPost('/shipping/opex/shipment-status', UpdateOpexShipmentStatusController, router);
+
+registerPost('/shipping/oto/shipment-status', UpdateOTOShipmentStatusController, router);
+registerPost('/shipping/salasa/shipment-status', UpdateSalasaShipmentStatusController, router);
+registerPost('/shipping/yfs/shipment-status', UpdateYFSShipmentStatusController, router);
+registerPost('/shipping/diggipacks/shipment-status', UpdateDiggipacksShipmentStatusController, router);
+
+registerGet('/shipping/shipping-companies', GetShippingCompaniesController, router, isAuthenticated);
+
+registerPost('/shipping/jt-eg/shipment-status', UpdateJTShipmentStatusController, router);
+
+//endregion
+export = router;

@@ -1,0 +1,21 @@
+<section>
+  <button
+    (click)="onDialogClicked('Completion')"
+    class="order-completion-btn"
+    *ngIf="
+      !this.order.isOrderVerified &&
+      (this.order.products.length > 1 || this.order.productQuantities[0] > 1)
+    "
+  >
+    Completion
+  </button>
+  <button (click)="onDialogClicked('Refund')" class="order-refund-btn">
+    Refund
+  </button>
+  <button
+    (click)="onDialogClicked('Replacement')"
+    class="order-replacement-btn"
+  >
+    Replacement
+  </button>
+</section>

@@ -1,0 +1,118 @@
+@import 'common.scss';
+
+:host {
+  .category-card {
+    display: block;
+    background-color: $fill-light-gray;
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 7px auto;
+    padding: 10px;
+    width: 180px;
+    overflow: auto;
+
+    &:hover {
+      text-decoration: none;
+    }
+
+   
+    
+    @media (max-width: 991px) {
+      background-color: transparent;
+      float: none;
+      padding: 0;
+      text-align: center;
+      width: 95px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 767px) {
+      margin: 5px auto 0;
+    }
+  }
+
+  .category-card:hover {
+    background-color: $primary-color;
+    color: $text-white; 
+
+    @media (max-width: 991px) {
+      background-color: transparent;
+    }
+  }
+
+
+  .category-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: $fill-white;
+    color: $primary-color;
+    font-size: 26px;
+    border-radius: 5px;
+    float: right;
+    height: 40px;
+    padding: 5px;
+    width: 40px;
+
+    @media (max-width: 991px) {
+      background-color: $background-color;
+      border-radius: 10px;
+      float: none;
+      height: 60px;
+      padding: 10px;
+      width: 60px;
+      margin: auto;
+    }
+  }
+
+  .category-text {
+    align-items: center;
+    float: right;
+    height: 40px;
+    margin: 0 20px 0 0;
+    text-align: right;
+    width: 100px;
+    display: flex;
+    justify-content: right;
+    padding: 5px 0 0;
+    
+    @media (max-width: 991px) {
+      float: none;
+      font-size: 12px;
+      margin: 5px 0 0;
+      text-align: center;
+      width: 100%;
+      align-items: start;
+      height: auto;
+    } 
+    
+  }  
+
+  .category-text p {
+    color: $text-primary;
+    font-size: 14px;
+    font-weight: bold;
+    font-style: normal;
+    line-height: 1.44;
+    vertical-align: middle;
+    margin-bottom: 0;  
+    width:100%;
+
+    @media (max-width: 991px) {
+      float: none;
+      font-size: 12px;
+      margin: 5px 0 0;
+      text-align: center;
+    } 
+  }
+
+  
+
+  .category-card:hover .category-text p{
+    color: $text-white; 
+    @media (max-width: 991px) {
+      color: $text-primary; 
+    }
+  }
+}
+

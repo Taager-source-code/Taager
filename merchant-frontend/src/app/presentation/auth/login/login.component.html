@@ -1,0 +1,127 @@
+<div class="background">
+
+  <div [ngClass]="{'container-custom-mob': isMobile,'container-custom': !isMobile}">
+
+    <div class="d-flex flex-column align-items-center">
+
+      <div class="title">تسجيل الدخول الي حسابك</div>
+
+      <div class="sub-title">انت في اول الطريق الي تحقيق حلمك و تقدر دلوقتي تشوف المنتجات
+
+        <br *ngIf="!isMobile">وتبدأ تبيع اللي يناسبك و تحقق ارباح و نجاحات كتير
+
+      </div>
+
+      <div [ngClass]="{'btns-mob': isMobile,'btns': !isMobile, 'flex-column': isMobile}"
+
+        class="d-flex justify-content-center align-items-center">
+
+        <button [disabled]="isLoggingIn" (click)="signInWithGoogle()"
+
+          class="btn btn-auth d-flex justify-content-center align-items-center" [ngClass]="{'btn-mob': isMobile}"
+
+          type="submit">
+
+          <img class="icon" src="../../../../assets/img/google-i.png">
+
+          تسجيل بواسطة جوجل
+
+        </button>
+
+      </div>
+
+      <div class="card main d-flex justify-content-center">
+
+        <div *ngIf="errorMessage && !isLoggingIn" class="alert alert-danger form-error-message">
+
+          {{errorMessage}}
+
+        </div>
+
+        <loader [loading]="isLoggingIn" size="md"></loader>
+
+        <div class="card-content" *ngIf="!isLoggingIn">
+
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+            <div class="form-group">
+
+              <label>
+
+                رقم الموبايل أو البريد الإلكتروني
+
+              </label>
+
+              <input class="form-control" type="text" placeholder="أدخل رقم الموبايل أو البريد الإلكتروني" formControlName="mobile">
+
+              <div *ngIf="mobile.invalid && (submitted)">
+
+                <div *ngIf="mobile.errors.required" class="input-error">
+
+                  رقم الموبايل مطلوب
+
+                </div>
+
+                <div *ngIf="mobile.errors.pattern" class="input-error">
+
+                  هذا الرقم غير صحيح
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="form-group">
+
+              <label>
+
+                كلمة السر
+
+              </label>
+
+              <input class="form-control" type="password" placeholder="أدخل كلمة السر" formControlName="password">
+
+              <div *ngIf="password.invalid && (submitted)">
+
+                <div *ngIf="password.errors.required" class="input-error">
+
+                  كلمة السر مطلوبة
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <button class="btn btn-register" [ngClass]="{'btn-register-mob': isMobile}" type="submit">تسجيل
+
+              الدخول</button>
+
+            <div class="foot-div">
+
+              <p class="foot-label">نسيت كلم المرور؟</p>
+
+              <a class="foot-label-2" [routerLink]="['/forgot-password']">اضغط هنا</a>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+
+      <div [ngClass]="{'foot-div': isMobile,'foot-div-1': !isMobile}">
+
+        <p class="foot-label-3">ليس لديك حساب؟ </p>
+
+        <a class="foot-label-4" [routerLink]="['/register']" [queryParams]="queryString">تسجيل حساب جديد</a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

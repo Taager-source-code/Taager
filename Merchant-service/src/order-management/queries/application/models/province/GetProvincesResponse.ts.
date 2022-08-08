@@ -1,0 +1,17 @@
+export interface GetProvincesResponse {
+  location: string;
+  branch: string;
+  shippingRevenue: number;
+  shippingCost: number;
+  minETA: number;
+  maxETA: number;
+  isActive?: boolean;
+  redZones?: any[];
+  greenZones?: any[];
+  _id: string;
+  updatedAt?: Date;
+  createdAt?: Date;
+  country: string;
+}
+
+

@@ -1,0 +1,35 @@
+import { NO_CONTENT, OK, UNPROCESSABLE_ENTITY } from 'http-status';
+import { Container } from 'typedi';
+import DeleteAnnouncement from '../../application/usecases/DeleteAnnouncement';
+import { validateDeleteAnnouncementRequest } from '../validators/DeleteAnnouncementValidator';
+
+const container = Container.of();
+
+function handleSuccess(res, deleteAnnouncementResponse) {
+  if (deleteAnnouncementResponse) {
+    res.status(OK).json({
+      msg: 'Announcement deleted!',
+    });
+  } else {
+    res.status(NO_CONTENT).json({
+      msg: 'Announcement id not correct',
+    });
+  }
+}
+
+function handleValidationError(res, error) {
+  return res.status(UNPROCESSABLE_ENTITY).json({
+    msg: error.details[0].message,
+  });
+}
+
+export const execute = async (req, res) => {
+  const { error, value: deleteAnnouncementRequest } = validateDeleteAnnouncementRequest(req.params);
+  if (error) {
+    handleValidationError(res, error);
+  }
+  const deleteAnnouncement = container.get(DeleteAnnouncement);
+  const deleteAnnouncementResponse = await deleteAnnouncement.execute(deleteAnnouncementRequest.id);
+
+  return handleSuccess(res, deleteAnnouncementResponse);
+};

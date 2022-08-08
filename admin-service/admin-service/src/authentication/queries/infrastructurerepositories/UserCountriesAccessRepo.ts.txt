@@ -1,0 +1,37 @@
+import { Service } from 'typedi';
+import { UserCountriesAccessCache } from '../../../common/infrastructure/cache/UserCountriesAccessCache';
+import UserCountriesAccessDao from '../../../common/infrastructure/db/access/UserCountriesAccessDao';
+import { UserCountriesAccess } from '../../../common/infrastructure/db/models/UserCountriesAccess';
+
+@Service({ global: true })
+export default class UserCountriesAccessRepo {
+  private cache: UserCountriesAccessCache;
+  private dao: UserCountriesAccessDao;
+
+  constructor(dao: UserCountriesAccessDao, cache: UserCountriesAccessCache) {
+    this.cache = cache;
+    this.dao = dao;
+  }
+
+  async getAvailableCountriesToUser(userId: string) {
+    const userCountriesAccess = await this.getUserCountriesAccessByUserId(String(userId));
+
+    if (userCountriesAccess) {
+      return userCountriesAccess.countries;
+    }
+    return [];
+  }
+
+  private async getUserCountriesAccessByUserId(userId: string): Promise<UserCountriesAccess | null> {
+    const cachedCountries = this.cache.getByUserId(userId);
+    if (cachedCountries) {
+      return cachedCountries;
+    }
+
+    const daoCountries = await this.dao.getUserCountriesAccessByUserId(userId);
+    if (daoCountries) {
+      this.cache.set(daoCountries);
+    }
+    return daoCountries;
+  }
+}

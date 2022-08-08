@@ -1,0 +1,9 @@
+import Catalog from '../../merchant/common/infrastructure/db/schemas/favouriteProducts.model';
+
+export const up = async () => {
+  const filter: any = { country: { $exists: false } };
+  const update = { $set: { country: 'EGY' } };
+  await Catalog.updateMany(filter, update, { timestamps: false });
+};
+
+

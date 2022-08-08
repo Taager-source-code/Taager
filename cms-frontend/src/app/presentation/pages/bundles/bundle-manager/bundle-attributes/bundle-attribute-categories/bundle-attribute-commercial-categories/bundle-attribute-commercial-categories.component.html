@@ -1,0 +1,94 @@
+<nb-accordion class="commercial-categories-accordion">
+  <nb-accordion-item expanded>
+    <nb-accordion-item-header class="accordion-header">
+      Commercial Categories
+    </nb-accordion-item-header>
+    <nb-accordion-item-body>
+      <form [formGroup]="commercialCategoriesFormGroup">
+        <p>Category</p>
+        <nb-select
+          fullWidth
+          class="down-spacing"
+          [ngClass]="{'--has-error': (showFormErrors$ | async) && commercialCategoriesFormGroup.get('commercialCategories').errors}"
+          formControlName="commercialCategories">
+            <nb-option *ngFor="let commercialCategory of commercialCategoriesList" [value]="commercialCategory._id">
+              {{commercialCategory.name.arName}}
+            </nb-option>
+        </nb-select>
+      <div *ngIf="addEditProductCommercialCategoryFlag">
+        <ng-container *ngIf="!isLoadingInitialData">
+        <nb-accordion formArrayName="commercialCategoriesFormGroupArray"
+          *ngFor="let commercialCategoryAccordionList of getCommercialCategoriesFormGroupArrayControls(); index as i">
+          <nb-accordion-item [formGroupName]="i" expanded [nbSpinner]="isLoadingLevelsCategoriesList" nbSpinnerSize="giant" nbSpinnerStatus="primary">
+              <nb-accordion-item-header class="accordion-header"> Commercial Category {{i + 1}} </nb-accordion-item-header>
+              <nb-accordion-item-body >
+                <div class="category-card">
+                  <p class="category-card__warning-text">
+                    Choose at least 1 level
+                  </p>
+                  <button nbButton ghost class="category-card__delete-button"
+                   *ngIf="getCommercialCategoriesFormGroupArrayLength() > 1"
+                   (click)="onDeleteNewCommercialCategory(i)"
+                   >
+                    <nb-icon class="category-card__delete-button-icon" icon="red-trash-icon" pack="taager-icons"
+                    ></nb-icon>
+                    <p class="category-card__delete-button-text">Delete category {{i + 1}}</p>
+                  </button>
+                </div>
+                    <label class="dropdown-label">Category (Level 1)</label>
+                    <nb-select
+                      class="dropdown-input"
+                      [ngClass]="{'--has-error': (showFormErrors$ | async) && commercialCategoriesFormGroup.get('commercialCategoriesFormGroupArray').at(0).get('commercialCategoriesLevelOne').errors}"
+                      fullWidth (selectedChange)="onLevelOneChange($event, i)"
+                      formControlName="commercialCategoriesLevelOne">
+                        <nb-option disabled *ngIf="!commercialCategoriesListLevelOne.length"> 
+                          There is no commercial categories
+                        </nb-option>
+                        <nb-option *ngFor="let levelOne of commercialCategoriesListLevelOne" [value]="levelOne.id">
+                          {{levelOne.name.arabicName}}
+                        </nb-option>
+                    </nb-select>
+                    <label class="dropdown-label">Level 2</label>
+                    <nb-select class="dropdown-input" fullWidth (selectedChange)="onLevelTwoChange($event, i)" formControlName="commercialCategoriesLevelTwo">
+                      <nb-option disabled *ngIf="!commercialCategoriesLists[i].levelTwo.length"> 
+                        There is no commercial categories
+                      </nb-option>
+                      <nb-option *ngFor="let levelTwoList of commercialCategoriesLists[i].levelTwo" [value]="levelTwoList.id">
+                        {{levelTwoList.name.arabicName}}
+                      </nb-option>
+                    </nb-select>
+                    <label class="dropdown-label">Level 3</label>
+                    <nb-select class="dropdown-input" fullWidth (selectedChange)="onLevelThreeChange($event, i)" formControlName="commercialCategoriesLevelThree">
+                      <nb-option disabled *ngIf="!commercialCategoriesLists[i].levelThree.length"> 
+                        There is no commercial categories
+                      </nb-option>
+                      <nb-option *ngFor="let levelThreeList of commercialCategoriesLists[i].levelThree" [value]="levelThreeList.id">
+                        {{levelThreeList.name.arabicName}}
+                      </nb-option>
+                    </nb-select>
+                    <label class="dropdown-label">Level 4</label>
+                    <nb-select class="dropdown-input" fullWidth formControlName="commercialCategoriesLevelFour">
+                      <nb-option disabled *ngIf="!commercialCategoriesLists[i].levelFour.length"> 
+                        There is no commercial categories
+                      </nb-option>
+                      <nb-option *ngFor="let levelFourList of commercialCategoriesLists[i].levelFour" [value]="levelFourList.id">
+                        {{levelFourList.name.arabicName}}
+                      </nb-option>
+                    </nb-select>
+              </nb-accordion-item-body>
+            </nb-accordion-item>
+          </nb-accordion>
+        </ng-container>
+        <div class="add-button-container">
+          <button *ngIf="getCommercialCategoriesFormGroupArrayLength() < 3" 
+            (click)="onAddNewCommercialCategory()" class="add-category-button">
+            <p class="add-category-button__text">
+              + Add one more commercial Category
+            </p>
+          </button>
+        </div>
+      </div>
+    </form>
+    </nb-accordion-item-body>
+  </nb-accordion-item>
+</nb-accordion>

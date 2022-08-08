@@ -1,0 +1,27 @@
+<p class="version-overlay">{{ version }}</p>
+<app-header
+  *ngIf="
+    !router.url.includes('thankyou') &&
+    !router.url.includes('login') &&
+    !router.url.includes('forgot-password') &&
+    !router.url.includes('reset-password')
+  "
+></app-header>
+<div
+  [ngClass]="{
+    'page-height':
+      !router.url.includes('thankyou') &&
+      !router.url.includes('forgot-password') &&
+      !router.url.includes('reset-password')
+  }"
+>
+  <router-outlet></router-outlet>
+</div>
+<app-footer
+  *ngIf="
+    !router.url.includes('thankyou') &&
+    !router.url.includes('login') &&
+    !router.url.includes('forgot-password') &&
+    !router.url.includes('reset-password')
+  "
+></app-footer>

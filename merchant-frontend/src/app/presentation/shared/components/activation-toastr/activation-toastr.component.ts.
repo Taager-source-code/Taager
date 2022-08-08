@@ -1,0 +1,143 @@
+import {
+
+  animate,
+
+  keyframes,
+
+  state,
+
+  style,
+
+  transition,
+
+  trigger
+
+} from '@angular/animations';
+
+import { Component } from '@angular/core';
+
+import { Toast, ToastrService, ToastPackage } from 'ngx-toastr';
+
+import { MatIconRegistry } from '@angular/material/icon';
+
+import { DomSanitizer } from '@angular/platform-browser';
+
+@Component({
+
+  selector: 'app-activation-toastr-component',
+
+  styleUrls: ['./activation-toastr.component.scss'],
+
+  templateUrl: './activation-toastr.component.html',
+
+  animations: [
+
+    trigger('flyInOut', [
+
+      state('inactive', style({
+
+        opacity: 0,
+
+      })),
+
+      transition('inactive => active', animate('400ms ease-out', keyframes([
+
+        style({
+
+          transform: 'translate3d(100%, 0, 0) skewX(-30deg)',
+
+          opacity: 0,
+
+        }),
+
+        style({
+
+          transform: 'skewX(20deg)',
+
+          opacity: 1,
+
+        }),
+
+        style({
+
+          transform: 'skewX(-5deg)',
+
+          opacity: 1,
+
+        }),
+
+        style({
+
+          transform: 'none',
+
+          opacity: 1,
+
+        }),
+
+      ]))),
+
+      transition('active => removed', animate('400ms ease-out', keyframes([
+
+        style({
+
+          opacity: 1,
+
+        }),
+
+        style({
+
+          transform: 'translate3d(100%, 0, 0) skewX(30deg)',
+
+          opacity: 0,
+
+        }),
+
+      ]))),
+
+    ]),
+
+  ],
+
+  preserveWhitespaces: false,
+
+})
+
+export class ActivationToastrComponent extends Toast{
+
+  btnLabel = 'نعم';
+
+  // constructor is only necessary when not using AoT
+
+  constructor(
+
+    protected toastrService: ToastrService,
+
+    public toastPackage: ToastPackage,
+
+    private matIconRegistry: MatIconRegistry,
+
+    private domSanitizer: DomSanitizer,
+
+  ) {
+
+    super(toastrService, toastPackage);
+
+    matIconRegistry.addSvgIcon('bell', domSanitizer.bypassSecurityTrustResourceUrl('../assets/img/activation-toaster-icons/bell.svg'));
+
+  }
+
+  action(event: Event) {
+
+    event.stopPropagation();
+
+    // @ts-ignore
+
+    location.reload(true);
+
+    this.toastPackage.triggerAction();
+
+    return false;
+
+  }
+
+}

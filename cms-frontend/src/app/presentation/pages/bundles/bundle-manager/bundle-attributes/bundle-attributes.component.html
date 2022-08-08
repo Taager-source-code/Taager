@@ -1,0 +1,42 @@
+<nb-tabset>
+    <nb-tab
+      [tabTitle]="'Details'"
+      [badgeText]="(showFormErrors$ | async) && detailsTabIsInValid ? '!' : ''"
+      [badgeStatus]="(showFormErrors$ | async) && detailsTabIsInValid ? 'danger': ''">
+       <ngx-bundle-attribute-details
+        [initialData]="initialData?.details"
+        [onDialogClose$]="onDialogClose$"
+        [showFormErrors$]="showFormErrors$"
+        (emitBundleAttributesDetailsForm)="resolveBundleAttributesDetailsForm($event)"></ngx-bundle-attribute-details>
+    </nb-tab>
+    <nb-tab
+      [tabTitle]="'Products ('+ productsCount +')'"
+      [badgeText]="(showFormErrors$ | async) && productsTabIsInValid ? '!' : ''"
+      [badgeStatus]="(showFormErrors$ | async) && productsTabIsInValid ? 'danger': ''">
+        <ngx-bundle-attributes-products
+          [initialData]="initialData?.products"
+          [bundleSavedCountry]="bundleSavedCountry"
+          [onDialogClose$]="onDialogClose$"
+          (emitBundleAttributesProductsForm)="resolveBundleAttributesProductsForm($event)"
+          (emitBundleAttributesProductsCount)="resolveBundleAttributesProductsCount($event)"></ngx-bundle-attributes-products>
+    </nb-tab>
+    <nb-tab
+      [tabTitle]="'Category'"
+      [badgeText]="(showFormErrors$ | async) && categoryTabIsInValid ? '!' : ''"
+      [badgeStatus]="(showFormErrors$ | async) && categoryTabIsInValid ? 'danger': ''">
+        <ngx-bundle-attribute-categories
+          [onDialogClose$]="onDialogClose$"
+          [showFormErrors$]="showFormErrors$"
+          [initialData]="initialData?.category"
+          (emitBundleAttributesCategoryForm)="resolveBundleAttributesCategoryForm($event)"></ngx-bundle-attribute-categories>
+    </nb-tab>
+    <nb-tab
+      [tabTitle]="'Images'"
+      [badgeText]="(showFormErrors$ | async) && imagesTabIsInValid ? '!' : ''"
+      [badgeStatus]="(showFormErrors$ | async) && imagesTabIsInValid ? 'danger': ''">
+        <ngx-bundle-attribute-images
+          [initialData]="initialData?.images"
+          [onDialogClose$]="onDialogClose$"
+          (emitBundleAttributesImagesForm)="resolveBundleAttributesImagesForm($event)"></ngx-bundle-attribute-images>
+    </nb-tab>
+</nb-tabset>

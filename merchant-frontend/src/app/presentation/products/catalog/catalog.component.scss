@@ -1,0 +1,416 @@
+@import "common.scss";
+
+:host {
+  p {
+    margin: 0;
+    letter-spacing: normal;
+    text-align: right;
+  }
+
+  .primary-button {
+    background-color: $primary-color;
+    border: 1px solid $primary-color;
+    color: $white;
+  }
+
+  .secondary-button {
+    background-color: $secondary-color;
+    border: 1px solid $secondary-color;
+    color: $white;
+  }
+
+  .outline-primary-button {
+    background-color: transparent;
+    border: 1px solid $primary-color;
+    color: $primary-color;
+  }
+
+  mat-checkbox::ng-deep {
+    label {
+      margin: 0;
+      .mat-checkbox-inner-container {
+        margin-right: 0 !important;
+      }
+    }
+    .mat-checkbox-layout {
+      margin: 0 !important;
+      .mat-checkbox-inner-container {
+        margin: 0 !important;
+      }
+    }
+  }
+
+  .page {
+    min-height: 85vh;
+    overflow-x: hidden;
+    @media (max-width: 767px) {
+      background-color: $white;
+    }
+
+
+    .catalog-table {
+      border: 1px solid $border-color-light-gray;
+    }
+
+    .container {
+      background-color: $white;
+      padding: 40px 20px 20px 20px;
+      border-radius: 20px;
+      @media (max-width: 480px) {
+        border-radius: 0;
+      }
+
+      .col-12 {
+        @media (max-width: 480px) {
+          padding: 0 10px;
+        }
+      }
+
+      .unavailability-msg{
+        color:  $text-danger;
+        margin: 4px 0;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 500;
+        line-height: 1.48;
+        color: $secondary-color;
+
+        @media (max-width: 991px) {
+          font-size: 20px;
+        }
+
+        span {
+          color: $primary-color;
+        }
+      }
+
+      .select-all-container {
+        margin-left: 30px;
+
+        .select-all-text {
+          font-size: 18px;
+          font-weight: 500;
+          line-height: 1.39;
+          color: $primary-color;
+          margin-right: 10px;
+
+          @media (max-width: 991px) {
+            font-size: 16px;
+          }
+        }
+      }
+
+      .remove-selected-button {
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.38;
+        color: $red;
+        background-color: transparent;
+        border: 0;
+        @media (max-width: 991px) {
+          font-size: 14px;
+        }
+      }
+
+      table {
+        border-collapse: separate;
+        border-spacing: 0px 17px;
+        th {
+          text-align: center;
+          font-size: 18px;
+          font-weight: 500;
+          line-height: 1.39;
+          color: $dark-gray;
+          border-bottom: 1px;
+          border-color: $light-gray;
+          @media (max-width: 991px) {
+            font-size: 16px;
+          }
+        }
+
+        td {
+          vertical-align: middle;
+          border-color: $light-gray;
+          padding: 14px 8px;
+          @media (max-width: 991px) {
+            padding: 10px 5px;
+          }
+        }
+      }
+
+      .product-actions {
+        height: 100px;
+        @media (max-width: 991px) {
+          height: 70px;
+        }
+      }
+
+      .delete-button {
+        width: 24px;
+        height: 30px;
+        margin: 0;
+        font-size: 20px;
+        background-color: transparent;
+        border: 0;
+        color: $red;
+        font-family: sans-serif;
+      }
+
+      .product-image {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+        border: 1px solid $medium-gray;
+        border-radius: 10px;
+        padding: 3px;
+        @media (max-width: 991px) {
+          width: 70px;
+          height: 70px;
+        }
+      }
+
+      .product-image-container {
+        @media (max-width: 767px) {
+          padding-left: 10px;
+        }
+      }
+
+      .name-and-category {
+        max-width: 315px;
+        @media (max-width: 1199px) {
+          max-width: 205px;
+        }
+        @media (max-width: 991px) {
+          max-width: 160px;
+        }
+        @media (max-width: 767px) {
+          max-width: 767px;
+        }
+
+        .product-name {
+          font-size: 18px;
+          font-weight: 800;
+          color: $secondary-color;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          $white-space: nowrap;
+          @media (max-width: 991px) {
+            font-size: 16px;
+          }
+          @media (max-width: 767px) {
+            $white-space: normal;
+          }
+        }
+
+        .product-name.link:hover {
+          text-decoration: underline;
+        }
+
+        .product-variants {
+          display: flex;
+          font-size: 14px;
+          .color-variant,
+          .size-variant {
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            .color-ball {
+              display: inline-block;
+              border-radius: 50%;
+              width: 10px;
+              height: 10px;
+              margin-bottom: 4px;
+            }
+          }
+        }
+      }
+
+      .product-original-price {
+        font-size: 16px;
+        font-weight: 400;
+        color: $dark-gray;
+        span {
+          color: $original-price-text-orange;
+          font-weight: 700;
+        }
+        @media (max-width: 991px) {
+          font-size: 14px;
+        }
+        @media (max-width: 767px) {
+          font-weight: 500;
+        }
+      }
+
+      .fa {
+        font-family: FontAwesome;
+        font-size: 16px;
+      }
+
+      .edit-action {
+        font-size: 8px;
+        width: 32px;
+        padding: 5px;
+        @media (max-width: 991px) {
+          width: 24px;
+          i {
+            font-size: 12px;
+          }
+        }
+      }
+
+      .product-price {
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1.5;
+        color: $secondary-color;
+        width: 70px;
+        border: 1px solid $medium-gray;
+        border-radius: 0 5px 5px 0;
+        font-family: sans-serif;
+        @media (max-width: 991px) {
+          font-size: 16px;
+          width: 50px;
+        }
+      }
+      .edit-price-button {
+        border-radius: 5px 0 0 5px;
+        margin-right: -1px;
+        width: 64px;
+        b {
+          margin: 0 auto;
+        }
+        @media (max-width: 991px) {
+          width: 48px;
+          i {
+            font-size: 12px;
+          }
+        }
+      }
+
+      .product-price-input {
+        border: 1px solid $dark-gray;
+        direction: ltr;
+      }
+      .product-price-input:focus {
+        outline: none;
+      }
+
+      .product-profit {
+        color: $primary-color;
+      }
+      p.product-profit {
+        display: block;
+        width: 70px;
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1.5;
+        font-family: sans-serif;
+        @media (max-width: 991px) {
+          font-size: 16px;
+          width: 50px;
+        }
+      }
+
+      .product-availability {
+        font-size: 18px;
+        font-weight: 500;
+        @media (max-width: 991px) {
+          font-size: 14px;
+        }
+      }
+
+      .action-button {
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: 500;
+        padding: 10px 0;
+        width: 200px;
+        @media (max-width: 991px) {
+          font-size: 14px;
+          width: 130px;
+        }
+      }
+
+      .add-to-cart-button {
+        img {
+          width: 16px;
+          @media (max-width: 991px) {
+            width: 14px;
+          }
+        }
+      }
+
+      .order-now-button {
+        margin-top: 5px;
+        @media (max-width: 767px) {
+          margin-top: 0;
+        }
+      }
+
+      .disabled-button {
+        opacity: 0.5 !important;
+      }
+
+      .mobile-product-card {
+        border: 1px solid $medium-gray;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 5px;
+
+        .separate-top {
+          border-top: 1px solid rgb(233, 233, 233, 0.8);
+          margin-top: 3px;
+          padding-top: 5px;
+        }
+
+        .mobile-action-buttons {
+          width: 100%;
+        }
+      }
+
+      .product-price-text,
+      .product-profit-text {
+        font-size: 14px;
+        color: $secondary-color;
+        font-weight: 500;
+        padding-top: 3px;
+      }
+    }
+  }
+  .td__empty-cell {
+    outline: none;
+    border: none;
+  }
+  .td__price-change {
+    border: none;
+    background-color: #fff3d0;
+    border-radius: 14px;
+    margin-top: 14px;
+    p {
+      color: #d48f05;
+      font-size: 18px;
+      margin-right: 0.5rem;
+      @media(max-width: 768px) {
+        font-size: 14px;
+      }
+    }
+    i {
+      border: 1px solid;
+      padding: 0.2rem 0.54rem 0.4rem 0;
+      width: 1.7rem;
+      height: 1.7rem;
+      border-radius: 50%;
+      font-size: 13px !important;
+    }
+    .price-text {
+      color: $text-primary;
+    }
+    .prod-price-text {
+      color: $text-light-green;
+    }
+  }
+}
+
+

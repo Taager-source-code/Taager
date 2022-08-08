@@ -1,0 +1,79 @@
+<div class="container-div">
+
+  <div class="title">اعدادات الحساب</div>
+
+  <mat-tab-group mat-align-tabs="start"  disableRipple="true" dynamicHeight="true">
+
+    <mat-tab label="{{ ACCOUNT_TABS.PERSONAL_INFO_TAB }}">
+
+      <ng-template matTabContent>
+
+        <div class="main">
+
+          <app-profile-card></app-profile-card>
+
+          <app-personal-info [user]="user"></app-personal-info>
+
+        </div>
+
+      </ng-template>
+
+    </mat-tab>
+
+    <mat-tab label="{{ ACCOUNT_TABS.CHANGE_PASSWORD_TAB }}">
+
+      <ng-template matTabContent>
+
+        <div class="main">
+
+          <app-profile-card></app-profile-card>
+
+          <app-change-password [user]="user"></app-change-password>
+
+        </div>
+
+      </ng-template>
+
+    </mat-tab>
+
+    <mat-tab
+
+      label="{{ ACCOUNT_TABS.CHANGE_WALLET_PASSWORD_TAB }}"
+
+      *ngIf="canChangeWalletPassword"
+
+    >
+
+      <ng-template matTabContent>
+
+        <div class="main">
+
+          <app-profile-card></app-profile-card>
+
+          <app-change-wallet-password [user]="user"></app-change-wallet-password>
+
+        </div>
+
+      </ng-template>
+
+    </mat-tab>
+
+    <mat-tab label="{{ ACCOUNT_TABS.REFFERED_ACCOUNTS_TAB }}">
+
+      <ng-template matTabContent>
+
+        <div class="main">
+
+          <app-profile-card></app-profile-card>
+
+          <app-referred-account [user]="user"></app-referred-account>
+
+        </div>
+
+      </ng-template>
+
+    </mat-tab>
+
+  </mat-tab-group>
+
+</div>

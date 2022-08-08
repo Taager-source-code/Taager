@@ -1,0 +1,137 @@
+@import './colors.scss';
+
+.questionnaire-banner {
+
+    margin-top: 30px;
+
+    .banner-section {
+
+        min-height: 80px;
+
+        background: $light-gray-background;
+
+        padding: 10px;
+
+        img.flag-img {
+
+            max-width: 60px;
+
+        }
+
+        .banner-text {
+
+            margin-bottom: 0;
+
+            margin-right: 24px;
+
+            font-weight: 600;
+
+            span {
+
+                color: $dark-green;
+
+                font-weight: bold;
+
+            }
+
+        }
+
+        .buttons-container {
+
+            margin: 0 auto 0 20px;
+
+            button {
+
+                border-radius: 10px;
+
+            }
+
+            button:hover {
+
+                cursor: pointer;
+
+            }
+
+            button.start-survey {
+
+                margin-left: 16px;
+
+                padding: 10px 60px;
+
+                background-color: $dark-blue;
+
+                color: $white;
+
+            }
+
+            button.start-survey:hover {
+
+                background-color: $dark-blue-hover;
+
+            }
+
+            button.decline-survey {
+
+                padding: 10px 30px;
+
+            }
+
+            button.decline-survey:hover {
+
+                background-color: $white-hover;
+
+            }
+
+        }
+
+        @media (max-width: 991px){
+
+            .buttons-container button {
+
+                padding: 10px 30px !important;
+
+                margin-bottom: 10px;
+
+                margin-left: 0 !important;
+
+                width: 180px;
+
+            }
+
+        }
+
+        @media (max-width: 540px){
+
+            .buttons-container{
+
+                margin: 0 10px 0 0;
+
+                button {
+
+                    font-size: 12px;
+
+                    padding: 10px 20px !important;
+
+                    margin-bottom: 10px;
+
+                    margin-left: 0 !important;
+
+                    width: 120px;
+
+                }
+
+            }
+
+           .banner-text {
+
+                margin-right: 0 !important;
+
+                font-size: 14px !important;
+
+            }
+
+        }
+
+    }
+
+}

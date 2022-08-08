@@ -1,0 +1,73 @@
+<div class="categories-sidebar"  *ngIf="categoriesNodes">
+
+    <div class="sidebar-title">الفئات</div>
+
+    <a 
+
+      class="category d-flex align-items-center" 
+
+      *ngFor="let categoryNode of categoriesNodes" 
+
+      [ngClass]="{'selected-category': categoryNode.value.name.arabicName === selectedCategory}" 
+
+      [routerLink]="['/', 'products', 'category', categoryNode.key]"
+
+      [queryParams]="{
+
+        currentPage: 1,
+
+        items: queryParamsObject.items,
+
+        sorting: queryParamsObject.sorting
+
+      }"
+
+    >
+
+      <img class="category_icon" src="{{ iconsBaseUrl }}commercial-categories/icons/{{categoryNode.value.icon}}" alt="" />
+
+      <span>{{categoryNode.value.name.arabicName}}</span>
+
+    </a>
+
+</div>
+
+  
+
+<div class="categories-sidebar" *ngIf="nonCommercialCategories">
+
+    <div class="sidebar-title">الفئات</div>
+
+    <a 
+
+    class="category d-flex align-items-center" 
+
+    *ngFor="let category of nonCommercialCategories" 
+
+    [ngClass]="{'selected-category': category.text === selectedCategory}" 
+
+    [routerLink]="['/category-products']"
+
+    [queryParams]="{
+
+      category: category.text,
+
+      currentPage: 1,
+
+      items: queryParamsObject.items,
+
+      sorting: queryParamsObject.sorting
+
+    }"
+
+  >
+
+    <img class="category_icon" src="assets/img/category-icons/{{category.name}}.svg" alt="" />
+
+    <span>{{category.text}}</span>
+
+  </a>
+
+</div>
+
+  
